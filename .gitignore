@@ -1,0 +1,16 @@
+# artefatos de build do Rust
+/target
+
+# binários e pacotes de distribuição (vão como GitHub Release, não no Git)
+/dist/tabletop
+/dist/signaling
+/dist/logo.svg
+*.tar.gz
+
+# screenshots de teste (mas mantém os SVGs de assets)
+/*.png
+/screenshot_*.png
+
+# sccache/local
+.env
+/.claude/

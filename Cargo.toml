@@ -1,0 +1,19 @@
+[workspace]
+members = ["app", "signaling"]
+resolver = "2"
+
+# runtime decente em dev sem pagar o preço de compilar tudo otimizado:
+# nosso código em O1 (compila rápido), dependências (Bevy/wgpu) em O3 (compilam
+# uma vez e rodam rápido pra sempre).
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# release enxuto para distribuir o binário final (target debian x86_64).
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"
