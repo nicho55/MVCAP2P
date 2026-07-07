@@ -1,0 +1,21 @@
+{
+  "name": "signaling",
+  "modules": [
+    {
+      "name": "main.rs",
+      "path": "src/main.rs",
+      "doc": [],
+      "structs": [],
+      "enums": [],
+      "fns": [
+        "main"
+      ],
+      "traits": [],
+      "resources": [],
+      "components": [],
+      "systems": [],
+      "events": [],
+      "submodules": []
+    }
+  ]
+}

@@ -14,3 +14,25 @@
 # sccache/local
 .env
 /.claude/
+
+# Android SDK (enorme, não versionar)
+/Sdk/
+
+# Android build artifacts (todos os níveis)
+/app/android/.gradle/
+/app/android/app/build/
+*.apk
+*.aab
+*.dex
+
+# Build temporário
+/build/
+/build/tmp/
+
+# Node / docs build
+/docs/node_modules/
+/docs/.next/
+/docs/out/
+
+# Artefatos locais
+*.local.properties

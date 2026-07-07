@@ -100,6 +100,7 @@ pub enum Msg {
     TokenMoved { id: TokenId, cell: Cell },
     RemoveTokenReq { id: TokenId },
     RemoveToken { id: TokenId },
+    AssignToken { id: TokenId, new_owner: PlayerUuid },
     DragPreview { id: TokenId, x: f32, y: f32 },
     Terrain { cell: Cell, val: Option<TerrainCell> },
 }

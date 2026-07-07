@@ -1,0 +1,7 @@
+com.tabletop2p.app-pngs-0 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/build/generated/res/pngs/debug
+com.tabletop2p.app-resValues-1 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/build/generated/res/resValues/debug
+com.tabletop2p.app-packageDebugResources-2 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.tabletop2p.app-packageDebugResources-3 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.tabletop2p.app-debug-4 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.tabletop2p.app-debug-5 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/src/debug/res
+com.tabletop2p.app-main-6 /home/neps/projetos/NEPSVTT/tabletop-p2p/app/android/app/src/main/res

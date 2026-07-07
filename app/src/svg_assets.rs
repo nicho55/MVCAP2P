@@ -32,7 +32,11 @@ pub fn tfont(assets: &GameAssets, size: f32) -> TextFont {
 
 fn load_svgs(mut commands: Commands, mut images: ResMut<Assets<Image>>, mut fonts: ResMut<Assets<Font>>) {
     let t0 = std::time::Instant::now();
-    let mut ras = |bytes: &[u8], px: u32| -> Handle<Image> { images.add(rasterize(bytes, px)) };
+
+    #[cfg(feature = "svg")]
+    let mut ras = |bytes: &[u8], px: u32| -> Handle<Image> { images.add(rasterize_svg(bytes, px)) };
+    #[cfg(not(feature = "svg"))]
+    let mut ras = |_: &[u8], px: u32| -> Handle<Image> { images.add(placeholder_tex(px)) };
 
     let textures = vec![
         ras(include_bytes!("../../assets/svg/tex_grass.svg"), 256),
@@ -61,24 +65,13 @@ fn load_svgs(mut commands: Commands, mut images: ResMut<Assets<Image>>, mut font
     icons.insert("map", ras(include_bytes!("../../assets/svg/icon_map.svg"), 96));
     icons.insert("token", ras(include_bytes!("../../assets/svg/icon_token.svg"), 96));
 
-    // Fonte com diacríticos completos (o default do bevy é um subset sem acentos).
-    // Tenta o sistema primeiro; se nada existir (outra máquina, sem essas fontes),
-    // cai na DejaVuSans embutida no binário — texto acentuado sempre renderiza.
-    let font = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
-    ]
-    .iter()
-    .find_map(|p| std::fs::read(p).ok())
-    .and_then(|b| Font::try_from_bytes(b).ok())
-    .or_else(|| Font::try_from_bytes(include_bytes!("../../assets/DejaVuSans.ttf").to_vec()).ok())
-    .map(|f| fonts.add(f));
+    let font = Font::try_from_bytes(include_bytes!("../../assets/DejaVuSans.ttf").to_vec()).ok()
+        .map(|f| fonts.add(f));
     if font.is_none() {
         warn!("nenhuma fonte carregada; acentos podem não renderizar");
     }
 
-    info!("assets SVG rasterizados em {:?}", t0.elapsed());
+    info!("assets carregados em {:?}", t0.elapsed());
     commands.insert_resource(GameAssets {
         textures,
         tex_names: vec!["Grama", "Pedra", "Água", "Areia"],
@@ -90,7 +83,8 @@ fn load_svgs(mut commands: Commands, mut images: ResMut<Assets<Image>>, mut font
     });
 }
 
-fn rasterize(bytes: &[u8], target: u32) -> Image {
+#[cfg(feature = "svg")]
+fn rasterize_svg(bytes: &[u8], target: u32) -> Image {
     let opt = resvg::usvg::Options::default();
     let tree = resvg::usvg::Tree::from_data(bytes, &opt).expect("SVG inválido");
     let sz = tree.size();
@@ -110,6 +104,18 @@ fn rasterize(bytes: &[u8], target: u32) -> Image {
     }
     Image::new(
         Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        TextureDimension::D2,
+        data,
+        TextureFormat::Rgba8UnormSrgb,
+        RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
+    )
+}
+
+#[cfg(not(feature = "svg"))]
+fn placeholder_tex(size: u32) -> Image {
+    let data = vec![255u8; (size * size * 4) as usize];
+    Image::new(
+        Extent3d { width: size, height: size, depth_or_array_layers: 1 },
         TextureDimension::D2,
         data,
         TextureFormat::Rgba8UnormSrgb,

@@ -12,8 +12,38 @@ use bevy::prelude::*;
 
 use crate::net::{Blobs, Net, NetSet, Roster, Session};
 use crate::protocol::*;
+use crate::room_discovery;
 use crate::svg_assets::GameAssets;
 use crate::{AppState, CliArgs};
+
+#[derive(Resource)]
+pub struct ScreenInfo {
+    pub width: f32,
+    pub height: f32,
+    pub scale: f32,
+    pub auto_scale: bool,
+}
+
+impl Default for ScreenInfo {
+    fn default() -> Self {
+        Self { width: 1366.0, height: 840.0, scale: 1.0, auto_scale: true }
+    }
+}
+
+/// Atualiza `width`/`height` do ScreenInfo. A escala automática só roda
+/// na primeira detecção da janela; depois o usuário controla com A+/A-.
+fn screen_update(mut si: ResMut<ScreenInfo>, q_win: Query<&Window>) {
+    let Ok(win) = q_win.single() else { return };
+    let w = win.resolution.width();
+    let h = win.resolution.height();
+    if (w - si.width).abs() > 10.0 || (h - si.height).abs() > 10.0 {
+        si.width = w;
+        si.height = h;
+        if si.auto_scale {
+            si.scale = (w / 900.0).clamp(0.5, 2.0);
+        }
+    }
+}
 
 #[derive(Resource, Default)]
 pub struct UiHovered(pub bool);
@@ -33,6 +63,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiHovered>()
+            .init_resource::<ScreenInfo>()
             .init_resource::<ActiveTool>()
             .init_resource::<camera::CamRig>()
             .init_resource::<lowpoly::Mats>()
@@ -43,13 +74,20 @@ impl Plugin for GamePlugin {
             .init_resource::<terrain::TerrainRender>()
             .init_resource::<tokens::Selection>()
             .init_resource::<tokens::Dragging>()
-            .add_systems(Startup, (camera::setup_camera, lowpoly::setup_lowpoly, setup_lighting))
+            .init_resource::<tokens::TouchDrag>();
+        #[cfg(target_os = "android")]
+        app.init_resource::<camera::TouchState>();
+        app.add_systems(Startup, (camera::setup_camera, lowpoly::setup_lowpoly, setup_lighting))
             .add_systems(OnEnter(AppState::InGame), (hud::setup_hud, game_init))
+            .add_systems(OnExit(AppState::InGame), (leave_game, reset_ui_hover))
+            .add_systems(First, screen_update)
             .add_systems(
                 Update,
                 (
                     track_ui_hover,
                     camera::pan_zoom,
+                    #[cfg(target_os = "android")]
+                    camera::touch_pan_zoom,
                     camera::apply_rig.after(camera::pan_zoom),
                     grid::draw_grid,
                     grid::grid_reflow,
@@ -59,6 +97,10 @@ impl Plugin for GamePlugin {
                     tokens::token_y_follow.after(tokens::token_interact),
                     tokens::selection_visual,
                     tokens::delete_selected,
+                    #[cfg(target_os = "android")]
+                    tokens::touch_interact,
+                    #[cfg(target_os = "android")]
+                    tokens::touch_highlight,
                     tokens::resolve_pending_art,
                     tokens::refresh_ring_colors,
                     terrain::terrain_tool,
@@ -72,11 +114,15 @@ impl Plugin for GamePlugin {
                     sync::handle_hello,
                     sync::handle_core,
                     sync::handle_tokens,
+                    sync::assign_token_rx,
                     hud::toolbar_clicks,
                     hud::toolbar_visuals,
                     hud::roster_panel,
                     hud::status_label,
                     hud::hint_label,
+                    hud::back_btn_click,
+                    hud::scale_btn_click,
+                    hud::assign_token_click,
                 )
                     .run_if(in_state(AppState::InGame))
                     .after(NetSet),
@@ -105,6 +151,36 @@ fn setup_lighting(mut commands: Commands) {
         brightness: 350.0,
         ..default()
     });
+}
+
+fn leave_game(
+    mut commands: Commands,
+    mut net: ResMut<Net>,
+    session: Option<Res<Session>>,
+    mut render: ResMut<terrain::TerrainRender>,
+    q_hud: Query<Entity, With<hud::HudRoot>>,
+    q_ground: Query<Entity, With<map::MapGround>>,
+    q_tokens: Query<Entity, With<tokens::Token>>,
+) {
+    let code = session.as_ref().map(|s| s.code.clone());
+    let is_gm = session.as_ref().map(|s| s.me.is_gm).unwrap_or(false);
+    net.disconnect();
+    render.ents.clear();
+    render.dirty.clear();
+    for e in q_hud.iter().chain(q_ground.iter()).chain(q_tokens.iter()) {
+        commands.entity(e).despawn();
+    }
+    if is_gm {
+        if let Some(code) = code {
+            std::thread::spawn(move || {
+                let _ = room_discovery::delete_room(&code);
+            });
+        }
+    }
+}
+
+fn reset_ui_hover(mut h: ResMut<UiHovered>) {
+    h.0 = false;
 }
 
 fn track_ui_hover(q: Query<&Interaction>, mut h: ResMut<UiHovered>) {

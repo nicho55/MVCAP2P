@@ -1,0 +1,23 @@
+---
+title: Documentação Tabletop P2P
+---
+
+# Documentação Tabletop P2P
+
+VTT tático peer-to-peer 3D low-poly — Rust + Bevy + WebRTC.
+
+## Navegação
+
+- **[tabletop](tabletop)** — O jogo: câmera, grid, tokens, terreno, HUD, sincronização em rede
+- **[signaling](signaling)** — Servidor de sinalização WebRTC (handshake entre peers)
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Engine 3D | Bevy 0.16 |
+| Rede P2P | WebRTC (matchbox) |
+| Serialização | bincode + serde |
+| Sinalização | matchbox_signaling + tokio |
+| Imagens | resvg (SVG → textura) + image (PNG/JPEG/WebP) |
+| Áudio | — |

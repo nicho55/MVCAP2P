@@ -1,19 +1,28 @@
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::prelude::*;
 
+use super::lowpoly::Ctx3d;
 use super::map::DropMode;
+use super::tokens::{set_token_owner, OwnerRing, Selection as TokenSelection, Token};
 use super::ActiveTool;
+use super::ScreenInfo;
 use crate::net::{Net, Roster, Session};
 use crate::protocol::*;
 use crate::svg_assets::{tfont, GameAssets};
+use crate::AppState;
 
 use super::grid::GridRes;
 
 const GOLD: Color = Color::srgb(0.83, 0.69, 0.22);
+const TEXT: Color = Color::srgb(0.92, 0.90, 0.95);
 const PANEL: Color = Color::srgba(0.10, 0.09, 0.14, 0.94);
 const PANEL_SOFT: Color = Color::srgba(0.10, 0.09, 0.14, 0.75);
 const BTN_BG: Color = Color::srgb(0.16, 0.14, 0.21);
 const BTN_BORDER: Color = Color::srgb(0.30, 0.26, 0.40);
+
+const SCALE_MIN: f32 = 0.35;
+const SCALE_MAX: f32 = 2.5;
+const SCALE_STEP: f32 = 0.1;
 
 #[derive(Component)]
 pub struct HudRoot;
@@ -25,6 +34,14 @@ pub struct RosterRow;
 pub struct StatusLabel;
 #[derive(Component)]
 pub struct HintLabel;
+#[derive(Component)]
+pub struct BackBtn;
+#[derive(Component)]
+pub struct ScaleUpBtn;
+#[derive(Component)]
+pub struct ScaleDownBtn;
+#[derive(Component)]
+pub struct AssignTokenBtn(pub PlayerUuid);
 
 #[derive(Component, Clone, Copy, PartialEq)]
 pub enum ToolBtn {
@@ -34,22 +51,27 @@ pub enum ToolBtn {
     Drop(DropMode),
 }
 
-fn tool_button(bar: &mut ChildSpawnerCommands, kind: ToolBtn, icon: Handle<Image>) {
+fn sz(n: f32, si: &ScreenInfo) -> f32 {
+    (n * si.scale).round().max(1.0)
+}
+
+fn tool_button(bar: &mut ChildSpawnerCommands, kind: ToolBtn, icon: Handle<Image>, si: &ScreenInfo) {
+    let b = sz(46.0, si);
     bar.spawn((
         Button,
         kind,
         Node {
-            width: Val::Px(46.0),
-            height: Val::Px(46.0),
-            border: UiRect::all(Val::Px(2.0)),
-            padding: UiRect::all(Val::Px(6.0)),
+            width: Val::Px(b),
+            height: Val::Px(b),
+            border: UiRect::all(Val::Px(sz(2.0, si))),
+            padding: UiRect::all(Val::Px(sz(6.0, si))),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
             ..default()
         },
         BackgroundColor(BTN_BG),
         BorderColor(BTN_BORDER),
-        BorderRadius::all(Val::Px(8.0)),
+        BorderRadius::all(Val::Px(sz(8.0, si))),
     ))
     .with_children(|b| {
         b.spawn((
@@ -59,8 +81,21 @@ fn tool_button(bar: &mut ChildSpawnerCommands, kind: ToolBtn, icon: Handle<Image
     });
 }
 
-pub fn setup_hud(mut commands: Commands, assets: Res<GameAssets>, session: Res<Session>) {
+fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si: &ScreenInfo) {
     let gm = session.me.is_gm;
+    let top = sz(if cfg!(target_os = "android") { 36.0 } else { 0.0 }, si);
+    let bottom = sz(if cfg!(target_os = "android") { 60.0 } else { 0.0 }, si);
+    let p = sz(12.0, si);
+    let p2 = sz(8.0, si);
+    let r = sz(8.0, si);
+    let r2 = sz(6.0, si);
+    let gap = sz(4.0, si);
+    let gap2 = sz(6.0, si);
+    let f0 = sz(22.0, si);
+    let f1 = sz(13.0, si);
+    let f2 = sz(12.0, si);
+    let bw = sz(170.0, si);
+
     commands
         .spawn((
             HudRoot,
@@ -76,32 +111,31 @@ pub fn setup_hud(mut commands: Commands, assets: Res<GameAssets>, session: Res<S
             root.spawn((
                 Node {
                     position_type: PositionType::Absolute,
-                    top: Val::Px(12.0),
-                    left: Val::Px(12.0),
+                    top: Val::Px(p + top),
+                    left: Val::Px(p),
                     flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(4.0),
-                    padding: UiRect::all(Val::Px(12.0)),
+                    row_gap: Val::Px(gap),
+                    padding: UiRect::all(Val::Px(p)),
                     ..default()
                 },
                 BackgroundColor(PANEL),
-                BorderRadius::all(Val::Px(8.0)),
-                Interaction::default(),
+                BorderRadius::all(Val::Px(r)),
             ))
             .with_children(|p| {
                 p.spawn((
                     Text::new(format!("SALA {}", session.code)),
-                    tfont(&assets, 22.0),
+                    tfont(assets, f0),
                     TextColor(GOLD),
                 ));
                 p.spawn((
                     StatusLabel,
                     Text::new("conectando..."),
-                    tfont(&assets, 13.0),
+                    tfont(assets, f1),
                     TextColor(Color::srgb(0.8, 0.8, 0.8)),
                 ));
                 p.spawn((
                     Text::new(if gm { "você é o MESTRE" } else { "você é JOGADOR" }),
-                    tfont(&assets, 12.0),
+                    tfont(assets, f2),
                     TextColor(Color::srgb(0.60, 0.58, 0.68)),
                 ));
             });
@@ -109,91 +143,174 @@ pub fn setup_hud(mut commands: Commands, assets: Res<GameAssets>, session: Res<S
             root.spawn((
                 Node {
                     position_type: PositionType::Absolute,
-                    top: Val::Px(118.0),
-                    left: Val::Px(12.0),
+                    top: Val::Px(p * 2.0 + sz(60.0, si) + top),
+                    left: Val::Px(p),
                     flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(6.0),
-                    padding: UiRect::all(Val::Px(12.0)),
-                    min_width: Val::Px(170.0),
+                    row_gap: Val::Px(gap2),
+                    padding: UiRect::all(Val::Px(p)),
+                    min_width: Val::Px(bw),
                     ..default()
                 },
                 BackgroundColor(PANEL),
-                BorderRadius::all(Val::Px(8.0)),
-                Interaction::default(),
+                BorderRadius::all(Val::Px(r)),
             ))
             .with_children(|p| {
                 p.spawn((
                     Text::new("JOGADORES"),
-                    tfont(&assets, 12.0),
+                    tfont(assets, f2),
                     TextColor(Color::srgb(0.60, 0.58, 0.68)),
                 ));
                 p.spawn((
                     RosterPanel,
-                    Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), ..default() },
+                    Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(gap), ..default() },
                 ));
             });
             // dica inferior direita
             root.spawn((
                 Node {
                     position_type: PositionType::Absolute,
-                    bottom: Val::Px(12.0),
-                    right: Val::Px(12.0),
-                    padding: UiRect::all(Val::Px(8.0)),
-                    max_width: Val::Px(420.0),
+                    bottom: Val::Px(sz(70.0, si) + bottom),
+                    right: Val::Px(p2),
+                    padding: UiRect::all(Val::Px(p2)),
+                    max_width: Val::Vw(45.0),
                     ..default()
                 },
                 BackgroundColor(PANEL_SOFT),
-                BorderRadius::all(Val::Px(6.0)),
+                BorderRadius::all(Val::Px(r2)),
             ))
             .with_children(|p| {
                 p.spawn((
                     HintLabel,
                     Text::new(""),
-                    tfont(&assets, 12.0),
+                    tfont(assets, f2),
                     TextColor(Color::srgb(0.75, 0.72, 0.80)),
                 ));
+            });
+            // botão voltar ao lobby
+            root.spawn((
+                Button,
+                BackBtn,
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(p + top),
+                    right: Val::Px(p),
+                    padding: UiRect::all(Val::Px(sz(6.0, si))),
+                    ..default()
+                },
+                BackgroundColor(Color::srgba(0.30, 0.12, 0.12, 0.85)),
+                BorderRadius::all(Val::Px(sz(6.0, si))),
+            ))
+            .with_children(|b| {
+                b.spawn((Text::new("SAIR"), tfont(assets, sz(13.0, si)), TextColor(Color::srgb(0.95, 0.70, 0.70))));
             });
             // toolbar inferior central
             root.spawn(Node {
                 position_type: PositionType::Absolute,
-                bottom: Val::Px(12.0),
+                bottom: Val::Px(p + bottom),
                 left: Val::Px(0.0),
                 width: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
                 ..default()
             })
             .with_children(|wrap| {
+                // painel da toolbar + escala
                 wrap.spawn((
                     Node {
                         flex_direction: FlexDirection::Row,
-                        column_gap: Val::Px(6.0),
-                        padding: UiRect::all(Val::Px(8.0)),
+                        column_gap: Val::Px(gap2),
+                        padding: UiRect::all(Val::Px(p2)),
                         align_items: AlignItems::Center,
                         ..default()
                     },
                     BackgroundColor(PANEL),
-                    BorderRadius::all(Val::Px(10.0)),
-                    Interaction::default(),
+                    BorderRadius::all(Val::Px(sz(10.0, si))),
                 ))
                 .with_children(|bar| {
-                    tool_button(bar, ToolBtn::Tool(ActiveTool::Select), assets.icons["select"].clone());
+                    tool_button(bar, ToolBtn::Tool(ActiveTool::Select), assets.icons["select"].clone(), si);
                     if gm {
                         for i in 0..assets.textures.len() as u8 {
-                            tool_button(bar, ToolBtn::Tool(ActiveTool::Paint(i)), assets.textures[i as usize].clone());
+                            tool_button(bar, ToolBtn::Tool(ActiveTool::Paint(i)), assets.textures[i as usize].clone(), si);
                         }
-                        tool_button(bar, ToolBtn::Tool(ActiveTool::Erase), assets.icons["eraser"].clone());
-                        tool_button(bar, ToolBtn::Tool(ActiveTool::ElevUp), assets.icons["elev_up"].clone());
-                        tool_button(bar, ToolBtn::Tool(ActiveTool::ElevDown), assets.icons["elev_down"].clone());
-                        tool_button(bar, ToolBtn::Grid(GridKind::Square), assets.icons["grid_square"].clone());
-                        tool_button(bar, ToolBtn::Grid(GridKind::HexFlat), assets.icons["grid_hex"].clone());
-                        tool_button(bar, ToolBtn::CellDelta(8.0), assets.icons["plus"].clone());
-                        tool_button(bar, ToolBtn::CellDelta(-8.0), assets.icons["minus"].clone());
-                        tool_button(bar, ToolBtn::Drop(DropMode::Map), assets.icons["map"].clone());
+                        tool_button(bar, ToolBtn::Tool(ActiveTool::Erase), assets.icons["eraser"].clone(), si);
+                        tool_button(bar, ToolBtn::Tool(ActiveTool::ElevUp), assets.icons["elev_up"].clone(), si);
+                        tool_button(bar, ToolBtn::Tool(ActiveTool::ElevDown), assets.icons["elev_down"].clone(), si);
+                        tool_button(bar, ToolBtn::Grid(GridKind::Square), assets.icons["grid_square"].clone(), si);
+                        tool_button(bar, ToolBtn::Grid(GridKind::HexFlat), assets.icons["grid_hex"].clone(), si);
+                        tool_button(bar, ToolBtn::CellDelta(8.0), assets.icons["plus"].clone(), si);
+                        tool_button(bar, ToolBtn::CellDelta(-8.0), assets.icons["minus"].clone(), si);
+                        tool_button(bar, ToolBtn::Drop(DropMode::Map), assets.icons["map"].clone(), si);
                     }
-                    tool_button(bar, ToolBtn::Drop(DropMode::Token), assets.icons["token"].clone());
+                    tool_button(bar, ToolBtn::Drop(DropMode::Token), assets.icons["token"].clone(), si);
+                    // botões de escala
+                    bar.spawn((
+                        Button,
+                        ScaleDownBtn,
+                        Node {
+                            width: Val::Px(sz(32.0, si)),
+                            height: Val::Px(sz(32.0, si)),
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            margin: UiRect::left(Val::Px(gap2)),
+                            ..default()
+                        },
+                        BackgroundColor(BTN_BG),
+                        BorderRadius::all(Val::Px(sz(6.0, si))),
+                    ))
+                    .with_children(|b| {
+                        b.spawn((Text::new("A-"), tfont(assets, sz(14.0, si)), TextColor(TEXT)));
+                    });
+                    bar.spawn((
+                        Button,
+                        ScaleUpBtn,
+                        Node {
+                            width: Val::Px(sz(32.0, si)),
+                            height: Val::Px(sz(32.0, si)),
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },
+                        BackgroundColor(BTN_BG),
+                        BorderRadius::all(Val::Px(sz(6.0, si))),
+                    ))
+                    .with_children(|b| {
+                        b.spawn((Text::new("A+"), tfont(assets, sz(14.0, si)), TextColor(TEXT)));
+                    });
                 });
             });
         });
+}
+
+pub fn setup_hud(mut commands: Commands, assets: Res<GameAssets>, session: Res<Session>, si: Res<ScreenInfo>) {
+    spawn_hud(&mut commands, &assets, &session, &si);
+}
+
+pub fn scale_btn_click(
+    q_down: Query<&Interaction, (Changed<Interaction>, With<ScaleDownBtn>)>,
+    q_up: Query<&Interaction, (Changed<Interaction>, With<ScaleUpBtn>)>,
+    mut si: ResMut<ScreenInfo>,
+    mut commands: Commands,
+    q_old_hud: Query<Entity, With<HudRoot>>,
+    assets: Res<GameAssets>,
+    session: Res<Session>,
+) {
+    let delta = if q_up.iter().any(|i| *i == Interaction::Pressed) {
+        SCALE_STEP
+    } else if q_down.iter().any(|i| *i == Interaction::Pressed) {
+        -SCALE_STEP
+    } else {
+        return;
+    };
+    let new = (si.scale + delta).clamp(SCALE_MIN, SCALE_MAX);
+    if (new - si.scale).abs() < 0.001 {
+        return;
+    }
+    si.scale = new;
+    si.auto_scale = false;
+    info!("escala do HUD ajustada para {new:.2}");
+    for e in &q_old_hud {
+        commands.entity(e).despawn();
+    }
+    spawn_hud(&mut commands, &assets, &session, &si);
 }
 
 pub fn toolbar_clicks(
@@ -262,17 +379,20 @@ pub fn roster_panel(
     mut commands: Commands,
     roster: Res<Roster>,
     session: Res<Session>,
+    selection: Res<TokenSelection>,
     assets: Res<GameAssets>,
+    si: Res<ScreenInfo>,
     q_panel: Query<Entity, With<RosterPanel>>,
     q_rows: Query<Entity, With<RosterRow>>,
 ) {
-    if !roster.is_changed() {
+    if !roster.is_changed() && !selection.is_changed() {
         return;
     }
     let Ok(panel) = q_panel.single() else { return };
     for e in &q_rows {
         commands.entity(e).despawn();
     }
+    let has_sel = session.me.is_gm && selection.0.is_some();
     for entry in &roster.list {
         let mut label = entry.meta.nick.clone();
         if entry.meta.is_gm {
@@ -286,26 +406,40 @@ pub fn roster_panel(
         } else {
             Color::srgb(0.45, 0.43, 0.50)
         };
-        let row = commands
-            .spawn((
+        let dot = sz(14.0, &si);
+        let mut spawner = if has_sel && !entry.meta.is_gm {
+            commands.spawn((
+                Button,
+                RosterRow,
+                AssignTokenBtn(entry.meta.uuid),
+                Node {
+                    flex_direction: FlexDirection::Row,
+                    column_gap: Val::Px(sz(8.0, &si)),
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                BackgroundColor(Color::srgba(0.20, 0.18, 0.26, 0.50)),
+                BorderRadius::all(Val::Px(dot * 0.5)),
+            ))
+        } else {
+            commands.spawn((
                 RosterRow,
                 Node {
                     flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(8.0),
+                    column_gap: Val::Px(sz(8.0, &si)),
                     align_items: AlignItems::Center,
                     ..default()
                 },
             ))
-            .with_children(|r| {
-                r.spawn((
-                    Node { width: Val::Px(14.0), height: Val::Px(14.0), ..default() },
-                    BackgroundColor(palette_color(entry.meta.color)),
-                    BorderRadius::all(Val::Px(7.0)),
-                ));
-                r.spawn((Text::new(label), tfont(&assets, 15.0), TextColor(col)));
-            })
-            .id();
-        commands.entity(panel).add_child(row);
+        };
+        spawner.with_children(|r| {
+            r.spawn((
+                Node { width: Val::Px(dot), height: Val::Px(dot), ..default() },
+                BackgroundColor(palette_color(entry.meta.color)),
+                BorderRadius::all(Val::Px(dot * 0.5)),
+            ));
+            r.spawn((Text::new(label), tfont(&*assets, sz(15.0, &si)), TextColor(col)));
+        });
     }
 }
 
@@ -329,6 +463,41 @@ pub fn status_label(
     if text.0 != s {
         text.0 = s;
         color.0 = c;
+    }
+}
+
+pub fn back_btn_click(
+    q: Query<&Interaction, (Changed<Interaction>, With<BackBtn>)>,
+    mut next: ResMut<NextState<AppState>>,
+) {
+    for i in &q {
+        if *i == Interaction::Pressed {
+            next.set(AppState::Lobby);
+        }
+    }
+}
+
+pub fn assign_token_click(
+    q: Query<(&Interaction, &AssignTokenBtn), Changed<Interaction>>,
+    selection: Res<TokenSelection>,
+    session: Res<Session>,
+    mut net: ResMut<Net>,
+    roster: Res<Roster>,
+    mut ctx: Ctx3d,
+    mut q_tokens: Query<(Entity, &mut Token, &Children)>,
+    mut q_rings: Query<&mut MeshMaterial3d<StandardMaterial>, With<OwnerRing>>,
+) {
+    if !session.me.is_gm {
+        return;
+    }
+    let Some(token_id) = selection.0 else { return };
+    for (i, btn) in &q {
+        if *i != Interaction::Pressed {
+            continue;
+        }
+        set_token_owner(token_id, btn.0, &roster, &mut ctx, &mut q_tokens, &mut q_rings);
+        net.broadcast(&Msg::AssignToken { id: token_id, new_owner: btn.0 });
+        info!("token {token_id} atribuído ao jogador {}", btn.0);
     }
 }
 
@@ -358,7 +527,13 @@ pub fn hint_label(
         ActiveTool::ElevUp => "elevar terreno",
         ActiveTool::ElevDown => "rebaixar terreno",
     };
-    text.0 = format!(
-        "Ferramenta: {tool_s}  |  soltar imagem cria: {mode}\nbotão direito/WASD: mover câmera  |  botão meio/Q/E: girar  |  scroll: zoom  |  Delete: remover token  |  F12: screenshot"
-    );
+    if cfg!(target_os = "android") {
+        text.0 = format!(
+            "Ferramenta: {tool_s}  |  soltar imagem cria: {mode}\n1 dedo: mover câmera  |  2 dedos: girar  |  pinça: zoom  |  toque token: arrastar"
+        );
+    } else {
+        text.0 = format!(
+            "Ferramenta: {tool_s}  |  soltar imagem cria: {mode}\nbotão direito/WASD: mover câmera  |  botão meio/Q/E: girar  |  scroll: zoom  |  Delete: remover token  |  F12: screenshot"
+        );
+    }
 }

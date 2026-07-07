@@ -1,0 +1,16 @@
+{
+  "steps": [
+    {"id": 1, "name": "Setup ambiente Android", "status": "done", "log": "SDK/NDK/cargo-ndk instalados. NDK atualizado para 28.2.13676358"},
+    {"id": 2, "name": "Reestruturar app: main.rs → lib.rs + thin main.rs", "status": "done", "log": "lib.rs com run_game(), main.rs enxuto, Cargo.toml com cdylib + #[bevy_main]"},
+    {"id": 3, "name": "Criar projeto Gradle (android/) com NativeActivity", "status": "done", "log": "NativeActivity (mais simples que GameActivity), build.gradle.kts sem Kotlin/AARs"},
+    {"id": 4, "name": "Resolver resvg para Android (feature gate)", "status": "done", "log": "feature gate svg/android, placeholder_tex() quando sem svg"},
+    {"id": 5, "name": "Configurar GLES3 fallback no RenderPlugin", "status": "pending", "log": "Vulkan funciona no device (Mali-G52), mas GLES3 fallback pode ser necessário para compatibilidade"},
+    {"id": 6, "name": "Adicionar toque: câmera orbit/pan/zoom", "status": "pending", "log": null},
+    {"id": 7, "name": "Adicionar highlight visual no token ao tocar", "status": "pending", "log": null},
+    {"id": 8, "name": "Build + deploy via adb no celular", "status": "done", "log": "APK compilado e instalado. App rodando no moto g06 (Android 15)"}
+  ],
+  "current_step": 9,
+  "build_attempts": 1,
+  "last_error": null,
+  "device_serial": "ZF525GRNC4"
+}

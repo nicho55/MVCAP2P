@@ -1,5 +1,5 @@
 [workspace]
-members = ["app", "signaling"]
+members = ["app", "signaling", "docgen"]
 resolver = "2"
 
 # runtime decente em dev sem pagar o preço de compilar tudo otimizado:

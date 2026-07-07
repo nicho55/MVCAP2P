@@ -1,6 +1,12 @@
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 
+#[cfg(target_os = "android")]
+use bevy::input::touch::TouchPhase;
+#[cfg(target_os = "android")]
+use bevy::platform::collections::HashMap;
+
+use super::tokens::TouchDrag;
 use super::UiHovered;
 
 #[derive(Component)]
@@ -134,4 +140,88 @@ pub fn ray_point_dist(ray: &Ray3d, p: Vec3) -> f32 {
     let v = p - ray.origin;
     let d = *ray.direction;
     (v - d * v.dot(d)).length()
+}
+
+// ─── Touch camera controls (Android) ────────────────────────────────────────
+
+#[cfg(target_os = "android")]
+#[derive(Resource, Default)]
+pub struct TouchState {
+    pub fingers: HashMap<u64, Vec2>,
+    pub last_pinch: Option<f32>,
+}
+
+/// Touch-based camera pan/zoom/orbit (Android).
+/// - 1 finger drag → pan (right-click equivalent)
+/// - 2 finger drag → orbit (middle-click equivalent)
+/// - pinch → zoom (scroll equivalent)
+#[cfg(target_os = "android")]
+pub fn touch_pan_zoom(
+    mut touch_ev: EventReader<TouchInput>,
+    mut state: ResMut<TouchState>,
+    mut rig: ResMut<CamRig>,
+    ui: Res<UiHovered>,
+    drag: Res<TouchDrag>,
+) {
+    if drag.token_id.is_some() {
+        return;
+    }
+    for t in touch_ev.read() {
+        if ui.0 && matches!(t.phase, TouchPhase::Started) {
+            continue;
+        }
+        match t.phase {
+            TouchPhase::Started => {
+                state.fingers.insert(t.id, t.position);
+                state.last_pinch = None;
+            }
+            TouchPhase::Moved => {
+                if let Some(&old) = state.fingers.get(&t.id) {
+                    state.fingers.insert(t.id, t.position);
+
+                    let yaw_rot = Quat::from_rotation_y(rig.yaw);
+                    let right = yaw_rot * Vec3::X;
+                    let fwd = yaw_rot * Vec3::NEG_Z;
+                    let k = rig.dist * 0.0016;
+
+                    let count = state.fingers.len();
+                    match count {
+                        1 => {
+                            let delta = t.position - old;
+                            rig.focus -= right * delta.x * k;
+                            rig.focus += fwd * delta.y * k;
+                        }
+                        2 => {
+                            let mut iter = state.fingers.iter();
+                            let (_, &p1) = iter.next().unwrap();
+                            let (_, &p2) = iter.next().unwrap();
+                            let center = (p1 + p2) / 2.0;
+                            let dist = p1.distance(p2);
+
+                            // orbit: delta do centro
+                            let dcenter = center - (old + state.fingers.get(&t.id).copied().unwrap_or(t.position)) / 2.0;
+                            rig.yaw -= dcenter.x * 0.006;
+                            rig.pitch = (rig.pitch + dcenter.y * 0.004).clamp(0.35, 1.45);
+
+                            // pinch zoom
+                            if let Some(last) = state.last_pinch {
+                                let ratio = dist / last;
+                                if (ratio - 1.0).abs() > 0.01 {
+                                    rig.dist = (rig.dist / ratio).clamp(180.0, 8000.0);
+                                }
+                            }
+                            state.last_pinch = Some(dist);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            TouchPhase::Ended | TouchPhase::Canceled => {
+                state.fingers.remove(&t.id);
+                if state.fingers.len() < 2 {
+                    state.last_pinch = None;
+                }
+            }
+        }
+    }
 }

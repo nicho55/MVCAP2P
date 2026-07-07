@@ -1,0 +1,567 @@
+{
+  "name": "net.rs",
+  "path": "src/net.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "NetPlugin",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [],
+      "attributes": []
+    },
+    {
+      "name": "NetSet",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "SystemSet",
+        "Debug",
+        "Clone",
+        "PartialEq",
+        "Eq",
+        "Hash"
+      ],
+      "attributes": [
+        "# [derive (SystemSet , Debug , Clone , PartialEq , Eq , Hash)]"
+      ]
+    },
+    {
+      "name": "NetRx",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Event"
+      ],
+      "attributes": [
+        "# [derive (Event)]"
+      ]
+    },
+    {
+      "name": "PeerEvent",
+      "doc": [],
+      "fields": [
+        {
+          "name": "peer",
+          "ty": "PeerId",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "connected",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Event"
+      ],
+      "attributes": [
+        "# [derive (Event)]"
+      ]
+    },
+    {
+      "name": "Session",
+      "doc": [],
+      "fields": [
+        {
+          "name": "me",
+          "ty": "PlayerMeta",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "code",
+          "ty": "String",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Clone"
+      ],
+      "attributes": [
+        "# [derive (Resource , Clone)]"
+      ]
+    },
+    {
+      "name": "Net",
+      "doc": [],
+      "fields": [
+        {
+          "name": "socket",
+          "ty": "Option < MatchboxSocket >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "gm_peer",
+          "ty": "Option < PeerId >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "room_url",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "reconnect",
+          "ty": "Option < Timer >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "retries",
+          "ty": "u32",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "RosterEntry",
+      "doc": [],
+      "fields": [
+        {
+          "name": "meta",
+          "ty": "PlayerMeta",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "peer",
+          "ty": "Option < PeerId >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "online",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Clone"
+      ],
+      "attributes": [
+        "# [derive (Clone)]"
+      ]
+    },
+    {
+      "name": "Roster",
+      "doc": [],
+      "fields": [
+        {
+          "name": "list",
+          "ty": "Vec < RosterEntry >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "Incoming",
+      "doc": [],
+      "fields": [
+        {
+          "name": "chunks",
+          "ty": "u32",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "parts",
+          "ty": "Vec < Option < Vec < u8 > > >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [],
+      "attributes": []
+    },
+    {
+      "name": "Blobs",
+      "doc": [],
+      "fields": [
+        {
+          "name": "data",
+          "ty": "HashMap < BlobId , Vec < u8 > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "images",
+          "ty": "HashMap < BlobId , Handle < Image > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "incoming",
+          "ty": "HashMap < BlobId , Incoming >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    }
+  ],
+  "enums": [],
+  "fns": [
+    {
+      "name": "net_poll",
+      "doc": [],
+      "inputs": [
+        "mut net : ResMut < Net >",
+        "mut rx : EventWriter < NetRx >",
+        "mut pev : EventWriter < PeerEvent >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "peer_greetings",
+      "doc": [],
+      "inputs": [
+        "mut ev : EventReader < PeerEvent >",
+        "mut net : ResMut < Net >",
+        "session : Option < Res < Session > >",
+        "mut roster : ResMut < Roster >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "blob_rx",
+      "doc": [],
+      "inputs": [
+        "mut rx : EventReader < NetRx >",
+        "mut blobs : ResMut < Blobs >",
+        "mut images : ResMut < Assets < Image > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "net_reconnect",
+      "doc": [],
+      "inputs": [
+        "mut net : ResMut < Net >",
+        "time : Res < Time >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [
+    {
+      "ty": "impl Plugin for NetPlugin { fn build (& self , app : & mut App) { app . add_event :: < NetRx > () . add_event :: < PeerEvent > () . init_resource :: < Net > () . init_resource :: < Roster > () . init_resource :: < Blobs > () . add_systems (Update , (net_reconnect , net_poll , peer_greetings , blob_rx) . chain () . in_set (NetSet) ,) ; } } . self_ty",
+      "trait_name": "Plugin",
+      "methods": [
+        {
+          "name": "build",
+          "doc": [],
+          "inputs": [
+            "& self",
+            "app : & mut App"
+          ],
+          "output": "()",
+          "generics": "fn build (& self , app : & mut App) { app . add_event :: < NetRx > () . add_event :: < PeerEvent > () . init_resource :: < Net > () . init_resource :: < Roster > () . init_resource :: < Blobs > () . add_systems (Update , (net_reconnect , net_poll , peer_greetings , blob_rx) . chain () . in_set (NetSet) ,) ; } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "impl Net { pub fn connect (& mut self , url : & str) { info ! (\"conectando à sinalização: {url}\") ; self . room_url = Some (url . to_string ()) ; self . socket = Some (MatchboxSocket :: new_reliable (url)) ; } pub fn send_to (& mut self , peer : PeerId , msg : & Msg) { if let Some (s) = self . socket . as_mut () { let data = bincode :: serialize (msg) . expect (\"serialize\") . into_boxed_slice () ; s . channel_mut (0) . send (data , peer) ; } } pub fn peers (& self) -> Vec < PeerId > { self . socket . as_ref () . map (| s | s . connected_peers () . collect ()) . unwrap_or_default () } pub fn broadcast (& mut self , msg : & Msg) { for p in self . peers () { self . send_to (p , msg) ; } } pub fn send_gm (& mut self , msg : & Msg) { if let Some (p) = self . gm_peer { self . send_to (p , msg) ; } } pub fn disconnect (& mut self) { self . socket = None ; self . gm_peer = None ; self . room_url = None ; self . reconnect = None ; self . retries = 0 ; } # [doc = \" Envia um blob em chunks; `peer = None` faz broadcast.\"] pub fn send_blob_to (& mut self , peer : Option < PeerId > , id : BlobId , data : & [u8]) { let chunks = data . chunks (CHUNK) . count () as u32 ; let start = Msg :: BlobStart { id , kind : BlobKind :: Image , len : data . len () as u32 , chunks } ; match peer { Some (p) => self . send_to (p , & start) , None => self . broadcast (& start) , } for (i , c) in data . chunks (CHUNK) . enumerate () { let m = Msg :: BlobChunk { id , seq : i as u32 , data : c . to_vec () } ; match peer { Some (p) => self . send_to (p , & m) , None => self . broadcast (& m) , } } } } . self_ty",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "connect",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "url : & str"
+          ],
+          "output": "()",
+          "generics": "pub fn connect (& mut self , url : & str) { info ! (\"conectando à sinalização: {url}\") ; self . room_url = Some (url . to_string ()) ; self . socket = Some (MatchboxSocket :: new_reliable (url)) ; } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "send_to",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "peer : PeerId",
+            "msg : & Msg"
+          ],
+          "output": "()",
+          "generics": "pub fn send_to (& mut self , peer : PeerId , msg : & Msg) { if let Some (s) = self . socket . as_mut () { let data = bincode :: serialize (msg) . expect (\"serialize\") . into_boxed_slice () ; s . channel_mut (0) . send (data , peer) ; } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "peers",
+          "doc": [],
+          "inputs": [
+            "& self"
+          ],
+          "output": "Vec < PeerId >",
+          "generics": "pub fn peers (& self) -> Vec < PeerId > { self . socket . as_ref () . map (| s | s . connected_peers () . collect ()) . unwrap_or_default () } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "broadcast",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "msg : & Msg"
+          ],
+          "output": "()",
+          "generics": "pub fn broadcast (& mut self , msg : & Msg) { for p in self . peers () { self . send_to (p , msg) ; } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "send_gm",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "msg : & Msg"
+          ],
+          "output": "()",
+          "generics": "pub fn send_gm (& mut self , msg : & Msg) { if let Some (p) = self . gm_peer { self . send_to (p , msg) ; } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "disconnect",
+          "doc": [],
+          "inputs": [
+            "& mut self"
+          ],
+          "output": "()",
+          "generics": "pub fn disconnect (& mut self) { self . socket = None ; self . gm_peer = None ; self . room_url = None ; self . reconnect = None ; self . retries = 0 ; } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "send_blob_to",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "peer : Option < PeerId >",
+            "id : BlobId",
+            "data : & [u8]"
+          ],
+          "output": "()",
+          "generics": "# [doc = \" Envia um blob em chunks; `peer = None` faz broadcast.\"] pub fn send_blob_to (& mut self , peer : Option < PeerId > , id : BlobId , data : & [u8]) { let chunks = data . chunks (CHUNK) . count () as u32 ; let start = Msg :: BlobStart { id , kind : BlobKind :: Image , len : data . len () as u32 , chunks } ; match peer { Some (p) => self . send_to (p , & start) , None => self . broadcast (& start) , } for (i , c) in data . chunks (CHUNK) . enumerate () { let m = Msg :: BlobChunk { id , seq : i as u32 , data : c . to_vec () } ; match peer { Some (p) => self . send_to (p , & m) , None => self . broadcast (& m) , } } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "impl Roster { pub fn upsert (& mut self , meta : PlayerMeta , peer : Option < PeerId >) { if let Some (e) = self . list . iter_mut () . find (| e | e . meta . uuid == meta . uuid) { e . meta = meta ; if peer . is_some () { e . peer = peer ; } e . online = true ; } else { self . list . push (RosterEntry { meta , peer , online : true }) ; } } pub fn by_peer (& self , p : PeerId) -> Option < & RosterEntry > { self . list . iter () . find (| e | e . peer == Some (p)) } pub fn set_peer (& mut self , uuid : PlayerUuid , peer : Option < PeerId >) { if let Some (e) = self . list . iter_mut () . find (| e | e . meta . uuid == uuid) { e . peer = peer ; } } pub fn set_online (& mut self , uuid : PlayerUuid , online : bool) { if let Some (e) = self . list . iter_mut () . find (| e | e . meta . uuid == uuid) { e . online = online ; } } pub fn set_offline_by_peer (& mut self , p : PeerId) -> Option < PlayerUuid > { if let Some (e) = self . list . iter_mut () . find (| e | e . peer == Some (p)) { e . online = false ; return Some (e . meta . uuid) ; } None } } . self_ty",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "upsert",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "meta : PlayerMeta",
+            "peer : Option < PeerId >"
+          ],
+          "output": "()",
+          "generics": "pub fn upsert (& mut self , meta : PlayerMeta , peer : Option < PeerId >) { if let Some (e) = self . list . iter_mut () . find (| e | e . meta . uuid == meta . uuid) { e . meta = meta ; if peer . is_some () { e . peer = peer ; } e . online = true ; } else { self . list . push (RosterEntry { meta , peer , online : true }) ; } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "by_peer",
+          "doc": [],
+          "inputs": [
+            "& self",
+            "p : PeerId"
+          ],
+          "output": "Option < & RosterEntry >",
+          "generics": "pub fn by_peer (& self , p : PeerId) -> Option < & RosterEntry > { self . list . iter () . find (| e | e . peer == Some (p)) } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "set_peer",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "uuid : PlayerUuid",
+            "peer : Option < PeerId >"
+          ],
+          "output": "()",
+          "generics": "pub fn set_peer (& mut self , uuid : PlayerUuid , peer : Option < PeerId >) { if let Some (e) = self . list . iter_mut () . find (| e | e . meta . uuid == uuid) { e . peer = peer ; } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "set_online",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "uuid : PlayerUuid",
+            "online : bool"
+          ],
+          "output": "()",
+          "generics": "pub fn set_online (& mut self , uuid : PlayerUuid , online : bool) { if let Some (e) = self . list . iter_mut () . find (| e | e . meta . uuid == uuid) { e . online = online ; } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "set_offline_by_peer",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "p : PeerId"
+          ],
+          "output": "Option < PlayerUuid >",
+          "generics": "pub fn set_offline_by_peer (& mut self , p : PeerId) -> Option < PlayerUuid > { if let Some (e) = self . list . iter_mut () . find (| e | e . peer == Some (p)) { e . online = false ; return Some (e . meta . uuid) ; } None } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "impl Blobs { pub fn store (& mut self , id : BlobId , bytes : Vec < u8 > , images : & mut Assets < Image >) -> Option < Handle < Image > > { let img = crate :: svg_assets :: image_from_encoded (& bytes) ? ; let h = images . add (img) ; self . images . insert (id , h . clone ()) ; self . data . insert (id , bytes) ; Some (h) } } . self_ty",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "store",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "id : BlobId",
+            "bytes : Vec < u8 >",
+            "images : & mut Assets < Image >"
+          ],
+          "output": "Option < Handle < Image > >",
+          "generics": "pub fn store (& mut self , id : BlobId , bytes : Vec < u8 > , images : & mut Assets < Image >) -> Option < Handle < Image > > { let img = crate :: svg_assets :: image_from_encoded (& bytes) ? ; let h = images . add (img) ; self . images . insert (id , h . clone ()) ; self . data . insert (id , bytes) ; Some (h) } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "uses": [
+    "use bevy :: prelude :: * ;",
+    "use bevy_matchbox :: matchbox_socket :: { PeerId , PeerState } ;",
+    "use bevy_matchbox :: MatchboxSocket ;",
+    "use std :: collections :: HashMap ;",
+    "use crate :: protocol :: * ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [
+    "impl Plugin for impl Plugin for NetPlugin { fn build (& self , app : & mut App) { app . add_event :: < NetRx > () . add_event :: < PeerEvent > () . init_resource :: < Net > () . init_resource :: < Roster > () . init_resource :: < Blobs > () . add_systems (Update , (net_reconnect , net_poll , peer_greetings , blob_rx) . chain () . in_set (NetSet) ,) ; } } . self_ty"
+  ],
+  "resources": [
+    "Session",
+    "Net",
+    "Roster",
+    "Blobs"
+  ],
+  "components": [],
+  "systems": [],
+  "events": [
+    "NetRx",
+    "PeerEvent"
+  ],
+  "consts": [
+    {
+      "name": "MAX_RETRIES",
+      "ty": "const MAX_RETRIES : u32 = 5 ; . ty",
+      "value": "const MAX_RETRIES : u32 = 5 ; . expr",
+      "doc": []
+    }
+  ],
+  "types": []
+}

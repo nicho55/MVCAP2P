@@ -1,0 +1,396 @@
+{
+  "name": "game/tokens.rs",
+  "path": "src/game/tokens.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "Token",
+      "doc": [],
+      "fields": [
+        {
+          "name": "meta",
+          "ty": "TokenMeta",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "PendingArt",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "OwnerRing",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "ArtDisc",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "SelRing",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "Selection",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "Dragging",
+      "doc": [],
+      "fields": [
+        {
+          "name": "id",
+          "ty": "Option < TokenId >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "grab",
+          "ty": "Vec2",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "last_tx",
+          "ty": "f32",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "TouchDrag",
+      "doc": [],
+      "fields": [
+        {
+          "name": "token_id",
+          "ty": "Option < TokenId >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "finger_id",
+          "ty": "Option < u64 >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "grab",
+          "ty": "Vec2",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "last_tx",
+          "ty": "f32",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    }
+  ],
+  "enums": [],
+  "fns": [
+    {
+      "name": "token_size",
+      "doc": [],
+      "inputs": [
+        "g : & GridCfg"
+      ],
+      "output": "f32",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "spawn_token",
+      "doc": [],
+      "inputs": [
+        "commands : & mut Commands",
+        "meta : TokenMeta",
+        "assets : & GameAssets",
+        "blobs : & Blobs",
+        "g : & GridCfg",
+        "roster : & Roster",
+        "ctx : & mut Ctx3d"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "token_interact",
+      "doc": [],
+      "inputs": [
+        "buttons : Res < ButtonInput < MouseButton > >",
+        "windows : Query < & Window >",
+        "q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >",
+        "mut q_tokens : Query < (Entity , & mut Transform , & mut Token) >",
+        "session : Res < Session >",
+        "tool : Res < ActiveTool >",
+        "ui : Res < UiHovered >",
+        "mut sel : ResMut < Selection >",
+        "mut drag : ResMut < Dragging >",
+        "mut net : ResMut < Net >",
+        "grid : Res < GridRes >",
+        "terrain : Res < Terrain >",
+        "time : Res < Time >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "token_y_follow",
+      "doc": [],
+      "inputs": [
+        "time : Res < Time >",
+        "terrain : Res < Terrain >",
+        "grid : Res < GridRes >",
+        "drag : Res < Dragging >",
+        "mut q : Query < (& mut Transform , & Token) >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "selection_visual",
+      "doc": [],
+      "inputs": [
+        "sel : Res < Selection >",
+        "q_tokens : Query < (& Token , & Children) >",
+        "mut q_rings : Query < & mut Visibility , With < SelRing > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "delete_selected",
+      "doc": [],
+      "inputs": [
+        "keys : Res < ButtonInput < KeyCode > >",
+        "mut sel : ResMut < Selection >",
+        "session : Res < Session >",
+        "mut net : ResMut < Net >",
+        "mut commands : Commands",
+        "q_tokens : Query < (Entity , & Token) >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "resolve_pending_art",
+      "doc": [],
+      "inputs": [
+        "mut commands : Commands",
+        "blobs : Res < Blobs >",
+        "assets : Res < GameAssets >",
+        "mut ctx : Ctx3d",
+        "q_pending : Query < (Entity , & PendingArt , & Children) >",
+        "mut q_art : Query < & mut MeshMaterial3d < StandardMaterial > , With < ArtDisc > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "touch_interact",
+      "doc": [],
+      "inputs": [
+        "mut touch_ev : EventReader < TouchInput >",
+        "windows : Query < & Window >",
+        "q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >",
+        "mut q_tokens : Query < (Entity , & mut Transform , & mut Token) >",
+        "session : Res < Session >",
+        "tool : Res < ActiveTool >",
+        "mut sel : ResMut < Selection >",
+        "mut drag : ResMut < TouchDrag >",
+        "mut net : ResMut < Net >",
+        "grid : Res < GridRes >",
+        "terrain : Res < Terrain >",
+        "time : Res < Time >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "touch_highlight",
+      "doc": [],
+      "inputs": [
+        "drag : Res < TouchDrag >",
+        "sel : Res < Selection >",
+        "time : Res < Time >",
+        "q_tokens : Query < (& Token , & Children) >",
+        "mut q_rings : Query < & mut Transform , With < SelRing > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "set_token_owner",
+      "doc": [],
+      "inputs": [
+        "id : TokenId",
+        "new_owner : PlayerUuid",
+        "roster : & Roster",
+        "ctx : & mut Ctx3d",
+        "q_tokens : & mut Query < (Entity , & mut Token , & Children) >",
+        "mut q_rings : & mut Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "refresh_ring_colors",
+      "doc": [],
+      "inputs": [
+        "roster : Res < Roster >",
+        "mut ctx : Ctx3d",
+        "q_tokens : Query < (& Token , & Children) >",
+        "mut q_rings : Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [],
+  "uses": [
+    "use bevy :: prelude :: * ;",
+    "# [cfg (target_os = \"android\")] use bevy :: input :: touch :: TouchPhase ;",
+    "use super :: camera :: { cursor_ground , cursor_ray , ray_point_dist , MainCamera } ;",
+    "use super :: grid :: { self , GridRes } ;",
+    "use super :: lowpoly :: { Ctx3d , BASE_CELL } ;",
+    "use super :: terrain :: { cell_top , Terrain } ;",
+    "use super :: { ActiveTool , UiHovered } ;",
+    "use crate :: net :: { Blobs , Net , Roster , Session } ;",
+    "use crate :: protocol :: * ;",
+    "use crate :: svg_assets :: GameAssets ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "Selection",
+    "Dragging",
+    "TouchDrag"
+  ],
+  "components": [
+    "Token",
+    "PendingArt",
+    "OwnerRing",
+    "ArtDisc",
+    "SelRing"
+  ],
+  "systems": [
+    "spawn_token",
+    "delete_selected",
+    "resolve_pending_art"
+  ],
+  "events": [],
+  "consts": [],
+  "types": []
+}

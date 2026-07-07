@@ -1,0 +1,240 @@
+{
+  "name": "lib.rs",
+  "path": "src/lib.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "CliArgs",
+      "doc": [],
+      "fields": [
+        {
+          "name": "gm",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "join",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "code",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "nick",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "color",
+          "ty": "Option < u8 >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "map",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "demo",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "signaling",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "shot",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "shot_at",
+          "ty": "f32",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "exit_at",
+          "ty": "Option < f32 >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Debug",
+        "Clone"
+      ],
+      "attributes": [
+        "# [derive (Resource , Debug , Clone)]"
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "AppState",
+      "doc": [],
+      "variants": [
+        {
+          "name": "Boot",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Lobby",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "InGame",
+          "doc": [],
+          "fields": []
+        }
+      ],
+      "derives": [
+        "States",
+        "Debug",
+        "Clone",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Default"
+      ],
+      "generics": ""
+    }
+  ],
+  "fns": [
+    {
+      "name": "parse_args",
+      "doc": [],
+      "inputs": [],
+      "output": "CliArgs",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "run_game",
+      "doc": [],
+      "inputs": [],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "main",
+      "doc": [],
+      "inputs": [],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "boot_to_lobby",
+      "doc": [],
+      "inputs": [
+        "mut next : ResMut < NextState < AppState > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "screenshot_hotkey",
+      "doc": [],
+      "inputs": [
+        "keys : Res < ButtonInput < KeyCode > >",
+        "mut commands : Commands",
+        "mut n : Local < u32 >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "auto_shot_exit",
+      "doc": [],
+      "inputs": [
+        "time : Res < Time >",
+        "args : Res < CliArgs >",
+        "mut commands : Commands",
+        "mut done : Local < bool >",
+        "mut exit : EventWriter < AppExit >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": true,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [
+    {
+      "ty": "impl Default for CliArgs { fn default () -> Self { Self { gm : false , join : None , code : None , nick : None , color : None , map : None , demo : false , signaling : None , shot : None , shot_at : 6.0 , exit_at : None , } } } . self_ty",
+      "trait_name": "Default",
+      "methods": [
+        {
+          "name": "default",
+          "doc": [],
+          "inputs": [],
+          "output": "Self",
+          "generics": "fn default () -> Self { Self { gm : false , join : None , code : None , nick : None , color : None , map : None , demo : false , signaling : None , shot : None , shot_at : 6.0 , exit_at : None , } } . sig . generics",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "uses": [
+    "use bevy :: prelude :: * ;",
+    "use bevy :: render :: settings :: { Backends , RenderCreation , WgpuLimits , WgpuSettings } ;",
+    "use bevy :: render :: RenderPlugin ;",
+    "use bevy :: render :: view :: screenshot :: { save_to_disk , Screenshot } ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "CliArgs"
+  ],
+  "components": [],
+  "systems": [
+    "screenshot_hotkey",
+    "auto_shot_exit"
+  ],
+  "events": [],
+  "consts": [],
+  "types": []
+}

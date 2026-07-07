@@ -1,0 +1,35 @@
+{
+  "name": "MVCAP2P Dev",
+  "build": {
+    "dockerfile": "../Dockerfile"
+  },
+  "runArgs": [
+    "--network=host",
+    "-e", "DISPLAY=${env:DISPLAY}",
+    "-e", "WAYLAND_DISPLAY=${env:WAYLAND_DISPLAY}",
+    "-e", "XDG_RUNTIME_DIR=${env:XDG_RUNTIME_DIR}",
+    "-e", "PULSE_SERVER=unix:${env:XDG_RUNTIME_DIR}/pulse/native",
+    "-v", "/tmp/.X11-unix:/tmp/.X11-unix",
+    "-v", "${env:XDG_RUNTIME_DIR}:${env:XDG_RUNTIME_DIR}",
+    "--device=/dev/dri:/dev/dri",
+    "--device=/dev/snd:/dev/snd",
+    "--device=/dev/input:/dev/input"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "tamasfe.even-better-toml",
+        "fill-labs.dependi",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "rust-analyzer.check.command": "clippy",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "postCreateCommand": "cargo fetch",
+  "remoteUser": "root"
+}

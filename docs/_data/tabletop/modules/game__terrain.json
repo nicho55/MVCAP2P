@@ -1,0 +1,205 @@
+{
+  "name": "game/terrain.rs",
+  "path": "src/game/terrain.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "Terrain",
+      "doc": [],
+      "fields": [
+        {
+          "name": "cells",
+          "ty": "HashMap < Cell , TerrainCell >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "TerrainRender",
+      "doc": [],
+      "fields": [
+        {
+          "name": "ents",
+          "ty": "HashMap < Cell , Entity >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "dirty",
+          "ty": "Vec < Cell >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "full",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "Op",
+      "doc": [],
+      "variants": [
+        {
+          "name": "Paint",
+          "doc": [],
+          "fields": [
+            "u8"
+          ]
+        },
+        {
+          "name": "Erase",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Elev",
+          "doc": [],
+          "fields": [
+            "i8"
+          ]
+        }
+      ],
+      "derives": [],
+      "generics": ""
+    }
+  ],
+  "fns": [
+    {
+      "name": "elev_height",
+      "doc": [],
+      "inputs": [
+        "cell : f32",
+        "elev : i8"
+      ],
+      "output": "f32",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "cell_top",
+      "doc": [],
+      "inputs": [
+        "terrain : & Terrain",
+        "g : & GridCfg",
+        "cell : Cell"
+      ],
+      "output": "f32",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "set_cell",
+      "doc": [],
+      "inputs": [
+        "terrain : & mut Terrain",
+        "render : & mut TerrainRender",
+        "cell : Cell",
+        "val : Option < TerrainCell >"
+      ],
+      "output": "bool",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "terrain_tool",
+      "doc": [],
+      "inputs": [
+        "buttons : Res < ButtonInput < MouseButton > >",
+        "mut touch_ev : EventReader < TouchInput >",
+        "tool : Res < ActiveTool >",
+        "ui : Res < UiHovered >",
+        "drag : Res < TouchDrag >",
+        "session : Res < Session >",
+        "windows : Query < & Window >",
+        "q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >",
+        "grid : Res < GridRes >",
+        "mut terrain : ResMut < Terrain >",
+        "mut render : ResMut < TerrainRender >",
+        "mut net : ResMut < Net >",
+        "mut stroke : Local < HashSet < Cell > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "terrain_render",
+      "doc": [],
+      "inputs": [
+        "mut commands : Commands",
+        "mut render : ResMut < TerrainRender >",
+        "grid : Res < GridRes >",
+        "assets : Res < GameAssets >",
+        "mut ctx : Ctx3d"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [],
+  "uses": [
+    "use bevy :: input :: touch :: TouchPhase ;",
+    "use bevy :: prelude :: * ;",
+    "use std :: collections :: { HashMap , HashSet } ;",
+    "use super :: camera :: { cursor_ground , MainCamera } ;",
+    "use super :: grid :: { self , GridRes } ;",
+    "use super :: lowpoly :: Ctx3d ;",
+    "use super :: tokens :: TouchDrag ;",
+    "use super :: { ActiveTool , UiHovered } ;",
+    "use crate :: net :: { Net , Session } ;",
+    "use crate :: protocol :: * ;",
+    "use crate :: svg_assets :: GameAssets ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "Terrain",
+    "TerrainRender"
+  ],
+  "components": [],
+  "systems": [
+    "terrain_render"
+  ],
+  "events": [],
+  "consts": [],
+  "types": []
+}

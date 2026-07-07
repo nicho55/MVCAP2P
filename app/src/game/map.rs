@@ -57,6 +57,7 @@ pub fn sync_map(
     let plane = meshes.add(Plane3d::default().mesh().size(size.x, size.y));
     let mat = ctx.materials.add(StandardMaterial {
         base_color_texture: Some(handle),
+        alpha_mode: AlphaMode::Blend,
         perceptual_roughness: 1.0,
         reflectance: 0.02,
         ..Default::default()

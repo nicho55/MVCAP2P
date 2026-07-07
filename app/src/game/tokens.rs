@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+#[cfg(target_os = "android")]
+use bevy::input::touch::TouchPhase;
+
 use super::camera::{cursor_ground, cursor_ray, ray_point_dist, MainCamera};
 use super::grid::{self, GridRes};
 use super::lowpoly::{Ctx3d, BASE_CELL};
@@ -281,6 +284,173 @@ pub fn resolve_pending_art(
             }
             commands.entity(e).remove::<PendingArt>();
         }
+    }
+}
+
+// ─── Touch interaction + highlight (Android) ─────────────────────────────────
+
+#[derive(Resource, Default)]
+pub struct TouchDrag {
+    pub token_id: Option<TokenId>,
+    pub finger_id: Option<u64>,
+    pub grab: Vec2,
+    pub last_tx: f32,
+}
+
+#[cfg(target_os = "android")]
+pub fn touch_interact(
+    mut touch_ev: EventReader<TouchInput>,
+    windows: Query<&Window>,
+    q_cam: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    mut q_tokens: Query<(Entity, &mut Transform, &mut Token)>,
+    session: Res<Session>,
+    tool: Res<ActiveTool>,
+    mut sel: ResMut<Selection>,
+    mut drag: ResMut<TouchDrag>,
+    mut net: ResMut<Net>,
+    grid: Res<GridRes>,
+    terrain: Res<Terrain>,
+    time: Res<Time>,
+) {
+    if *tool != ActiveTool::Select {
+        return;
+    }
+    let Ok(win) = windows.single() else { return };
+    let Ok((cam, cam_gt)) = q_cam.single() else { return };
+
+    for t in touch_ev.read() {
+        match t.phase {
+            TouchPhase::Started => {
+                if drag.finger_id.is_some() {
+                    continue;
+                }
+                if let Some(ray) = cursor_ray(win, cam, cam_gt) {
+                    let radius = token_size(&grid.0) * 0.62;
+                    let mut best: Option<(TokenId, PlayerUuid, f32)> = None;
+                    for (_, tf, tok) in q_tokens.iter() {
+                        let p = tf.translation + Vec3::Y * grid.0.cell * 0.15;
+                        let d = ray_point_dist(&ray, p);
+                        if d <= radius && best.map(|(_, _, bd)| d < bd).unwrap_or(true) {
+                            best = Some((tok.meta.id, tok.meta.owner, d));
+                        }
+                    }
+                    if let Some((id, owner, _)) = best {
+                        sel.0 = Some(id);
+                        if session.me.is_gm || owner == session.me.uuid {
+                            if let Some(ground) = cursor_ground(win, cam, cam_gt) {
+                                let tokxz = q_tokens
+                                    .iter()
+                                    .find(|(_, _, t)| t.meta.id == id)
+                                    .map(|(_, tf, _)| Vec2::new(tf.translation.x, tf.translation.z))
+                                    .unwrap_or(ground);
+                                drag.token_id = Some(id);
+                                drag.finger_id = Some(t.id);
+                                drag.grab = tokxz - ground;
+                                drag.last_tx = 0.0;
+                            }
+                        }
+                    } else {
+                        sel.0 = None;
+                    }
+                }
+            }
+            TouchPhase::Moved => {
+                let Some(tid) = drag.token_id else { continue };
+                if drag.finger_id != Some(t.id) {
+                    continue;
+                }
+                if let Some(ground) = cursor_ground(win, cam, cam_gt) {
+                    let pos = ground + drag.grab;
+                    let hover_cell = grid::world_to_cell(&grid.0, pos);
+                    let lift = cell_top(&terrain, &grid.0, hover_cell) + grid.0.cell * 0.35;
+                    if let Some((_, mut tf, _)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == tid) {
+                        tf.translation.x = pos.x;
+                        tf.translation.z = pos.y;
+                        tf.translation.y = lift;
+                    }
+                    let now = time.elapsed_secs();
+                    if now - drag.last_tx > 0.05 {
+                        drag.last_tx = now;
+                        net.broadcast(&Msg::DragPreview { id: tid, x: pos.x, y: pos.y });
+                    }
+                }
+            }
+            TouchPhase::Ended => {
+                let Some(tid) = drag.token_id else { continue };
+                if drag.finger_id != Some(t.id) {
+                    continue;
+                }
+                drag.token_id = None;
+                drag.finger_id = None;
+                if let Some((_, mut tf, mut tok)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == tid) {
+                    let pos = cursor_ground(win, cam, cam_gt)
+                        .map(|g| g + drag.grab)
+                        .unwrap_or(Vec2::new(tf.translation.x, tf.translation.z));
+                    let cell = grid::world_to_cell(&grid.0, pos);
+                    tok.meta.cell = cell;
+                    let c = grid::cell_center(&grid.0, cell);
+                    tf.translation.x = c.x;
+                    tf.translation.z = c.y;
+                    if session.me.is_gm {
+                        net.broadcast(&Msg::TokenMoved { id: tid, cell });
+                    } else {
+                        net.send_gm(&Msg::MoveTokenReq { id: tid, cell });
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Highlight visual em token tocado/dragado — pulso suave de escala no anel de seleção.
+#[cfg(target_os = "android")]
+pub fn touch_highlight(
+    drag: Res<TouchDrag>,
+    sel: Res<Selection>,
+    time: Res<Time>,
+    q_tokens: Query<(&Token, &Children)>,
+    mut q_rings: Query<&mut Transform, With<SelRing>>,
+) {
+    let pulse = (time.elapsed_secs() * 4.0).sin() * 0.15 + 1.0;
+    for (tok, children) in &q_tokens {
+        let active = sel.0 == Some(tok.meta.id) && drag.token_id.is_some();
+        for c in children {
+            if let Ok(mut tf) = q_rings.get_mut(*c) {
+                if active {
+                    tf.scale = Vec3::splat(pulse);
+                } else {
+                    tf.scale = Vec3::ONE;
+                }
+            }
+        }
+    }
+}
+
+/// Troca o dono de um token e atualiza a cor do anel.
+pub fn set_token_owner(
+    id: TokenId,
+    new_owner: PlayerUuid,
+    roster: &Roster,
+    ctx: &mut Ctx3d,
+    q_tokens: &mut Query<(Entity, &mut Token, &Children)>,
+    mut q_rings: &mut Query<&mut MeshMaterial3d<StandardMaterial>, With<OwnerRing>>,
+) {
+    for (_, mut tok, children) in q_tokens.iter_mut() {
+        if tok.meta.id != id {
+            continue;
+        }
+        tok.meta.owner = new_owner;
+        let mat = match roster.list.iter().find(|e| e.meta.uuid == new_owner) {
+            Some(e) => ctx.mats.ring(&mut ctx.materials, e.meta.color),
+            None => ctx.mats.gray_ring(&mut ctx.materials),
+        };
+        for c in children {
+            if let Ok(mut m) = q_rings.get_mut(*c) {
+                m.0 = mat.clone();
+            }
+        }
+        break;
     }
 }
 

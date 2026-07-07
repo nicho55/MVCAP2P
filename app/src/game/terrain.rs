@@ -1,9 +1,11 @@
+use bevy::input::touch::TouchPhase;
 use bevy::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 use super::camera::{cursor_ground, MainCamera};
 use super::grid::{self, GridRes};
 use super::lowpoly::Ctx3d;
+use super::tokens::TouchDrag;
 use super::{ActiveTool, UiHovered};
 use crate::net::{Net, Session};
 use crate::protocol::*;
@@ -64,8 +66,10 @@ enum Op {
 
 pub fn terrain_tool(
     buttons: Res<ButtonInput<MouseButton>>,
+    mut touch_ev: EventReader<TouchInput>,
     tool: Res<ActiveTool>,
     ui: Res<UiHovered>,
+    drag: Res<TouchDrag>,
     session: Res<Session>,
     windows: Query<&Window>,
     q_cam: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -88,14 +92,32 @@ pub fn terrain_tool(
     if buttons.just_released(MouseButton::Left) {
         stroke.clear();
     }
-    if !buttons.pressed(MouseButton::Left) || ui.0 {
+    let mut touch_ended = false;
+    let mut touch_active = false;
+    for t in touch_ev.read() {
+        match t.phase {
+            TouchPhase::Started | TouchPhase::Moved => touch_active = true,
+            TouchPhase::Ended | TouchPhase::Canceled => touch_ended = true,
+            _ => {}
+        }
+    }
+    if touch_ended {
+        stroke.clear();
+    }
+    if drag.token_id.is_some() {
+        return;
+    }
+    let mouse_down = buttons.pressed(MouseButton::Left);
+    if !mouse_down && !touch_active {
+        return;
+    }
+    if ui.0 && mouse_down {
         return;
     }
     let Ok(win) = windows.single() else { return };
     let Ok((cam, cam_gt)) = q_cam.single() else { return };
     let Some(world) = cursor_ground(win, cam, cam_gt) else { return };
     let cell = grid::world_to_cell(&grid.0, world);
-    // uma aplicação por célula por "pincelada" (senão elevação estoura no primeiro frame)
     if stroke.contains(&cell) {
         return;
     }

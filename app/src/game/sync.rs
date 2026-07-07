@@ -4,7 +4,7 @@ use super::grid::{self, GridRes};
 use super::lowpoly::Ctx3d;
 use super::map::MapState;
 use super::terrain::{self, Terrain, TerrainRender};
-use super::tokens::{spawn_token, Dragging, Token};
+use super::tokens::{set_token_owner, spawn_token, Dragging, OwnerRing, Token};
 use crate::net::{Blobs, Net, NetRx, Roster, Session};
 use crate::protocol::*;
 use crate::svg_assets::GameAssets;
@@ -207,6 +207,26 @@ pub fn handle_tokens(
                 }
             }
             _ => {}
+        }
+    }
+}
+
+/// Processa `AssignToken` em jogadores não-mestre: atualiza dono e cor do anel.
+pub fn assign_token_rx(
+    mut rx: EventReader<NetRx>,
+    session: Option<Res<Session>>,
+    roster: Res<Roster>,
+    mut ctx: Ctx3d,
+    mut q_tokens: Query<(Entity, &mut Token, &Children)>,
+    mut q_rings: Query<&mut MeshMaterial3d<StandardMaterial>, With<OwnerRing>>,
+) {
+    let Some(sess) = session else { return };
+    if sess.me.is_gm {
+        return;
+    }
+    for NetRx(_, msg) in rx.read() {
+        if let Msg::AssignToken { id, new_owner } = msg {
+            set_token_owner(*id, *new_owner, &roster, &mut ctx, &mut q_tokens, &mut q_rings);
         }
     }
 }

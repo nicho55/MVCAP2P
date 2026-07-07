@@ -39,12 +39,15 @@ pub struct Session {
     pub code: String,
 }
 
+const MAX_RETRIES: u32 = 5;
+
 #[derive(Resource, Default)]
 pub struct Net {
     pub socket: Option<MatchboxSocket>,
     pub gm_peer: Option<PeerId>,
     pub room_url: Option<String>,
     pub reconnect: Option<Timer>,
+    pub retries: u32,
 }
 
 impl Net {
@@ -75,6 +78,14 @@ impl Net {
         if let Some(p) = self.gm_peer {
             self.send_to(p, msg);
         }
+    }
+
+    pub fn disconnect(&mut self) {
+        self.socket = None;
+        self.gm_peer = None;
+        self.room_url = None;
+        self.reconnect = None;
+        self.retries = 0;
     }
 
     /// Envia um blob em chunks; `peer = None` faz broadcast.
@@ -174,7 +185,15 @@ fn net_poll(mut net: ResMut<Net>, mut rx: EventWriter<NetRx>, mut pev: EventWrit
     let changes = match net.socket.as_mut().unwrap().try_update_peers() {
         Ok(c) => c,
         Err(e) => {
-            warn!("socket caiu ({e:?}); reconectando em 1.5s");
+            net.retries += 1;
+            if net.retries > MAX_RETRIES {
+                warn!("socket caiu ({e:?}); desistindo após {MAX_RETRIES} tentativas");
+                net.socket = None;
+                net.gm_peer = None;
+                net.reconnect = None;
+                return;
+            }
+            warn!("socket caiu ({e:?}); reconectando (tentativa {}/{MAX_RETRIES})", net.retries);
             net.socket = None;
             net.gm_peer = None;
             net.reconnect = Some(Timer::from_seconds(1.5, TimerMode::Once));

@@ -1,0 +1,11 @@
+{
+  "index": "Visão Geral da Arquitetura",
+  "signaling": {
+    "display": "signaling (sinalização)",
+    "type": "page"
+  },
+  "tabletop": {
+    "display": "tabletop (jogo)",
+    "type": "page"
+  }
+}
