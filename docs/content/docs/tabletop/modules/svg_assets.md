@@ -1,0 +1,62 @@
+# `svg_assets`
+
+**Path**: `src/svg_assets.rs`
+
+## Resources (Bevy)
+
+### `GameAssets`
+
+| Campo | Tipo |
+|-------|------|
+| `textures` | `Vec < Handle < Image > >` |
+| `tex_names` | `Vec < & 'static str >` |
+| `tokens_builtin` | `Vec < Handle < Image > >` |
+| `logo` | `Handle < Image >` |
+| `default_map` | `Handle < Image >` |
+| `icons` | `HashMap < & 'static str , Handle < Image > >` |
+| `font` | `Option < Handle < Font > >` |
+
+## Structs
+
+### `SvgAssetsPlugin`
+
+**Derives**: 
+
+## Funções
+
+### `tfont`
+
+```rust
+fn tfont(assets : & GameAssets, size : f32) -> TextFont
+```
+
+### `rasterize_svg`
+
+```rust
+fn rasterize_svg(bytes : & [u8], target : u32) -> Image
+```
+
+### `placeholder_tex`
+
+```rust
+fn placeholder_tex(size : u32) -> Image
+```
+
+### `image_from_encoded`
+
+```rust
+fn image_from_encoded(bytes : & [u8]) -> Option < Image >
+```
+
+## Systems (Bevy)
+
+### `load_svgs`
+
+**Parâmetros**: `mut commands : Commands`, `mut images : ResMut < Assets < Image > >`, `mut fonts : ResMut < Assets < Font > >`
+
+## Implementações
+
+### `impl Plugin for impl Plugin for SvgAssetsPlugin { fn build (& self , app : & mut App) { app . add_systems (PreStartup , load_svgs) ; } } . self_ty`
+
+- `build`
+

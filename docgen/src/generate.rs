@@ -156,7 +156,7 @@ fn build_dependency_graph(crate_data: &CrateData) -> DependencyGraph {
     DependencyGraph { nodes, edges }
 }
 
-pub fn generate_mdx(all_crates: &HashMap<String, CrateData>, out_dir: &str) -> Result<()> {
+pub fn generate_md(all_crates: &HashMap<String, CrateData>, out_dir: &str) -> Result<()> {
     let out = Path::new(out_dir);
 
     for (crate_name, crate_data) in all_crates {
@@ -164,45 +164,25 @@ pub fn generate_mdx(all_crates: &HashMap<String, CrateData>, out_dir: &str) -> R
         fs::create_dir_all(&crate_dir)?;
 
         // Write the crate overview
-        let overview = generate_crate_overview_mdx(crate_name, crate_data);
-        fs::write(crate_dir.join("index.mdx"), overview)?;
+        let overview = generate_crate_overview_md(crate_name, crate_data);
+        fs::write(crate_dir.join("index.md"), overview)?;
 
-        // Write per-module mdx pages
+        // Write per-module md pages
         let mods_dir = crate_dir.join("modules");
         fs::create_dir_all(&mods_dir)?;
 
-        // Also copy _meta.json for fumadocs navigation
-        let meta = generate_meta_json(crate_name, crate_data);
-        fs::write(mods_dir.join("_meta.json"), meta)?;
-
         for (mod_name, mod_data) in &crate_data.modules {
             let safe_name = mod_name.replace("::", "__");
-            let mdx = generate_module_mdx(mod_name, mod_data);
-            fs::write(mods_dir.join(format!("{}.mdx", safe_name)), mdx)?;
+            let md = generate_module_md(mod_name, mod_data);
+            fs::write(mods_dir.join(format!("{}.md", safe_name)), md)?;
         }
     }
-
-    // Write root meta for fumadocs
-    let root_meta = serde_json::json!({
-        "index": "Visão Geral da Arquitetura",
-        "tabletop": {
-            "type": "page",
-            "display": "tabletop (jogo)"
-        },
-        "signaling": {
-            "type": "page",
-            "display": "signaling (sinalização)"
-        }
-    });
-    fs::write(out.join("_meta.json"), serde_json::to_string_pretty(&root_meta)?)?;
 
     Ok(())
 }
 
-fn generate_crate_overview_mdx(crate_name: &str, data: &CrateData) -> String {
+fn generate_crate_overview_md(crate_name: &str, data: &CrateData) -> String {
     let mut md = String::new();
-    let title = format!("Crate: {}", crate_name);
-    md.push_str(&format!("---\ntitle: \"{}\"\n---\n\n", title));
     md.push_str(&format!("# Crate: `{}`\n\n", crate_name));
     md.push_str("```mermaid\ngraph TD\n");
     md.push_str(&format!("  {}[\"{}\"]\n", crate_name, crate_name));
@@ -261,31 +241,10 @@ fn generate_crate_overview_mdx(crate_name: &str, data: &CrateData) -> String {
     md
 }
 
-fn generate_meta_json(_crate_name: &str, data: &CrateData) -> String {
-    let mut meta: HashMap<String, serde_json::Value> = HashMap::new();
-    meta.insert("index".to_string(), serde_json::json!("Visão Geral"));
-    for (mod_name, m) in &data.modules {
-        let label = mod_name.split("::").last().unwrap_or(mod_name);
-        if m.submodules.is_empty() {
-            meta.insert(
-                mod_name.replace("::", "__"),
-                serde_json::json!(format!("`{}` — {} estruturas, {} sistemas", label, m.structs.len(), m.systems.len())),
-            );
-        } else {
-            meta.insert(
-                mod_name.replace("::", "__"),
-                serde_json::json!({"display": label, "type": "folder"}),
-            );
-        }
-    }
-    serde_json::to_string_pretty(&meta).unwrap()
-}
-
-fn generate_module_mdx(mod_name: &str, data: &ModuleData) -> String {
+fn generate_module_md(mod_name: &str, data: &ModuleData) -> String {
     let mut md = String::new();
     let label = mod_name.split("::").last().unwrap_or(mod_name);
 
-    md.push_str(&format!("---\ntitle: \"{}\"\n---\n\n", label));
     md.push_str(&format!("# `{}`\n\n", label));
     md.push_str(&format!("**Path**: `{}`\n\n", data.path));
 

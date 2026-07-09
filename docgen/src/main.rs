@@ -8,7 +8,7 @@ mod extract;
 mod generate;
 
 use extract::extract_crate;
-use generate::{generate_json, generate_mdx};
+use generate::{generate_json, generate_md};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Config {
@@ -62,10 +62,10 @@ fn main() -> Result<()> {
     }
 
     generate_json(&all_crates, &config.output.json_dir)?;
-    generate_mdx(&all_crates, &config.output.mdx_dir)?;
+    generate_md(&all_crates, &config.output.mdx_dir)?;
 
     println!("Documentação gerada em {}", config.output.json_dir);
-    println!("MDX gerado em {}", config.output.mdx_dir);
+    println!("Markdown gerado em {}", config.output.mdx_dir);
 
     Ok(())
 }

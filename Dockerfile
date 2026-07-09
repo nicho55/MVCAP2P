@@ -12,10 +12,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libudev-dev \
     # resvg (fontconfig)
     libfontconfig-dev \
+    # Build rápido (linker mold + cache sccache)
+    mold clang sccache \
     # Úteis
     pkg-config cmake gdb lldb \
     && rm -rf /var/lib/apt/lists/*
 
 RUN rustup component add clippy rustfmt rust-analyzer
+
+RUN cargo install cargo-ndk
+
+# Ativa sccache como wrapper do rustc (acelera rebuilds)
+RUN mkdir -p /root/.cargo && \
+    printf '[target."cfg(all())"]\nrustc-wrapper = "sccache"\n' >> /root/.cargo/config.toml
+
+# OpenCode CLI
+RUN curl -fsSL https://opencode.ai/install | bash && ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode
 
 WORKDIR /workspace
