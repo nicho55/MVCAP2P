@@ -1,0 +1,569 @@
+{
+  "name": "net.rs",
+  "path": "src/net.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "NetPlugin",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [],
+      "attributes": []
+    },
+    {
+      "name": "NetSet",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "SystemSet",
+        "Debug",
+        "Clone",
+        "PartialEq",
+        "Eq",
+        "Hash"
+      ],
+      "attributes": [
+        "# [derive (SystemSet , Debug , Clone , PartialEq , Eq , Hash)]"
+      ]
+    },
+    {
+      "name": "NetRx",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Event"
+      ],
+      "attributes": [
+        "# [derive (Event)]"
+      ]
+    },
+    {
+      "name": "PeerEvent",
+      "doc": [],
+      "fields": [
+        {
+          "name": "peer",
+          "ty": "PeerId",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "connected",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Event"
+      ],
+      "attributes": [
+        "# [derive (Event)]"
+      ]
+    },
+    {
+      "name": "Session",
+      "doc": [],
+      "fields": [
+        {
+          "name": "me",
+          "ty": "PlayerMeta",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "code",
+          "ty": "String",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Clone"
+      ],
+      "attributes": [
+        "# [derive (Resource , Clone)]"
+      ]
+    },
+    {
+      "name": "Net",
+      "doc": [],
+      "fields": [
+        {
+          "name": "socket",
+          "ty": "Option < MatchboxSocket >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "gm_peer",
+          "ty": "Option < PeerId >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "room_url",
+          "ty": "Option < String >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "reconnect",
+          "ty": "Option < Timer >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "retries",
+          "ty": "u32",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "RosterEntry",
+      "doc": [],
+      "fields": [
+        {
+          "name": "meta",
+          "ty": "PlayerMeta",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "peer",
+          "ty": "Option < PeerId >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "online",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Clone"
+      ],
+      "attributes": [
+        "# [derive (Clone)]"
+      ]
+    },
+    {
+      "name": "Roster",
+      "doc": [],
+      "fields": [
+        {
+          "name": "list",
+          "ty": "Vec < RosterEntry >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "Incoming",
+      "doc": [],
+      "fields": [
+        {
+          "name": "chunks",
+          "ty": "u32",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "parts",
+          "ty": "Vec < Option < Vec < u8 > > >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [],
+      "attributes": []
+    },
+    {
+      "name": "Blobs",
+      "doc": [],
+      "fields": [
+        {
+          "name": "data",
+          "ty": "HashMap < BlobId , Vec < u8 > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "images",
+          "ty": "HashMap < BlobId , Handle < Image > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "incoming",
+          "ty": "HashMap < BlobId , Incoming >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    }
+  ],
+  "enums": [],
+  "fns": [
+    {
+      "name": "net_poll",
+      "doc": [],
+      "inputs": [
+        "mut net : ResMut < Net >",
+        "mut rx : EventWriter < NetRx >",
+        "mut pev : EventWriter < PeerEvent >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "peer_greetings",
+      "doc": [],
+      "inputs": [
+        "mut ev : EventReader < PeerEvent >",
+        "mut net : ResMut < Net >",
+        "session : Option < Res < Session > >",
+        "mut roster : ResMut < Roster >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "blob_rx",
+      "doc": [],
+      "inputs": [
+        "mut rx : EventReader < NetRx >",
+        "mut blobs : ResMut < Blobs >",
+        "mut images : ResMut < Assets < Image > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "net_reconnect",
+      "doc": [],
+      "inputs": [
+        "mut net : ResMut < Net >",
+        "time : Res < Time >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [
+    {
+      "ty": "NetPlugin",
+      "trait_name": "Plugin",
+      "methods": [
+        {
+          "name": "build",
+          "doc": [],
+          "inputs": [
+            "& self",
+            "app : & mut App"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "Net",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "connect",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "url : & str"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "send_to",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "peer : PeerId",
+            "msg : & Msg"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "peers",
+          "doc": [],
+          "inputs": [
+            "& self"
+          ],
+          "output": "Vec < PeerId >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "broadcast",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "msg : & Msg"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "send_gm",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "msg : & Msg"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "disconnect",
+          "doc": [],
+          "inputs": [
+            "& mut self"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "send_blob_to",
+          "doc": [
+            " Envia um blob em chunks; `peer = None` faz broadcast."
+          ],
+          "inputs": [
+            "& mut self",
+            "peer : Option < PeerId >",
+            "id : BlobId",
+            "data : & [u8]"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "Roster",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "upsert",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "meta : PlayerMeta",
+            "peer : Option < PeerId >"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "by_peer",
+          "doc": [],
+          "inputs": [
+            "& self",
+            "p : PeerId"
+          ],
+          "output": "Option < & RosterEntry >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "set_peer",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "uuid : PlayerUuid",
+            "peer : Option < PeerId >"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "set_online",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "uuid : PlayerUuid",
+            "online : bool"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "set_offline_by_peer",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "p : PeerId"
+          ],
+          "output": "Option < PlayerUuid >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "Blobs",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "store",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "id : BlobId",
+            "bytes : Vec < u8 >",
+            "images : & mut Assets < Image >"
+          ],
+          "output": "Option < Handle < Image > >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "uses": [
+    "use bevy :: prelude :: * ;",
+    "use bevy_matchbox :: matchbox_socket :: { PeerId , PeerState } ;",
+    "use bevy_matchbox :: MatchboxSocket ;",
+    "use std :: collections :: HashMap ;",
+    "use crate :: protocol :: * ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [
+    "impl Plugin for NetPlugin"
+  ],
+  "resources": [
+    "Session",
+    "Net",
+    "Roster",
+    "Blobs"
+  ],
+  "components": [],
+  "systems": [],
+  "events": [
+    "NetRx",
+    "PeerEvent"
+  ],
+  "consts": [
+    {
+      "name": "MAX_RETRIES",
+      "ty": "u32",
+      "value": "5",
+      "doc": []
+    }
+  ],
+  "types": []
+}

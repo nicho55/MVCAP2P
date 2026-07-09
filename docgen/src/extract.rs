@@ -204,17 +204,20 @@ fn extract_module(path: &str, syntax: &File) -> ModuleData {
                 }
             }
             Item::Const(c) => {
+                let ty = &c.ty;
+                let expr = &c.expr;
                 data.consts.push(ConstInfo {
                     name: c.ident.to_string(),
-                    ty: quote::quote!(#c.ty).to_string(),
-                    value: quote::quote!(#c.expr).to_string(),
+                    ty: quote::quote!(#ty).to_string(),
+                    value: quote::quote!(#expr).to_string(),
                     doc: extract_doc_attrs(&c.attrs),
                 });
             }
             Item::Type(t) => {
+                let ty = &t.ty;
                 data.types.push(TypeAliasInfo {
                     name: t.ident.to_string(),
-                    ty: quote::quote!(#t.ty).to_string(),
+                    ty: quote::quote!(#ty).to_string(),
                     doc: extract_doc_attrs(&t.attrs),
                 });
             }
@@ -267,15 +270,26 @@ fn extract_doc_attrs(attrs: &[syn::Attribute]) -> Vec<String> {
 
 fn format_doc_attr(attr: &syn::Attribute) -> Option<String> {
     if attr.path().is_ident("doc") {
-        if let syn::Expr::Assign(syn::ExprAssign {
-            right: expr, ..
-        }) = &attr.meta.require_list().ok()?.parse_args::<syn::Expr>().ok()?
-        {
-            if let syn::Expr::Lit(lit) = expr.as_ref() {
-                if let syn::Lit::Str(s) = &lit.lit {
-                    return Some(s.value());
+        match &attr.meta {
+            syn::Meta::NameValue(nv) => {
+                if let syn::Expr::Lit(lit) = &nv.value {
+                    if let syn::Lit::Str(s) = &lit.lit {
+                        return Some(s.value());
+                    }
                 }
             }
+            syn::Meta::List(list) => {
+                if let Ok(s) = list.parse_args::<syn::Expr>() {
+                    if let syn::Expr::Assign(ass) = s {
+                        if let syn::Expr::Lit(lit) = &*ass.right {
+                            if let syn::Lit::Str(s) = &lit.lit {
+                                return Some(s.value());
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
     None
@@ -432,6 +446,7 @@ fn extract_trait(t: &ItemTrait) -> TraitInfo {
             .iter()
             .filter_map(|i| {
                 if let syn::TraitItem::Fn(m) = i {
+                    let generics = &m.sig.generics;
                     Some(FnInfo {
                         name: m.sig.ident.to_string(),
                         doc: extract_doc_attrs(&m.attrs),
@@ -440,7 +455,7 @@ fn extract_trait(t: &ItemTrait) -> TraitInfo {
                             syn::ReturnType::Default => "()".to_string(),
                             syn::ReturnType::Type(_, ty) => quote::quote!(#ty).to_string(),
                         },
-                        generics: quote::quote!(#m.sig.generics).to_string(),
+                        generics: quote::quote!(#generics).to_string(),
                         asyncness: m.sig.asyncness.is_some(),
                         visibility: "pub".to_string(),
                         is_system: false,
@@ -455,14 +470,16 @@ fn extract_trait(t: &ItemTrait) -> TraitInfo {
 }
 
 fn extract_impl(i: &ItemImpl) -> ImplInfo {
+    let self_ty = &i.self_ty;
     ImplInfo {
-        ty: quote::quote!(#i.self_ty).to_string(),
+        ty: quote::quote!(#self_ty).to_string(),
         trait_name: i.trait_.as_ref().map(|(_, t, _)| quote::quote!(#t).to_string()),
         methods: i
             .items
             .iter()
             .filter_map(|item| {
                 if let syn::ImplItem::Fn(m) = item {
+                    let generics = &m.sig.generics;
                     Some(FnInfo {
                         name: m.sig.ident.to_string(),
                         doc: extract_doc_attrs(&m.attrs),
@@ -471,7 +488,7 @@ fn extract_impl(i: &ItemImpl) -> ImplInfo {
                             syn::ReturnType::Default => "()".to_string(),
                             syn::ReturnType::Type(_, ty) => quote::quote!(#ty).to_string(),
                         },
-                        generics: quote::quote!(#m.sig.generics).to_string(),
+                        generics: quote::quote!(#generics).to_string(),
                         asyncness: m.sig.asyncness.is_some(),
                         visibility: "pub".to_string(),
                         is_system: false,

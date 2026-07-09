@@ -36,11 +36,17 @@
 fn elev_height(cell : f32, elev : i8) -> f32
 ```
 
+ Altura da coluna de uma célula. Elevação <= 0 vira um ladrilho fino
+
+ (rebaixo é indicado por cor escura — não dá para cavar abaixo do plano do mapa).
+
 ### `cell_top`
 
 ```rust
 fn cell_top(terrain : & Terrain, g : & GridCfg, cell : Cell) -> f32
 ```
+
+ Altura do topo da célula (onde uma peça deve apoiar).
 
 ### `set_cell`
 
@@ -57,6 +63,10 @@ fn terrain_tool(buttons : Res < ButtonInput < MouseButton > >, mut touch_ev : Ev
 ## Systems (Bevy)
 
 ### `terrain_render`
+
+ Materializa células como prismas low-poly (cubo no grid quadrado,
+
+ prisma hexagonal no grid hex), com altura = elevação.
 
 **Parâmetros**: `mut commands : Commands`, `mut render : ResMut < TerrainRender >`, `grid : Res < GridRes >`, `assets : Res < GameAssets >`, `mut ctx : Ctx3d`
 

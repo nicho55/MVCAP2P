@@ -40,6 +40,6 @@ fn delete_room(code : & str) -> Result < () , String >
 
 | Nome | Tipo | Valor |
 |------|------|-------|
-| `SUPABASE_URL` | `const SUPABASE_URL : & str = "https://cbnbmweqyezxejipisvf.supabase.co" ; . ty` | `const SUPABASE_URL : & str = "https://cbnbmweqyezxejipisvf.supabase.co" ; . expr` |
-| `SUPABASE_ANON_KEY` | `const SUPABASE_ANON_KEY : & str = "sb_publishable_JY_scW17hysS_cUCpnhz-g_49N_YGxr" ; . ty` | `const SUPABASE_ANON_KEY : & str = "sb_publishable_JY_scW17hysS_cUCpnhz-g_49N_YGxr" ; . expr` |
+| `SUPABASE_URL` | `& str` | `"https://cbnbmweqyezxejipisvf.supabase.co"` |
+| `SUPABASE_ANON_KEY` | `& str` | `"sb_publishable_JY_scW17hysS_cUCpnhz-g_49N_YGxr"` |
 

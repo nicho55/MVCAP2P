@@ -39,6 +39,10 @@ fn import_map_bytes(bytes : Vec < u8 >, blobs : & mut Blobs, images : & mut Asse
 
 ### `sync_map`
 
+ Aplica o mapa desejado: plano texturizado no chão (XZ), centrado na origem.
+
+ No mapa padrão, decora com árvores low-poly (filhas do plano — somem juntas).
+
 **Parâmetros**: `mut commands : Commands`, `mut map_state : ResMut < MapState >`, `blobs : Res < Blobs >`, `assets : Res < GameAssets >`, `images : Res < Assets < Image > >`, `q_map : Query < Entity , With < MapGround > >`, `mut meshes : ResMut < Assets < Mesh > >`, `mut ctx : Ctx3d`
 
 ### `file_drop`

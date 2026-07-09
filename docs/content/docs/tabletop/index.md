@@ -3,51 +3,47 @@
 ```mermaid
 graph TD
   tabletop["tabletop"]
-  game_grid["grid"]
-  tabletop --> game_grid
-  game_sync["sync"]
-  tabletop --> game_sync
-  game_camera["camera"]
-  tabletop --> game_camera
-  room_discovery["room_discovery"]
-  tabletop --> room_discovery
-  game_hud["hud"]
-  tabletop --> game_hud
-  game_map["map"]
-  tabletop --> game_map
-  game_terrain["terrain"]
-  tabletop --> game_terrain
-  main["main"]
-  tabletop --> main
-  svg_assets["svg_assets"]
-  tabletop --> svg_assets
-  lib["lib"]
-  tabletop --> lib
-  game_mod["mod"]
-  tabletop --> game_mod
-  protocol["protocol"]
-  tabletop --> protocol
-  game_lowpoly["lowpoly"]
-  tabletop --> game_lowpoly
   net["net"]
   tabletop --> net
-  lobby["lobby"]
-  tabletop --> lobby
+  game_camera["camera"]
+  tabletop --> game_camera
+  game_lowpoly["lowpoly"]
+  tabletop --> game_lowpoly
+  game_terrain["terrain"]
+  tabletop --> game_terrain
+  game_hud["hud"]
+  tabletop --> game_hud
+  game_sync["sync"]
+  tabletop --> game_sync
+  lib["lib"]
+  tabletop --> lib
+  room_discovery["room_discovery"]
+  tabletop --> room_discovery
+  game_grid["grid"]
+  tabletop --> game_grid
+  game_mod["mod"]
+  tabletop --> game_mod
+  main["main"]
+  tabletop --> main
   game_tokens["tokens"]
   tabletop --> game_tokens
+  lobby["lobby"]
+  tabletop --> lobby
+  protocol["protocol"]
+  tabletop --> protocol
+  svg_assets["svg_assets"]
+  tabletop --> svg_assets
+  game_map["map"]
+  tabletop --> game_map
 ```
 
 ## Módulos
 
-### [`grid`](modules/game__grid) — `src/game/grid.rs`
+### [`net`](modules/net) — `src/net.rs`
 
-- **Resources**: GridRes
-- **Systems**: draw_grid
-- **Structs**: `GridRes`
-
-### [`sync`](modules/game__sync) — `src/game/sync.rs`
-
-- **Systems**: handle_tokens
+- **Resources**: Session, Net, Roster, Blobs
+- **Events**: NetRx, PeerEvent
+- **Structs**: `NetPlugin`, `NetSet`, `NetRx`, `PeerEvent`, `Session`, `Net`, `RosterEntry`, `Roster`, `Incoming`, `Blobs`
 
 ### [`camera`](modules/game__camera) — `src/game/camera.rs`
 
@@ -56,24 +52,11 @@ graph TD
 - **Systems**: setup_camera
 - **Structs**: `MainCamera`, `CamRig`, `TouchState`
 
-### [`room_discovery`](modules/room_discovery) — `src/room_discovery.rs`
+### [`lowpoly`](modules/game__lowpoly) — `src/game/lowpoly.rs`
 
-- **Structs**: `RoomEntry`
-
-### [`hud`](modules/game__hud) — `src/game/hud.rs`
-
-- **Components**: HudRoot, RosterPanel, RosterRow, StatusLabel, HintLabel, BackBtn, ScaleUpBtn, ScaleDownBtn, AssignTokenBtn
-- **Systems**: tool_button, spawn_hud, setup_hud, scale_btn_click, roster_panel
-- **Structs**: `HudRoot`, `RosterPanel`, `RosterRow`, `StatusLabel`, `HintLabel`, `BackBtn`, `ScaleUpBtn`, `ScaleDownBtn`, `AssignTokenBtn`
-- **Enums**: `ToolBtn`
-
-### [`map`](modules/game__map) — `src/game/map.rs`
-
-- **Resources**: MapState
-- **Components**: MapGround
-- **Systems**: sync_map, file_drop
-- **Structs**: `MapState`, `MapGround`
-- **Enums**: `DropMode`
+- **Resources**: LowPoly, Mats
+- **Systems**: setup_lowpoly, spawn_tree
+- **Structs**: `LowPoly`, `Mats`, `Ctx3d`
 
 ### [`terrain`](modules/game__terrain) — `src/game/terrain.rs`
 
@@ -82,14 +65,16 @@ graph TD
 - **Structs**: `Terrain`, `TerrainRender`
 - **Enums**: `Op`
 
-### [`main`](modules/main) — `src/main.rs`
+### [`hud`](modules/game__hud) — `src/game/hud.rs`
 
+- **Components**: HudRoot, RosterPanel, RosterRow, StatusLabel, HintLabel, BackBtn, ScaleUpBtn, ScaleDownBtn, AssignTokenBtn
+- **Systems**: tool_button, spawn_hud, setup_hud, scale_btn_click, roster_panel
+- **Structs**: `HudRoot`, `RosterPanel`, `RosterRow`, `StatusLabel`, `HintLabel`, `BackBtn`, `ScaleUpBtn`, `ScaleDownBtn`, `AssignTokenBtn`
+- **Enums**: `ToolBtn`
 
-### [`svg_assets`](modules/svg_assets) — `src/svg_assets.rs`
+### [`sync`](modules/game__sync) — `src/game/sync.rs`
 
-- **Resources**: GameAssets
-- **Systems**: load_svgs
-- **Structs**: `SvgAssetsPlugin`, `GameAssets`
+- **Systems**: handle_tokens
 
 ### [`lib`](modules/lib) — `src/lib.rs`
 
@@ -98,6 +83,16 @@ graph TD
 - **Structs**: `CliArgs`
 - **Enums**: `AppState`
 
+### [`room_discovery`](modules/room_discovery) — `src/room_discovery.rs`
+
+- **Structs**: `RoomEntry`
+
+### [`grid`](modules/game__grid) — `src/game/grid.rs`
+
+- **Resources**: GridRes
+- **Systems**: draw_grid
+- **Structs**: `GridRes`
+
 ### [`mod`](modules/game__mod) — `src/game/mod.rs`
 
 - **Resources**: ScreenInfo, UiHovered
@@ -105,22 +100,15 @@ graph TD
 - **Structs**: `ScreenInfo`, `UiHovered`, `GamePlugin`
 - **Enums**: `ActiveTool`
 
-### [`protocol`](modules/protocol) — `src/protocol.rs`
+### [`main`](modules/main) — `src/main.rs`
 
-- **Structs**: `GridCfg`, `TerrainCell`, `TokenMeta`, `PlayerMeta`
-- **Enums**: `GridKind`, `TokenArt`, `BlobKind`, `Msg`
 
-### [`lowpoly`](modules/game__lowpoly) — `src/game/lowpoly.rs`
+### [`tokens`](modules/game__tokens) — `src/game/tokens.rs`
 
-- **Resources**: LowPoly, Mats
-- **Systems**: setup_lowpoly, spawn_tree
-- **Structs**: `LowPoly`, `Mats`, `Ctx3d`
-
-### [`net`](modules/net) — `src/net.rs`
-
-- **Resources**: Session, Net, Roster, Blobs
-- **Events**: NetRx, PeerEvent
-- **Structs**: `NetPlugin`, `NetSet`, `NetRx`, `PeerEvent`, `Session`, `Net`, `RosterEntry`, `Roster`, `Incoming`, `Blobs`
+- **Resources**: Selection, Dragging, TouchDrag
+- **Components**: Token, PendingArt, OwnerRing, ArtDisc, SelRing
+- **Systems**: spawn_token, delete_selected, resolve_pending_art
+- **Structs**: `Token`, `PendingArt`, `OwnerRing`, `ArtDisc`, `SelRing`, `Selection`, `Dragging`, `TouchDrag`
 
 ### [`lobby`](modules/lobby) — `src/lobby.rs`
 
@@ -130,10 +118,28 @@ graph TD
 - **Structs**: `RoomList`, `LobbyPlugin`, `LobbyForm`, `LobbyRoot`, `NickField`, `CodeField`, `NickText`, `CodeText`, `StatusText`, `Swatch`, `CreateBtn`, `JoinBtn`, `RoomsPanel`, `RoomsContainer`, `RoomEntryBtn`, `RoomEmptyLabel`
 - **Enums**: `Focus`
 
-### [`tokens`](modules/game__tokens) — `src/game/tokens.rs`
+### [`protocol`](modules/protocol) — `src/protocol.rs`
 
-- **Resources**: Selection, Dragging, TouchDrag
-- **Components**: Token, PendingArt, OwnerRing, ArtDisc, SelRing
-- **Systems**: spawn_token, delete_selected, resolve_pending_art
-- **Structs**: `Token`, `PendingArt`, `OwnerRing`, `ArtDisc`, `SelRing`, `Selection`, `Dragging`, `TouchDrag`
+ # Módulo: protocol
+ Define os tipos de dados e mensagens trocadas entre peers via WebRTC.
+ Toda comunicação serializada com `bincode` usa os tipos e enum `Msg`
+ declarados aqui. O GM é autoritativo: jogadores enviam `*Req`, GM
+ valida e broadcast a versão final.
+
+- **Structs**: `GridCfg`, `TerrainCell`, `TokenMeta`, `PlayerMeta`
+- **Enums**: `GridKind`, `TokenArt`, `BlobKind`, `Msg`
+
+### [`svg_assets`](modules/svg_assets) — `src/svg_assets.rs`
+
+- **Resources**: GameAssets
+- **Systems**: load_svgs
+- **Structs**: `SvgAssetsPlugin`, `GameAssets`
+
+### [`map`](modules/game__map) — `src/game/map.rs`
+
+- **Resources**: MapState
+- **Components**: MapGround
+- **Systems**: sync_map, file_drop
+- **Structs**: `MapState`, `MapGround`
+- **Enums**: `DropMode`
 

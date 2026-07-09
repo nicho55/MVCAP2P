@@ -1,0 +1,177 @@
+{
+  "name": "game/map.rs",
+  "path": "src/game/map.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "MapState",
+      "doc": [],
+      "fields": [
+        {
+          "name": "want",
+          "ty": "Option < BlobId >",
+          "doc": [
+            " None = mapa padrão embutido; Some(blob) = imagem importada."
+          ],
+          "attributes": [
+            "# [doc = \" None = mapa padrão embutido; Some(blob) = imagem importada.\"]"
+          ]
+        },
+        {
+          "name": "applied",
+          "ty": "Option < Option < BlobId > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "size",
+          "ty": "Vec2",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "MapGround",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "DropMode",
+      "doc": [],
+      "variants": [
+        {
+          "name": "Token",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Map",
+          "doc": [],
+          "fields": []
+        }
+      ],
+      "derives": [
+        "Resource",
+        "Default",
+        "PartialEq",
+        "Clone",
+        "Copy"
+      ],
+      "generics": ""
+    }
+  ],
+  "fns": [
+    {
+      "name": "sync_map",
+      "doc": [
+        " Aplica o mapa desejado: plano texturizado no chão (XZ), centrado na origem.",
+        " No mapa padrão, decora com árvores low-poly (filhas do plano — somem juntas)."
+      ],
+      "inputs": [
+        "mut commands : Commands",
+        "mut map_state : ResMut < MapState >",
+        "blobs : Res < Blobs >",
+        "assets : Res < GameAssets >",
+        "images : Res < Assets < Image > >",
+        "q_map : Query < Entity , With < MapGround > >",
+        "mut meshes : ResMut < Assets < Mesh > >",
+        "mut ctx : Ctx3d"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "import_map_bytes",
+      "doc": [],
+      "inputs": [
+        "bytes : Vec < u8 >",
+        "blobs : & mut Blobs",
+        "images : & mut Assets < Image >",
+        "net : & mut Net",
+        "map_state : & mut MapState"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "file_drop",
+      "doc": [],
+      "inputs": [
+        "mut evr : EventReader < FileDragAndDrop >",
+        "drop_mode : Res < DropMode >",
+        "session : Res < Session >",
+        "mut net : ResMut < Net >",
+        "mut blobs : ResMut < Blobs >",
+        "mut images : ResMut < Assets < Image > >",
+        "mut map_state : ResMut < MapState >",
+        "mut commands : Commands",
+        "assets : Res < GameAssets >",
+        "grid : Res < GridRes >",
+        "roster : Res < Roster >",
+        "windows : Query < & Window >",
+        "q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >",
+        "mut ctx : Ctx3d"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [],
+  "uses": [
+    "use bevy :: prelude :: * ;",
+    "use bevy :: window :: FileDragAndDrop ;",
+    "use super :: camera :: { cursor_ground , MainCamera } ;",
+    "use super :: grid :: { self , GridRes } ;",
+    "use super :: lowpoly :: { self , Ctx3d } ;",
+    "use super :: tokens ;",
+    "use crate :: net :: { Blobs , Net , Roster , Session } ;",
+    "use crate :: protocol :: * ;",
+    "use crate :: svg_assets :: GameAssets ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "MapState"
+  ],
+  "components": [
+    "MapGround"
+  ],
+  "systems": [
+    "sync_map",
+    "file_drop"
+  ],
+  "events": [],
+  "consts": [],
+  "types": []
+}

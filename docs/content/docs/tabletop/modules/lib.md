@@ -70,7 +70,7 @@ fn boot_to_lobby(mut next : ResMut < NextState < AppState > >) -> ()
 
 ## Implementações
 
-### `impl Default for impl Default for CliArgs { fn default () -> Self { Self { gm : false , join : None , code : None , nick : None , color : None , map : None , demo : false , signaling : None , shot : None , shot_at : 6.0 , exit_at : None , } } } . self_ty`
+### `impl Default for CliArgs`
 
 - `default`
 

@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    {
+      "id": "main",
+      "label": "main",
+      "module": "main",
+      "kind": "module"
+    }
+  ],
+  "edges": []
+}

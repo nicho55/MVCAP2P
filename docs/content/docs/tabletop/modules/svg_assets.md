@@ -56,7 +56,7 @@ fn image_from_encoded(bytes : & [u8]) -> Option < Image >
 
 ## Implementações
 
-### `impl Plugin for impl Plugin for SvgAssetsPlugin { fn build (& self , app : & mut App) { app . add_systems (PreStartup , load_svgs) ; } } . self_ty`
+### `impl Plugin for SvgAssetsPlugin`
 
 - `build`
 

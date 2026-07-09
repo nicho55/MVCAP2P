@@ -14,6 +14,8 @@
 fn cell_center(g : & GridCfg, cell : Cell) -> Vec2
 ```
 
+ Centro da célula em coordenadas de chão (x, z).
+
 ### `world_to_cell`
 
 ```rust
@@ -44,9 +46,15 @@ fn v3(p : Vec2) -> Vec3
 fn grid_reflow(grid : Res < GridRes >, mut trender : ResMut < TerrainRender >, mut q_tokens : Query < (& mut Transform , & Token) >) -> ()
 ```
 
+ Quando o grid muda (tipo/tamanho de célula), reposiciona e reescala tokens
+
+ e redesenha o terreno. Filhos dos tokens escalam junto com o pai.
+
 ## Systems (Bevy)
 
 ### `draw_grid`
+
+ Desenha o grid no chão (XZ) em volta do foco da câmera, limitado ao mapa.
 
 **Parâmetros**: `mut gizmos : Gizmos`, `grid : Res < GridRes >`, `rig : Res < CamRig >`, `map_state : Res < MapState >`
 
@@ -54,6 +62,6 @@ fn grid_reflow(grid : Res < GridRes >, mut trender : ResMut < TerrainRender >, m
 
 | Nome | Tipo | Valor |
 |------|------|-------|
-| `SQRT3` | `pub const SQRT3 : f32 = 1.732_050_8 ; . ty` | `pub const SQRT3 : f32 = 1.732_050_8 ; . expr` |
-| `GRID_Y` | `const GRID_Y : f32 = 0.45 ; . ty` | `const GRID_Y : f32 = 0.45 ; . expr` |
+| `SQRT3` | `f32` | `1.732_050_8` |
+| `GRID_Y` | `f32` | `0.45` |
 

@@ -2,9 +2,23 @@
 
 **Path**: `src/protocol.rs`
 
+## Descrição
+
+ # Módulo: protocol
+
+ Define os tipos de dados e mensagens trocadas entre peers via WebRTC.
+
+ Toda comunicação serializada com `bincode` usa os tipos e enum `Msg`
+
+ declarados aqui. O GM é autoritativo: jogadores enviam `*Req`, GM
+
+ valida e broadcast a versão final.
+
 ## Structs
 
 ### `GridCfg`
+
+ Configuração do grid: tipo e tamanho da célula em pixels.
 
 **Derives**: Serialize, Deserialize, Clone, Copy, Debug, PartialEq
 
@@ -15,6 +29,8 @@
 
 ### `TerrainCell`
 
+ Célula de terreno: textura e elevação.
+
 **Derives**: Serialize, Deserialize, Clone, Copy, Debug, PartialEq
 
 | Campo | Tipo |
@@ -23,6 +39,8 @@
 | `elev` | `i8` |
 
 ### `TokenMeta`
+
+ Metadados de um token: identificadores, dono, arte e posição.
 
 **Derives**: Serialize, Deserialize, Clone, Debug
 
@@ -34,6 +52,8 @@
 | `cell` | `Cell` |
 
 ### `PlayerMeta`
+
+ Metadados de um jogador: identificadores, apelido e papel na mesa.
 
 **Derives**: Serialize, Deserialize, Clone, Debug
 
@@ -48,6 +68,8 @@
 
 ### `GridKind`
 
+ Tipo de grid do tabuleiro.
+
 **Derives**: Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default
 
 | Variante | Campos |
@@ -56,6 +78,8 @@
 | `HexFlat` | `—` |
 
 ### `TokenArt`
+
+ Arte de um token: textura embutida ou blob transferido.
 
 **Derives**: Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash
 
@@ -66,6 +90,8 @@
 
 ### `BlobKind`
 
+ Tipo de blob transferido entre peers.
+
 **Derives**: Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash
 
 | Variante | Campos |
@@ -73,6 +99,18 @@
 | `Image` | `—` |
 
 ### `Msg`
+
+ Mensagens trocadas entre peers via WebRTC (serializadas com bincode).
+
+
+
+ O GM é autoritativo: jogadores enviam pedidos (`*Req`), o GM valida
+
+ e transmite a versão final (`TokenMoved`, `SpawnToken`, etc.).
+
+ Blobs (imagens) são enviados em chunks antes do `Welcome` para
+
+ garantir que estejam disponíveis ao processar o estado inicial.
 
 **Derives**: Serialize, Deserialize, Clone, Debug
 
@@ -104,9 +142,11 @@
 fn palette_color(i : u8) -> Color
 ```
 
+ Retorna uma cor da paleta pelo índice (com wrap seguro).
+
 ## Implementações
 
-### `impl Default for impl Default for GridCfg { fn default () -> Self { Self { kind : GridKind :: Square , cell : 64.0 } } } . self_ty`
+### `impl Default for GridCfg`
 
 - `default`
 
@@ -114,17 +154,17 @@ fn palette_color(i : u8) -> Color
 
 | Nome | Tipo | Valor |
 |------|------|-------|
-| `CODE_ALPHABET` | `pub const CODE_ALPHABET : & [u8] = b"ABCDEFGHJKMNPQRSTUVWXYZ23456789" ; . ty` | `pub const CODE_ALPHABET : & [u8] = b"ABCDEFGHJKMNPQRSTUVWXYZ23456789" ; . expr` |
-| `CHUNK` | `pub const CHUNK : usize = 14 * 1024 ; . ty` | `pub const CHUNK : usize = 14 * 1024 ; . expr` |
-| `TEX_NONE` | `pub const TEX_NONE : u8 = 255 ; . ty` | `pub const TEX_NONE : u8 = 255 ; . expr` |
-| `PALETTE` | `pub const PALETTE : [(f32 , f32 , f32) ; 8] = [(0.898 , 0.282 , 0.302) , (0.243 , 0.388 , 0.867) , (0.275 , 0.655 , 0.345) , (0.961 , 0.851 , 0.039) , (0.557 , 0.306 , 0.776) , (0.969 , 0.420 , 0.082) , (0.020 , 0.635 , 0.761) , (0.839 , 0.251 , 0.624) ,] ; . ty` | `pub const PALETTE : [(f32 , f32 , f32) ; 8] = [(0.898 , 0.282 , 0.302) , (0.243 , 0.388 , 0.867) , (0.275 , 0.655 , 0.345) , (0.961 , 0.851 , 0.039) , (0.557 , 0.306 , 0.776) , (0.969 , 0.420 , 0.082) , (0.020 , 0.635 , 0.761) , (0.839 , 0.251 , 0.624) ,] ; . expr` |
+| `CODE_ALPHABET` | `& [u8]` | `b"ABCDEFGHJKMNPQRSTUVWXYZ23456789"` |
+| `CHUNK` | `usize` | `14 * 1024` |
+| `TEX_NONE` | `u8` | `255` |
+| `PALETTE` | `[(f32 , f32 , f32) ; 8]` | `[(0.898 , 0.282 , 0.302) , (0.243 , 0.388 , 0.867) , (0.275 , 0.655 , 0.345) , (0.961 , 0.851 , 0.039) , (0.557 , 0.306 , 0.776) , (0.969 , 0.420 , 0.082) , (0.020 , 0.635 , 0.761) , (0.839 , 0.251 , 0.624) ,]` |
 
 ## Type Aliases
 
 | Nome | Tipo |
 |------|------|
-| `PlayerUuid` | `pub type PlayerUuid = u64 ; . ty` |
-| `TokenId` | `pub type TokenId = u64 ; . ty` |
-| `BlobId` | `pub type BlobId = u64 ; . ty` |
-| `Cell` | `pub type Cell = (i32 , i32) ; . ty` |
+| `PlayerUuid` | `u64` |
+| `TokenId` | `u64` |
+| `BlobId` | `u64` |
+| `Cell` | `(i32 , i32)` |
 

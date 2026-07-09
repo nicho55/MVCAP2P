@@ -11,6 +11,7 @@ services:
       - .:/workspace
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}
+      - ~/.ssh:/root/.ssh:ro
     devices:
       - /dev/dri:/dev/dri
       - /dev/snd:/dev/snd

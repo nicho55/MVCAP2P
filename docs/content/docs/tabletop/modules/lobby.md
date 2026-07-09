@@ -100,6 +100,10 @@ fn age_str(created_at : & str) -> String
 fn detect_lan_ip() -> Option < String >
 ```
 
+ Detecta o IP da LAN conectando um UDP socket a um endereço externo
+
+ (sem enviar dados) e lendo o endereço local.
+
 ### `random_code`
 
 ```rust
@@ -134,15 +138,15 @@ fn random_code() -> String
 
 ## Implementações
 
-### `impl Default for impl Default for RoomList { fn default () -> Self { Self { rooms : vec ! [] , loading : false , error : None , pending : Arc :: new (Mutex :: new (None)) , timer : Timer :: from_seconds (3.0 , TimerMode :: Repeating) , } } } . self_ty`
+### `impl Default for RoomList`
 
 - `default`
 
-### `impl Plugin for impl Plugin for LobbyPlugin { fn build (& self , app : & mut App) { app . init_resource :: < LobbyForm > () . init_resource :: < RoomList > () . add_systems (OnEnter (AppState :: Lobby) , setup_lobby) . add_systems (OnExit (AppState :: Lobby) , cleanup_lobby) . add_systems (Update , (lobby_auto , lobby_clicks , lobby_typing , lobby_reflect , room_poll) . run_if (in_state (AppState :: Lobby)) ,) ; } } . self_ty`
+### `impl Plugin for LobbyPlugin`
 
 - `build`
 
-### `impl Default for impl Default for LobbyForm { fn default () -> Self { Self { nick : format ! ("Jogador{}" , rand :: random ::< u16 > () % 90 + 10) , code : String :: new () , color : rand :: random :: < u8 > () % 8 , focus : Focus :: Nick , status : String :: new () , } } } . self_ty`
+### `impl Default for LobbyForm`
 
 - `default`
 
@@ -150,10 +154,10 @@ fn random_code() -> String
 
 | Nome | Tipo | Valor |
 |------|------|-------|
-| `GOLD` | `const GOLD : Color = Color :: srgb (0.83 , 0.69 , 0.22) ; . ty` | `const GOLD : Color = Color :: srgb (0.83 , 0.69 , 0.22) ; . expr` |
-| `PANEL` | `const PANEL : Color = Color :: srgba (0.10 , 0.09 , 0.14 , 0.96) ; . ty` | `const PANEL : Color = Color :: srgba (0.10 , 0.09 , 0.14 , 0.96) ; . expr` |
-| `FIELD_BG` | `const FIELD_BG : Color = Color :: srgb (0.16 , 0.14 , 0.21) ; . ty` | `const FIELD_BG : Color = Color :: srgb (0.16 , 0.14 , 0.21) ; . expr` |
-| `TEXT` | `const TEXT : Color = Color :: srgb (0.92 , 0.90 , 0.95) ; . ty` | `const TEXT : Color = Color :: srgb (0.92 , 0.90 , 0.95) ; . expr` |
-| `MUTED` | `const MUTED : Color = Color :: srgb (0.58 , 0.55 , 0.66) ; . ty` | `const MUTED : Color = Color :: srgb (0.58 , 0.55 , 0.66) ; . expr` |
-| `ROW_BG` | `const ROW_BG : Color = Color :: srgba (0.20 , 0.18 , 0.26 , 0.80) ; . ty` | `const ROW_BG : Color = Color :: srgba (0.20 , 0.18 , 0.26 , 0.80) ; . expr` |
+| `GOLD` | `Color` | `Color :: srgb (0.83 , 0.69 , 0.22)` |
+| `PANEL` | `Color` | `Color :: srgba (0.10 , 0.09 , 0.14 , 0.96)` |
+| `FIELD_BG` | `Color` | `Color :: srgb (0.16 , 0.14 , 0.21)` |
+| `TEXT` | `Color` | `Color :: srgb (0.92 , 0.90 , 0.95)` |
+| `MUTED` | `Color` | `Color :: srgb (0.58 , 0.55 , 0.66)` |
+| `ROW_BG` | `Color` | `Color :: srgba (0.20 , 0.18 , 0.26 , 0.80)` |
 

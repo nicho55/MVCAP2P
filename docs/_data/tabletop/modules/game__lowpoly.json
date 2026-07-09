@@ -1,0 +1,378 @@
+{
+  "name": "game/lowpoly.rs",
+  "path": "src/game/lowpoly.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "LowPoly",
+      "doc": [],
+      "fields": [
+        {
+          "name": "cube",
+          "ty": "Handle < Mesh >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "hex_prism",
+          "ty": "Handle < Mesh >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "cylinder",
+          "ty": "Handle < Mesh >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "cone",
+          "ty": "Handle < Mesh >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Clone"
+      ],
+      "attributes": [
+        "# [derive (Resource , Clone)]"
+      ]
+    },
+    {
+      "name": "Mats",
+      "doc": [],
+      "fields": [
+        {
+          "name": "terrain",
+          "ty": "HashMap < (u8 , i8) , Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "rings",
+          "ty": "HashMap < u8 , Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "art",
+          "ty": "HashMap < TokenArt , Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "gold",
+          "ty": "Option < Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "gray_ring",
+          "ty": "Option < Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "pending",
+          "ty": "Option < Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "trunk",
+          "ty": "Option < Handle < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "leaves",
+          "ty": "[Option < Handle < StandardMaterial > > ; 2]",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "Ctx3d",
+      "doc": [
+        " Contexto agrupado para spawn de tokens/terreno 3D (evita estourar o limite de params)."
+      ],
+      "fields": [
+        {
+          "name": "lp",
+          "ty": "Res < 'w , LowPoly >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "mats",
+          "ty": "ResMut < 'w , Mats >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "materials",
+          "ty": "ResMut < 'w , Assets < StandardMaterial > >",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "terrain",
+          "ty": "Res < 'w , Terrain >",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "< 'w >",
+      "derives": [
+        "SystemParam"
+      ],
+      "attributes": [
+        "# [doc = \" Contexto agrupado para spawn de tokens/terreno 3D (evita estourar o limite de params).\"]",
+        "# [derive (SystemParam)]"
+      ]
+    }
+  ],
+  "enums": [],
+  "fns": [
+    {
+      "name": "setup_lowpoly",
+      "doc": [],
+      "inputs": [
+        "mut commands : Commands",
+        "mut meshes : ResMut < Assets < Mesh > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "flat",
+      "doc": [],
+      "inputs": [
+        "color : Color"
+      ],
+      "output": "StandardMaterial",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "hex_prism_mesh",
+      "doc": [
+        " Prisma hexagonal flat-top (circumraio 1, altura 1, centrado na origem),",
+        " vértices duplicados por face para flat shading."
+      ],
+      "inputs": [],
+      "output": "Mesh",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "spawn_tree",
+      "doc": [
+        " Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa."
+      ],
+      "inputs": [
+        "parent : & mut ChildSpawnerCommands",
+        "lp : & LowPoly",
+        "mats : & mut Mats",
+        "materials : & mut Assets < StandardMaterial >",
+        "pos : Vec2",
+        "size : f32",
+        "variant : usize"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [
+    {
+      "ty": "Mats",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "terrain",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >",
+            "assets : & GameAssets",
+            "tex : u8",
+            "elev : i8"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "ring",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >",
+            "color_idx : u8"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "gray_ring",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "gold",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "art",
+          "doc": [
+            " Material da arte do token; `None` se o blob ainda não chegou (usar pending + PendingArt)."
+          ],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >",
+            "assets : & GameAssets",
+            "blobs : & Blobs",
+            "art : TokenArt"
+          ],
+          "output": "Option < Handle < StandardMaterial > >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "pending",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "trunk",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "leaves",
+          "doc": [],
+          "inputs": [
+            "& mut self",
+            "materials : & mut Assets < StandardMaterial >",
+            "variant : usize"
+          ],
+          "output": "Handle < StandardMaterial >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "uses": [
+    "use bevy :: asset :: RenderAssetUsages ;",
+    "use bevy :: ecs :: hierarchy :: ChildSpawnerCommands ;",
+    "use bevy :: ecs :: system :: SystemParam ;",
+    "use bevy :: prelude :: * ;",
+    "use bevy :: render :: mesh :: PrimitiveTopology ;",
+    "use std :: collections :: HashMap ;",
+    "use super :: terrain :: Terrain ;",
+    "use crate :: net :: Blobs ;",
+    "use crate :: protocol :: * ;",
+    "use crate :: svg_assets :: GameAssets ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "LowPoly",
+    "Mats"
+  ],
+  "components": [],
+  "systems": [
+    "setup_lowpoly",
+    "spawn_tree"
+  ],
+  "events": [],
+  "consts": [
+    {
+      "name": "BASE_CELL",
+      "ty": "f32",
+      "value": "64.0",
+      "doc": [
+        " Tokens e árvores são modelados para célula de 64 e escalados pelo Transform pai."
+      ]
+    }
+  ],
+  "types": []
+}

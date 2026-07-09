@@ -1,0 +1,242 @@
+{
+  "nodes": [
+    {
+      "id": "net",
+      "label": "net",
+      "module": "net",
+      "kind": "module"
+    },
+    {
+      "id": "game::camera",
+      "label": "camera",
+      "module": "game::camera",
+      "kind": "module"
+    },
+    {
+      "id": "game::lowpoly",
+      "label": "lowpoly",
+      "module": "game::lowpoly",
+      "kind": "module"
+    },
+    {
+      "id": "game::terrain",
+      "label": "terrain",
+      "module": "game::terrain",
+      "kind": "module"
+    },
+    {
+      "id": "game::hud",
+      "label": "hud",
+      "module": "game::hud",
+      "kind": "module"
+    },
+    {
+      "id": "game::sync",
+      "label": "sync",
+      "module": "game::sync",
+      "kind": "module"
+    },
+    {
+      "id": "lib",
+      "label": "lib",
+      "module": "lib",
+      "kind": "module"
+    },
+    {
+      "id": "room_discovery",
+      "label": "room_discovery",
+      "module": "room_discovery",
+      "kind": "module"
+    },
+    {
+      "id": "game::grid",
+      "label": "grid",
+      "module": "game::grid",
+      "kind": "module"
+    },
+    {
+      "id": "game::mod",
+      "label": "mod",
+      "module": "game::mod",
+      "kind": "module"
+    },
+    {
+      "id": "main",
+      "label": "main",
+      "module": "main",
+      "kind": "module"
+    },
+    {
+      "id": "game::tokens",
+      "label": "tokens",
+      "module": "game::tokens",
+      "kind": "module"
+    },
+    {
+      "id": "lobby",
+      "label": "lobby",
+      "module": "lobby",
+      "kind": "module"
+    },
+    {
+      "id": "protocol",
+      "label": "protocol",
+      "module": "protocol",
+      "kind": "module"
+    },
+    {
+      "id": "svg_assets",
+      "label": "svg_assets",
+      "module": "svg_assets",
+      "kind": "module"
+    },
+    {
+      "id": "game::map",
+      "label": "map",
+      "module": "game::map",
+      "kind": "module"
+    }
+  ],
+  "edges": [
+    {
+      "source": "net",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::lowpoly",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::lowpoly",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::lowpoly",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "game::terrain",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::terrain",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::terrain",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "game::hud",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::hud",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::hud",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "game::sync",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::sync",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::sync",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "game::grid",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::mod",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::mod",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::mod",
+      "target": "room_discovery",
+      "kind": "import"
+    },
+    {
+      "source": "game::mod",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "game::tokens",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::tokens",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::tokens",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "lobby",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "lobby",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "lobby",
+      "target": "room_discovery",
+      "kind": "import"
+    },
+    {
+      "source": "lobby",
+      "target": "svg_assets",
+      "kind": "import"
+    },
+    {
+      "source": "game::map",
+      "target": "net",
+      "kind": "import"
+    },
+    {
+      "source": "game::map",
+      "target": "protocol",
+      "kind": "import"
+    },
+    {
+      "source": "game::map",
+      "target": "svg_assets",
+      "kind": "import"
+    }
+  ]
+}

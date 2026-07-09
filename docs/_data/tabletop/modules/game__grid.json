@@ -1,0 +1,166 @@
+{
+  "name": "game/grid.rs",
+  "path": "src/game/grid.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "GridRes",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    }
+  ],
+  "enums": [],
+  "fns": [
+    {
+      "name": "cell_center",
+      "doc": [
+        " Centro da célula em coordenadas de chão (x, z)."
+      ],
+      "inputs": [
+        "g : & GridCfg",
+        "cell : Cell"
+      ],
+      "output": "Vec2",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "world_to_cell",
+      "doc": [],
+      "inputs": [
+        "g : & GridCfg",
+        "w : Vec2"
+      ],
+      "output": "Cell",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "axial_round",
+      "doc": [],
+      "inputs": [
+        "q : f32",
+        "r : f32"
+      ],
+      "output": "Cell",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "hex_corners",
+      "doc": [],
+      "inputs": [
+        "g : & GridCfg",
+        "cell : Cell"
+      ],
+      "output": "[Vec2 ; 6]",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "v3",
+      "doc": [],
+      "inputs": [
+        "p : Vec2"
+      ],
+      "output": "Vec3",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "draw_grid",
+      "doc": [
+        " Desenha o grid no chão (XZ) em volta do foco da câmera, limitado ao mapa."
+      ],
+      "inputs": [
+        "mut gizmos : Gizmos",
+        "grid : Res < GridRes >",
+        "rig : Res < CamRig >",
+        "map_state : Res < MapState >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "grid_reflow",
+      "doc": [
+        " Quando o grid muda (tipo/tamanho de célula), reposiciona e reescala tokens",
+        " e redesenha o terreno. Filhos dos tokens escalam junto com o pai."
+      ],
+      "inputs": [
+        "grid : Res < GridRes >",
+        "mut trender : ResMut < TerrainRender >",
+        "mut q_tokens : Query < (& mut Transform , & Token) >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [],
+  "uses": [
+    "use bevy :: prelude :: * ;",
+    "use super :: camera :: CamRig ;",
+    "use super :: lowpoly :: BASE_CELL ;",
+    "use super :: map :: MapState ;",
+    "use super :: terrain :: TerrainRender ;",
+    "use super :: tokens :: Token ;",
+    "use crate :: protocol :: * ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "GridRes"
+  ],
+  "components": [],
+  "systems": [
+    "draw_grid"
+  ],
+  "events": [],
+  "consts": [
+    {
+      "name": "SQRT3",
+      "ty": "f32",
+      "value": "1.732_050_8",
+      "doc": []
+    },
+    {
+      "name": "GRID_Y",
+      "ty": "f32",
+      "value": "0.45",
+      "doc": []
+    }
+  ],
+  "types": []
+}

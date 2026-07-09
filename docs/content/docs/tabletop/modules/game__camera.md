@@ -6,6 +6,8 @@
 
 ### `CamRig`
 
+ Câmera orbital estilo RPG tático: foco no chão, yaw/pitch/distância.
+
 | Campo | Tipo |
 |-------|------|
 | `focus` | `Vec3` |
@@ -44,11 +46,15 @@ fn pan_zoom(mut wheel : EventReader < MouseWheel >, mut motion : EventReader < M
 fn cursor_ray(win : & Window, cam : & Camera, cam_gt : & GlobalTransform) -> Option < Ray3d >
 ```
 
+ Raio do cursor no mundo.
+
 ### `ray_ground`
 
 ```rust
 fn ray_ground(ray : Ray3d, y : f32) -> Option < Vec3 >
 ```
+
+ Interseção do raio com o plano do chão (y = altura dada).
 
 ### `cursor_ground`
 
@@ -56,17 +62,29 @@ fn ray_ground(ray : Ray3d, y : f32) -> Option < Vec3 >
 fn cursor_ground(win : & Window, cam : & Camera, cam_gt : & GlobalTransform) -> Option < Vec2 >
 ```
 
+ Ponto do chão sob o cursor, como Vec2 = (x, z) — casa com a matemática do grid.
+
 ### `ray_point_dist`
 
 ```rust
 fn ray_point_dist(ray : & Ray3d, p : Vec3) -> f32
 ```
 
+ Distância mínima entre um raio e um ponto (para picking de tokens 3D).
+
 ### `touch_pan_zoom`
 
 ```rust
 fn touch_pan_zoom(mut touch_ev : EventReader < TouchInput >, mut state : ResMut < TouchState >, mut rig : ResMut < CamRig >, ui : Res < UiHovered >, drag : Res < TouchDrag >) -> ()
 ```
+
+ Touch-based camera pan/zoom/orbit (Android).
+
+ - 1 finger drag → pan (right-click equivalent)
+
+ - 2 finger drag → orbit (middle-click equivalent)
+
+ - pinch → zoom (scroll equivalent)
 
 ## Systems (Bevy)
 
@@ -76,7 +94,7 @@ fn touch_pan_zoom(mut touch_ev : EventReader < TouchInput >, mut state : ResMut 
 
 ## Implementações
 
-### `impl Default for impl Default for CamRig { fn default () -> Self { Self { focus : Vec3 :: ZERO , yaw : 0.0 , pitch : 0.95 , dist : 1400.0 } } } . self_ty`
+### `impl Default for CamRig`
 
 - `default`
 

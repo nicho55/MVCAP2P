@@ -59,6 +59,10 @@ fn token_interact(buttons : Res < ButtonInput < MouseButton > >, windows : Query
 fn token_y_follow(time : Res < Time >, terrain : Res < Terrain >, grid : Res < GridRes >, drag : Res < Dragging >, mut q : Query < (& mut Transform , & Token) >) -> ()
 ```
 
+ A peça acompanha suavemente a altura do terreno da sua célula
+
+ (sobe/desce quando o GM deforma o chão embaixo dela).
+
 ### `selection_visual`
 
 ```rust
@@ -77,11 +81,15 @@ fn touch_interact(mut touch_ev : EventReader < TouchInput >, windows : Query < &
 fn touch_highlight(drag : Res < TouchDrag >, sel : Res < Selection >, time : Res < Time >, q_tokens : Query < (& Token , & Children) >, mut q_rings : Query < & mut Transform , With < SelRing > >) -> ()
 ```
 
+ Highlight visual em token tocado/dragado — pulso suave de escala no anel de seleção.
+
 ### `set_token_owner`
 
 ```rust
 fn set_token_owner(id : TokenId, new_owner : PlayerUuid, roster : & Roster, ctx : & mut Ctx3d, q_tokens : & mut Query < (Entity , & mut Token , & Children) >, mut q_rings : & mut Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >) -> ()
 ```
+
+ Troca o dono de um token e atualiza a cor do anel.
 
 ### `refresh_ring_colors`
 
@@ -89,9 +97,15 @@ fn set_token_owner(id : TokenId, new_owner : PlayerUuid, roster : & Roster, ctx 
 fn refresh_ring_colors(roster : Res < Roster >, mut ctx : Ctx3d, q_tokens : Query < (& Token , & Children) >, mut q_rings : Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >) -> ()
 ```
 
+ Atualiza a cor do anel quando o roster muda (dono entrou/trocou de cor).
+
 ## Systems (Bevy)
 
 ### `spawn_token`
+
+ Peça de tabuleiro 3D: anel da cor do dono + disco com a arte em cima.
+
+ Filhos modelados para célula BASE_CELL; o pai escala por g.cell/BASE_CELL.
 
 **Parâmetros**: `commands : & mut Commands`, `meta : TokenMeta`, `assets : & GameAssets`, `blobs : & Blobs`, `g : & GridCfg`, `roster : & Roster`, `ctx : & mut Ctx3d`
 
@@ -100,6 +114,8 @@ fn refresh_ring_colors(roster : Res < Roster >, mut ctx : Ctx3d, q_tokens : Quer
 **Parâmetros**: `keys : Res < ButtonInput < KeyCode > >`, `mut sel : ResMut < Selection >`, `session : Res < Session >`, `mut net : ResMut < Net >`, `mut commands : Commands`, `q_tokens : Query < (Entity , & Token) >`
 
 ### `resolve_pending_art`
+
+ Troca o material do disco de arte quando o blob da imagem chega.
 
 **Parâmetros**: `mut commands : Commands`, `blobs : Res < Blobs >`, `assets : Res < GameAssets >`, `mut ctx : Ctx3d`, `q_pending : Query < (Entity , & PendingArt , & Children) >`, `mut q_art : Query < & mut MeshMaterial3d < StandardMaterial > , With < ArtDisc > >`
 

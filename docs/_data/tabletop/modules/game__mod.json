@@ -1,0 +1,277 @@
+{
+  "name": "game/mod.rs",
+  "path": "src/game/mod.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "ScreenInfo",
+      "doc": [],
+      "fields": [
+        {
+          "name": "width",
+          "ty": "f32",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "height",
+          "ty": "f32",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "scale",
+          "ty": "f32",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "auto_scale",
+          "ty": "bool",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource"
+      ],
+      "attributes": [
+        "# [derive (Resource)]"
+      ]
+    },
+    {
+      "name": "UiHovered",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Default"
+      ],
+      "attributes": [
+        "# [derive (Resource , Default)]"
+      ]
+    },
+    {
+      "name": "GamePlugin",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [],
+      "attributes": []
+    }
+  ],
+  "enums": [
+    {
+      "name": "ActiveTool",
+      "doc": [],
+      "variants": [
+        {
+          "name": "Select",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Paint",
+          "doc": [],
+          "fields": [
+            "u8"
+          ]
+        },
+        {
+          "name": "Erase",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "ElevUp",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "ElevDown",
+          "doc": [],
+          "fields": []
+        }
+      ],
+      "derives": [
+        "Resource",
+        "Default",
+        "Clone",
+        "Copy",
+        "PartialEq"
+      ],
+      "generics": ""
+    }
+  ],
+  "fns": [
+    {
+      "name": "screen_update",
+      "doc": [
+        " Atualiza `width`/`height` do ScreenInfo. A escala automática só roda",
+        " na primeira detecção da janela; depois o usuário controla com A+/A-."
+      ],
+      "inputs": [
+        "mut si : ResMut < ScreenInfo >",
+        "q_win : Query < & Window >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "setup_lighting",
+      "doc": [],
+      "inputs": [
+        "mut commands : Commands"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "leave_game",
+      "doc": [],
+      "inputs": [
+        "mut commands : Commands",
+        "mut net : ResMut < Net >",
+        "session : Option < Res < Session > >",
+        "mut render : ResMut < terrain :: TerrainRender >",
+        "q_hud : Query < Entity , With < hud :: HudRoot > >",
+        "q_ground : Query < Entity , With < map :: MapGround > >",
+        "q_tokens : Query < Entity , With < tokens :: Token > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "reset_ui_hover",
+      "doc": [],
+      "inputs": [
+        "mut h : ResMut < UiHovered >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "track_ui_hover",
+      "doc": [],
+      "inputs": [
+        "q : Query < & Interaction >",
+        "mut h : ResMut < UiHovered >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "game_init",
+      "doc": [
+        " GM: carrega mapa via --map e tokens de demonstração via --demo."
+      ],
+      "inputs": [
+        "mut commands : Commands",
+        "session : Res < Session >",
+        "args : Res < CliArgs >",
+        "mut net : ResMut < Net >",
+        "mut blobs : ResMut < Blobs >",
+        "mut images : ResMut < Assets < Image > >",
+        "mut map_state : ResMut < map :: MapState >",
+        "assets : Res < GameAssets >",
+        "grid : Res < grid :: GridRes >",
+        "roster : Res < Roster >",
+        "mut ctx : lowpoly :: Ctx3d"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": true,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [
+    {
+      "ty": "ScreenInfo",
+      "trait_name": "Default",
+      "methods": [
+        {
+          "name": "default",
+          "doc": [],
+          "inputs": [],
+          "output": "Self",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "GamePlugin",
+      "trait_name": "Plugin",
+      "methods": [
+        {
+          "name": "build",
+          "doc": [],
+          "inputs": [
+            "& self",
+            "app : & mut App"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "uses": [
+    "use bevy :: pbr :: CascadeShadowConfigBuilder ;",
+    "use bevy :: prelude :: * ;",
+    "use crate :: net :: { Blobs , Net , NetSet , Roster , Session } ;",
+    "use crate :: protocol :: * ;",
+    "use crate :: room_discovery ;",
+    "use crate :: svg_assets :: GameAssets ;",
+    "use crate :: { AppState , CliArgs } ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [
+    "impl Plugin for GamePlugin"
+  ],
+  "resources": [
+    "ScreenInfo",
+    "UiHovered"
+  ],
+  "components": [],
+  "systems": [
+    "setup_lighting",
+    "leave_game",
+    "game_init"
+  ],
+  "events": [],
+  "consts": [],
+  "types": []
+}

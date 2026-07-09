@@ -105,13 +105,13 @@ fn hint_label(drop_mode : Res < DropMode >, tool : Res < ActiveTool >, assets : 
 
 | Nome | Tipo | Valor |
 |------|------|-------|
-| `GOLD` | `const GOLD : Color = Color :: srgb (0.83 , 0.69 , 0.22) ; . ty` | `const GOLD : Color = Color :: srgb (0.83 , 0.69 , 0.22) ; . expr` |
-| `TEXT` | `const TEXT : Color = Color :: srgb (0.92 , 0.90 , 0.95) ; . ty` | `const TEXT : Color = Color :: srgb (0.92 , 0.90 , 0.95) ; . expr` |
-| `PANEL` | `const PANEL : Color = Color :: srgba (0.10 , 0.09 , 0.14 , 0.94) ; . ty` | `const PANEL : Color = Color :: srgba (0.10 , 0.09 , 0.14 , 0.94) ; . expr` |
-| `PANEL_SOFT` | `const PANEL_SOFT : Color = Color :: srgba (0.10 , 0.09 , 0.14 , 0.75) ; . ty` | `const PANEL_SOFT : Color = Color :: srgba (0.10 , 0.09 , 0.14 , 0.75) ; . expr` |
-| `BTN_BG` | `const BTN_BG : Color = Color :: srgb (0.16 , 0.14 , 0.21) ; . ty` | `const BTN_BG : Color = Color :: srgb (0.16 , 0.14 , 0.21) ; . expr` |
-| `BTN_BORDER` | `const BTN_BORDER : Color = Color :: srgb (0.30 , 0.26 , 0.40) ; . ty` | `const BTN_BORDER : Color = Color :: srgb (0.30 , 0.26 , 0.40) ; . expr` |
-| `SCALE_MIN` | `const SCALE_MIN : f32 = 0.35 ; . ty` | `const SCALE_MIN : f32 = 0.35 ; . expr` |
-| `SCALE_MAX` | `const SCALE_MAX : f32 = 2.5 ; . ty` | `const SCALE_MAX : f32 = 2.5 ; . expr` |
-| `SCALE_STEP` | `const SCALE_STEP : f32 = 0.1 ; . ty` | `const SCALE_STEP : f32 = 0.1 ; . expr` |
+| `GOLD` | `Color` | `Color :: srgb (0.83 , 0.69 , 0.22)` |
+| `TEXT` | `Color` | `Color :: srgb (0.92 , 0.90 , 0.95)` |
+| `PANEL` | `Color` | `Color :: srgba (0.10 , 0.09 , 0.14 , 0.94)` |
+| `PANEL_SOFT` | `Color` | `Color :: srgba (0.10 , 0.09 , 0.14 , 0.75)` |
+| `BTN_BG` | `Color` | `Color :: srgb (0.16 , 0.14 , 0.21)` |
+| `BTN_BORDER` | `Color` | `Color :: srgb (0.30 , 0.26 , 0.40)` |
+| `SCALE_MIN` | `f32` | `0.35` |
+| `SCALE_MAX` | `f32` | `2.5` |
+| `SCALE_STEP` | `f32` | `0.1` |
 

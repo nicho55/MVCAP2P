@@ -1,0 +1,121 @@
+{
+  "name": "room_discovery.rs",
+  "path": "src/room_discovery.rs",
+  "doc": [],
+  "structs": [
+    {
+      "name": "RoomEntry",
+      "doc": [],
+      "fields": [
+        {
+          "name": "id",
+          "ty": "i64",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "code",
+          "ty": "String",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "gm_name",
+          "ty": "String",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "room_url",
+          "ty": "String",
+          "doc": [],
+          "attributes": []
+        },
+        {
+          "name": "created_at",
+          "ty": "String",
+          "doc": [],
+          "attributes": []
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Debug",
+        "Clone",
+        "Serialize",
+        "Deserialize"
+      ],
+      "attributes": [
+        "# [derive (Debug , Clone , Serialize , Deserialize)]"
+      ]
+    }
+  ],
+  "enums": [],
+  "fns": [
+    {
+      "name": "list_rooms",
+      "doc": [],
+      "inputs": [],
+      "output": "Result < Vec < RoomEntry > , String >",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "create_room",
+      "doc": [],
+      "inputs": [
+        "code : & str",
+        "gm_name : & str",
+        "room_url : & str"
+      ],
+      "output": "Result < () , String >",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "delete_room",
+      "doc": [],
+      "inputs": [
+        "code : & str"
+      ],
+      "output": "Result < () , String >",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [],
+  "uses": [
+    "use serde :: { Deserialize , Serialize } ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [],
+  "components": [],
+  "systems": [],
+  "events": [],
+  "consts": [
+    {
+      "name": "SUPABASE_URL",
+      "ty": "& str",
+      "value": "\"https://cbnbmweqyezxejipisvf.supabase.co\"",
+      "doc": []
+    },
+    {
+      "name": "SUPABASE_ANON_KEY",
+      "ty": "& str",
+      "value": "\"sb_publishable_JY_scW17hysS_cUCpnhz-g_49N_YGxr\"",
+      "doc": []
+    }
+  ],
+  "types": []
+}

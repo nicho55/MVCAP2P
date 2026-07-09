@@ -1,0 +1,34 @@
+{
+  "name": "main.rs",
+  "path": "src/main.rs",
+  "doc": [],
+  "structs": [],
+  "enums": [],
+  "fns": [
+    {
+      "name": "main",
+      "doc": [],
+      "inputs": [],
+      "output": "()",
+      "generics": "",
+      "asyncness": true,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [],
+  "uses": [
+    "use matchbox_signaling :: SignalingServer ;",
+    "use std :: net :: { Ipv4Addr , SocketAddr } ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [],
+  "components": [],
+  "systems": [],
+  "events": [],
+  "consts": [],
+  "types": []
+}
