@@ -15,6 +15,9 @@
 .env
 /.claude/
 
+# opencode config (contém API keys)
+opencode.json
+
 # Android SDK (enorme, não versionar)
 /Sdk/
 
@@ -34,5 +37,7 @@
 /docs/.next/
 /docs/out/
 
-# Artefatos locais
+# Artefatos locais (config específica de máquina — Android SDK/NDK path)
 *.local.properties
+local.properties
+app/android/local.properties

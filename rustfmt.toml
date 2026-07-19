@@ -1,0 +1,4 @@
+# Formatação — opções estáveis (rodam em toolchain stable).
+edition = "2021"          # o projeto usa 2021, não 2024
+max_width = 100
+use_field_init_shorthand = true

@@ -69,3 +69,44 @@ são muito mais rápidos graças ao sccache.
 - `protocol.rs` — novas mensagens seguem o padrão `Req → GM valida → broadcast`
 - Tokens: jogador pede (`SpawnTokenReq`), GM autoriza e broadcast (`SpawnToken`)
 - Imagens: enviadas em chunks de 14KB (`BlobStart` + `BlobChunk`)
+
+## Padrões de Código (Type-Driven Design)
+
+> Complementa as regras de estilo já vigentes (docstrings, sem `unwrap`, Rust
+> idiomático). Justificativa e origem no **ADR-006**.
+
+1. **Parse, don't validate — newtypes, não `type` aliases crus.**
+   Prefira `struct RoomCode(String)` a `type PlayerUuid = u64`. A validação mora
+   no construtor (`try_new`/`parse`); o resto do código confia no tipo.
+   Alvos: código de sala, índice de cor (`0..8` da `PALETTE`), UUID de jogador,
+   IDs de token/blob.
+
+2. **Estados inválidos inexprimíveis — enums algébricos.**
+   Modele variações como enum que carrega só os campos válidos do caso (padrão já
+   usado em `Msg` e `GridKind`). Evite structs cheias de `Option` "conforme o
+   caso". Papel (GM/Jogador) e modo de drop (MAPA/TOKEN) são tipos, não `bool` +
+   checagem espalhada.
+
+3. **Typestate para ciclo de vida.**
+   O ciclo `Boot → Lobby → InGame` já é `AppState` (Bevy States) — trate-o como o
+   padrão oficial. Operações só devem existir no estado que as permite (ex.:
+   broadcast apenas com socket conectado).
+
+4. **Erros com `thiserror` + `?`.**
+   Introduza enums de erro (ex.: `NetError`, `ProtocolError`) com `thiserror` e
+   propague com `?`. Zero `unwrap()`/`expect()` no caminho de rede.
+
+5. **`#[non_exhaustive]` no que evolui.**
+   `Msg` é protocolo versionado: `#[non_exhaustive]` nos enums públicos de
+   protocolo e de erro, para não quebrar peers ao adicionar variantes. Structs
+   públicas complexas ganham construtor/builder em vez de construção crua.
+
+6. **Sealed traits para extensão controlada.**
+   Traits de comportamento interno (serialização de mensagem, cálculo de layout)
+   são *sealed*: só nossos tipos as implementam.
+
+### Portões de qualidade (força o cumprimento)
+- Configs na raiz: `rustfmt.toml`, `clippy.toml`, `deny.toml`.
+- Antes de concluir uma mudança:
+  `cargo fmt` · `cargo clippy --all-targets --all-features -- -D warnings` · `cargo test`.
+- CI em `.github/workflows/ci.yml` roda fmt + clippy + test + doc a cada push/PR.

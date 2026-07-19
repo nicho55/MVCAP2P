@@ -1,0 +1,3 @@
+# MSRV alinhado à toolchain de build (Bevy 0.16 exige Rust recente).
+msrv = "1.85"
+cognitive-complexity-threshold = 30
