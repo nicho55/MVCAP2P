@@ -108,7 +108,7 @@ pub fn run_game() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title,
-                        resolution: (1366.0, 840.0).into(),
+                        resolution: (1366.0_f32, 840.0_f32).into(),
                         ..default()
                     }),
                     ..default()
