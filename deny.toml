@@ -1,12 +1,15 @@
 # cargo-deny — licenças, vulnerabilidades e duplicatas.
 # Uso: cargo deny check
+# No CI roda como job informativo (não-bloqueante) — ver ADR-006.
 
 [graph]
 all-features = true
 
 [licenses]
+# Allow-list de licenças permissivas presentes na árvore.
 allow = [
     "MIT",
+    "MIT-0",
     "Apache-2.0",
     "BSD-2-Clause",
     "BSD-3-Clause",
@@ -15,14 +18,31 @@ allow = [
     "Zlib",
     "MPL-2.0",
     "CC0-1.0",
+    "Unlicense",
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
+# Nossos próprios crates (tabletop/signaling/docgen) não têm campo `license`.
+private = { ignore = true }
 
 [bans]
 multiple-versions = "warn"
 
 [advisories]
 yanked = "warn"
+# Vários crates da árvore do Bevy/matchbox estão marcados como não-mantidos
+# (bincode, paste, async-std, rustls-pemfile, rustybuzz, ttf-parser). São
+# transitivos e sem substituto imediato na dupla fixada Bevy 0.16 + matchbox
+# 0.12; tratamos como informativo, não como falha.
+unmaintained = "none"
+ignore = [
+    # Vulnerabilidades transitivas via bevy_matchbox → webrtc (parsing de
+    # certificados X.509 na camada DTLS). Sem upgrade disponível sem trocar a
+    # dupla Bevy/matchbox fixada. Reavaliar a cada bump de dependências.
+    "RUSTSEC-2026-0098", # name constraints (URI) aceitos incorretamente
+    "RUSTSEC-2026-0099", # name constraints com wildcard aceitos
+    "RUSTSEC-2026-0104", # panic alcançável no parsing de CRL
+]
 
 [sources]
 unknown-registry = "warn"

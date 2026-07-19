@@ -41,8 +41,11 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --workspace --no-deps
 
+  # cargo-deny é informativo por ora (ver ADR-006): reporta licenças/vulns
+  # sem derrubar o CI. Endurecer para bloqueante quando a árvore estiver limpa.
   deny:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
