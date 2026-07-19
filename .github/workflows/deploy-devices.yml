@@ -1,0 +1,79 @@
+name: deploy-devices
+
+# Lança uma versão nos celulares físicos.
+#  - build: roda na nuvem do GitHub (ubuntu-latest), gera o APK.
+#  - deploy: roda no SEU self-hosted runner (label android-farm), com os
+#    celulares plugados/conectados via adb, instala e mede desempenho.
+on:
+  push:
+    tags: ['v*']              # criar tag v0.2.0 = lançar versão
+  workflow_dispatch:          # ou botão "Run workflow" no site
+    inputs:
+      launch_seconds:
+        description: 'segundos rodando em cada aparelho p/ medir fps'
+        default: '20'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Instalar NDK 28.2.13676358 + cargo-ndk
+        run: |
+          sdkmanager --install "ndk;28.2.13676358"
+          cargo install cargo-ndk --locked
+
+      - name: Compilar lib nativa (cargo-ndk)
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/28.2.13676358
+        run: |
+          cargo ndk -t arm64-v8a -P 24 \
+            -o app/android/app/src/main/jniLibs \
+            build --release -p tabletop
+
+      - name: Montar APK (gradle)
+        run: cd app/android && ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, android-farm]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk
+          path: app/android/app/build/outputs/apk/debug/
+
+      - name: Reconectar J7 via WiFi (se J7_IP estiver definido)
+        if: ${{ vars.J7_IP != '' }}
+        run: adb connect ${{ vars.J7_IP }}:5555 || true
+
+      - name: Instalar + medir em todos os celulares
+        run: LAUNCH_SECONDS='${{ inputs.launch_seconds || 20 }}' ./scripts/deploy-farm.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-reports
+          path: reports/

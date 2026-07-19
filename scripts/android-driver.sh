@@ -88,10 +88,12 @@ deploy_apk() {
     adb install -r "$apk_path" 2>&1 | tee -a "$LOG_FILE"
   fi
   log "✅ App instalado! Iniciando..."
+  # A activity é android.app.NativeActivity (hasCode=false). Iniciar pelo
+  # LAUNCHER é robusto e independe do nome interno da activity.
   if [ -n "$serial" ]; then
-    adb -s "$serial" shell am start -n "com.tabletop2p/com.tabletop2p.MainActivity" 2>&1 | tee -a "$LOG_FILE"
+    adb -s "$serial" shell monkey -p "com.tabletop2p" -c android.intent.category.LAUNCHER 1 2>&1 | tee -a "$LOG_FILE"
   else
-    adb shell am start -n "com.tabletop2p/com.tabletop2p.MainActivity" 2>&1 | tee -a "$LOG_FILE"
+    adb shell monkey -p "com.tabletop2p" -c android.intent.category.LAUNCHER 1 2>&1 | tee -a "$LOG_FILE"
   fi
   log "🎉 App rodando no celular!"
 }
