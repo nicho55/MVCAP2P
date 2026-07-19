@@ -79,8 +79,18 @@ pub fn handle_core(
     let Some(sess) = session else { return };
     for NetRx(peer, msg) in rx.read() {
         match msg {
-            Msg::Welcome { players, grid: g, terrain: t, map_blob, .. } if !sess.me.is_gm => {
-                info!("Welcome do mestre {peer}: {} jogadores, {} células de terreno", players.len(), t.len());
+            Msg::Welcome {
+                players,
+                grid: g,
+                terrain: t,
+                map_blob,
+                ..
+            } if !sess.me.is_gm => {
+                info!(
+                    "Welcome do mestre {peer}: {} jogadores, {} células de terreno",
+                    players.len(),
+                    t.len()
+                );
                 net.gm_peer = Some(*peer);
                 for p in players {
                     roster.upsert(p.clone(), None);
@@ -143,32 +153,65 @@ pub fn handle_tokens(
                 }
                 drag.id = None;
                 for meta in tokens {
-                    spawn_token(&mut commands, meta.clone(), &assets, &blobs, &grid.0, &roster, &mut ctx);
+                    spawn_token(
+                        &mut commands,
+                        meta.clone(),
+                        &assets,
+                        &blobs,
+                        &grid.0,
+                        &roster,
+                        &mut ctx,
+                    );
                 }
             }
             Msg::SpawnToken(meta) => {
                 if !q_tokens.iter().any(|(_, _, t)| t.meta.id == meta.id) {
-                    spawn_token(&mut commands, meta.clone(), &assets, &blobs, &grid.0, &roster, &mut ctx);
+                    spawn_token(
+                        &mut commands,
+                        meta.clone(),
+                        &assets,
+                        &blobs,
+                        &grid.0,
+                        &roster,
+                        &mut ctx,
+                    );
                 }
             }
             Msg::SpawnTokenReq(meta) if sess.me.is_gm => {
-                let Some(entry) = roster.by_peer(*peer) else { continue };
+                let Some(entry) = roster.by_peer(*peer) else {
+                    continue;
+                };
                 let mut meta = meta.clone();
                 meta.owner = entry.meta.uuid;
                 if !q_tokens.iter().any(|(_, _, t)| t.meta.id == meta.id) {
-                    spawn_token(&mut commands, meta.clone(), &assets, &blobs, &grid.0, &roster, &mut ctx);
+                    spawn_token(
+                        &mut commands,
+                        meta.clone(),
+                        &assets,
+                        &blobs,
+                        &grid.0,
+                        &roster,
+                        &mut ctx,
+                    );
                     net.broadcast(&Msg::SpawnToken(meta));
                 }
             }
             Msg::MoveTokenReq { id, cell } if sess.me.is_gm => {
-                let Some(entry) = roster.by_peer(*peer) else { continue };
-                if let Some((_, mut tf, mut tok)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id) {
+                let Some(entry) = roster.by_peer(*peer) else {
+                    continue;
+                };
+                if let Some((_, mut tf, mut tok)) =
+                    q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id)
+                {
                     if tok.meta.owner == entry.meta.uuid {
                         tok.meta.cell = *cell;
                         let c = grid::cell_center(&grid.0, *cell);
                         tf.translation.x = c.x;
                         tf.translation.z = c.y;
-                        net.broadcast(&Msg::TokenMoved { id: *id, cell: *cell });
+                        net.broadcast(&Msg::TokenMoved {
+                            id: *id,
+                            cell: *cell,
+                        });
                     }
                 }
             }
@@ -176,7 +219,9 @@ pub fn handle_tokens(
                 if drag.id == Some(*id) {
                     continue;
                 }
-                if let Some((_, mut tf, mut tok)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id) {
+                if let Some((_, mut tf, mut tok)) =
+                    q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id)
+                {
                     tok.meta.cell = *cell;
                     let c = grid::cell_center(&grid.0, *cell);
                     tf.translation.x = c.x;
@@ -184,7 +229,9 @@ pub fn handle_tokens(
                 }
             }
             Msg::RemoveTokenReq { id } if sess.me.is_gm => {
-                let Some(entry) = roster.by_peer(*peer) else { continue };
+                let Some(entry) = roster.by_peer(*peer) else {
+                    continue;
+                };
                 if let Some((e, _, tok)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id) {
                     if tok.meta.owner == entry.meta.uuid {
                         commands.entity(e).despawn();
@@ -201,7 +248,8 @@ pub fn handle_tokens(
                 if drag.id == Some(*id) {
                     continue;
                 }
-                if let Some((_, mut tf, _)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id) {
+                if let Some((_, mut tf, _)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == *id)
+                {
                     tf.translation.x = *x;
                     tf.translation.z = *y;
                 }
@@ -226,7 +274,14 @@ pub fn assign_token_rx(
     }
     for NetRx(_, msg) in rx.read() {
         if let Msg::AssignToken { id, new_owner } = msg {
-            set_token_owner(*id, *new_owner, &roster, &mut ctx, &mut q_tokens, &mut q_rings);
+            set_token_owner(
+                *id,
+                *new_owner,
+                &roster,
+                &mut ctx,
+                &mut q_tokens,
+                &mut q_rings,
+            );
         }
     }
 }

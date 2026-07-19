@@ -36,10 +36,19 @@ pub fn elev_height(cell: f32, elev: i8) -> f32 {
 
 /// Altura do topo da célula (onde uma peça deve apoiar).
 pub fn cell_top(terrain: &Terrain, g: &GridCfg, cell: Cell) -> f32 {
-    terrain.cells.get(&cell).map(|v| elev_height(g.cell, v.elev)).unwrap_or(0.0)
+    terrain
+        .cells
+        .get(&cell)
+        .map(|v| elev_height(g.cell, v.elev))
+        .unwrap_or(0.0)
 }
 
-pub fn set_cell(terrain: &mut Terrain, render: &mut TerrainRender, cell: Cell, val: Option<TerrainCell>) -> bool {
+pub fn set_cell(
+    terrain: &mut Terrain,
+    render: &mut TerrainRender,
+    cell: Cell,
+    val: Option<TerrainCell>,
+) -> bool {
     let changed = match val {
         Some(v) => terrain.cells.get(&cell) != Some(&v),
         None => terrain.cells.contains_key(&cell),
@@ -98,7 +107,6 @@ pub fn terrain_tool(
         match t.phase {
             TouchPhase::Started | TouchPhase::Moved => touch_active = true,
             TouchPhase::Ended | TouchPhase::Canceled => touch_ended = true,
-            _ => {}
         }
     }
     if touch_ended {
@@ -115,8 +123,12 @@ pub fn terrain_tool(
         return;
     }
     let Ok(win) = windows.single() else { return };
-    let Ok((cam, cam_gt)) = q_cam.single() else { return };
-    let Some(world) = cursor_ground(win, cam, cam_gt) else { return };
+    let Ok((cam, cam_gt)) = q_cam.single() else {
+        return;
+    };
+    let Some(world) = cursor_ground(win, cam, cam_gt) else {
+        return;
+    };
     let cell = grid::world_to_cell(&grid.0, world);
     if stroke.contains(&cell) {
         return;
@@ -124,11 +136,20 @@ pub fn terrain_tool(
     stroke.insert(cell);
     let old = terrain.cells.get(&cell).copied();
     let val: Option<TerrainCell> = match op {
-        Op::Paint(i) => Some(TerrainCell { tex: i, elev: old.map(|o| o.elev).unwrap_or(0) }),
+        Op::Paint(i) => Some(TerrainCell {
+            tex: i,
+            elev: old.map(|o| o.elev).unwrap_or(0),
+        }),
         Op::Erase => None,
         Op::Elev(d) => {
-            let o = old.unwrap_or(TerrainCell { tex: TEX_NONE, elev: 0 });
-            Some(TerrainCell { tex: o.tex, elev: (o.elev + d).clamp(-4, 4) })
+            let o = old.unwrap_or(TerrainCell {
+                tex: TEX_NONE,
+                elev: 0,
+            });
+            Some(TerrainCell {
+                tex: o.tex,
+                elev: (o.elev + d).clamp(-4, 4),
+            })
         }
     };
     if set_cell(&mut terrain, &mut render, cell, val) {
@@ -161,7 +182,9 @@ pub fn terrain_render(
         if let Some(e) = render.ents.remove(&cell) {
             commands.entity(e).despawn();
         }
-        let Some(v) = ctx.terrain.cells.get(&cell).copied() else { continue };
+        let Some(v) = ctx.terrain.cells.get(&cell).copied() else {
+            continue;
+        };
         let h = elev_height(grid.0.cell, v.elev);
         let c = grid::cell_center(&grid.0, cell);
         let (mesh, sxz) = match grid.0.kind {

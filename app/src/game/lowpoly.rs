@@ -47,7 +47,10 @@ pub fn setup_lowpoly(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         cube: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
         hex_prism: meshes.add(hex_prism_mesh()),
         cylinder: meshes.add(Cylinder::new(1.0, 1.0)),
-        cone: meshes.add(Cone { radius: 1.0, height: 1.0 }),
+        cone: meshes.add(Cone {
+            radius: 1.0,
+            height: 1.0,
+        }),
     });
 }
 
@@ -90,7 +93,11 @@ impl Mats {
         h
     }
 
-    pub fn ring(&mut self, materials: &mut Assets<StandardMaterial>, color_idx: u8) -> Handle<StandardMaterial> {
+    pub fn ring(
+        &mut self,
+        materials: &mut Assets<StandardMaterial>,
+        color_idx: u8,
+    ) -> Handle<StandardMaterial> {
         if let Some(h) = self.rings.get(&color_idx) {
             return h.clone();
         }
@@ -104,7 +111,10 @@ impl Mats {
         h
     }
 
-    pub fn gray_ring(&mut self, materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
+    pub fn gray_ring(
+        &mut self,
+        materials: &mut Assets<StandardMaterial>,
+    ) -> Handle<StandardMaterial> {
         if let Some(h) = &self.gray_ring {
             return h.clone();
         }
@@ -139,7 +149,9 @@ impl Mats {
             return Some(h.clone());
         }
         let img = match art {
-            TokenArt::BuiltIn(i) => assets.tokens_builtin[i as usize % assets.tokens_builtin.len()].clone(),
+            TokenArt::BuiltIn(i) => {
+                assets.tokens_builtin[i as usize % assets.tokens_builtin.len()].clone()
+            }
             TokenArt::Blob(id) => blobs.images.get(&id)?.clone(),
         };
         let h = materials.add(StandardMaterial {
@@ -152,7 +164,10 @@ impl Mats {
         Some(h)
     }
 
-    pub fn pending(&mut self, materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
+    pub fn pending(
+        &mut self,
+        materials: &mut Assets<StandardMaterial>,
+    ) -> Handle<StandardMaterial> {
         if let Some(h) = &self.pending {
             return h.clone();
         }
@@ -170,12 +185,20 @@ impl Mats {
         h
     }
 
-    pub fn leaves(&mut self, materials: &mut Assets<StandardMaterial>, variant: usize) -> Handle<StandardMaterial> {
+    pub fn leaves(
+        &mut self,
+        materials: &mut Assets<StandardMaterial>,
+        variant: usize,
+    ) -> Handle<StandardMaterial> {
         let v = variant % 2;
         if let Some(h) = &self.leaves[v] {
             return h.clone();
         }
-        let c = if v == 0 { Color::srgb(0.25, 0.48, 0.20) } else { Color::srgb(0.33, 0.58, 0.28) };
+        let c = if v == 0 {
+            Color::srgb(0.25, 0.48, 0.20)
+        } else {
+            Color::srgb(0.33, 0.58, 0.28)
+        };
         let h = materials.add(flat(c));
         self.leaves[v] = Some(h.clone());
         h
@@ -215,15 +238,25 @@ fn hex_prism_mesh() -> Mesh {
         let cb = corner(i, -0.5);
         let jt = corner(j, 0.5);
         let jb = corner(j, -0.5);
-        for (p, t) in [(ct, [u0, 0.0]), (jb, [u1, 1.0]), (cb, [u0, 1.0]), (ct, [u0, 0.0]), (jt, [u1, 0.0]), (jb, [u1, 1.0])] {
+        for (p, t) in [
+            (ct, [u0, 0.0]),
+            (jb, [u1, 1.0]),
+            (cb, [u0, 1.0]),
+            (ct, [u0, 0.0]),
+            (jt, [u1, 0.0]),
+            (jb, [u1, 1.0]),
+        ] {
             pos.push(p);
             uv.push(t);
         }
     }
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
-        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
-        .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv);
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv);
     mesh.compute_flat_normals();
     mesh
 }
@@ -242,17 +275,28 @@ pub fn spawn_tree(
     let c1 = size * 1.1;
     let c2 = size * 0.8;
     parent
-        .spawn((Transform::from_xyz(pos.x, 0.0, pos.y), Visibility::default()))
+        .spawn((
+            Transform::from_xyz(pos.x, 0.0, pos.y),
+            Visibility::default(),
+        ))
         .with_children(|t| {
             t.spawn((
                 Mesh3d(lp.cylinder.clone()),
                 MeshMaterial3d(mats.trunk(materials)),
-                Transform::from_xyz(0.0, trunk_h * 0.5, 0.0).with_scale(Vec3::new(size * 0.16, trunk_h, size * 0.16)),
+                Transform::from_xyz(0.0, trunk_h * 0.5, 0.0).with_scale(Vec3::new(
+                    size * 0.16,
+                    trunk_h,
+                    size * 0.16,
+                )),
             ));
             t.spawn((
                 Mesh3d(lp.cone.clone()),
                 MeshMaterial3d(mats.leaves(materials, variant)),
-                Transform::from_xyz(0.0, trunk_h + c1 * 0.5, 0.0).with_scale(Vec3::new(size * 0.62, c1, size * 0.62)),
+                Transform::from_xyz(0.0, trunk_h + c1 * 0.5, 0.0).with_scale(Vec3::new(
+                    size * 0.62,
+                    c1,
+                    size * 0.62,
+                )),
             ));
             t.spawn((
                 Mesh3d(lp.cone.clone()),

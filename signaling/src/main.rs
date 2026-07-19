@@ -11,5 +11,8 @@ async fn main() {
     let addr: SocketAddr = (Ipv4Addr::UNSPECIFIED, port).into();
     println!("sinalização WebRTC ouvindo em ws://{addr}");
     let server = SignalingServer::full_mesh_builder(addr).build();
-    server.serve().await.expect("servidor de sinalização falhou");
+    server
+        .serve()
+        .await
+        .expect("servidor de sinalização falhou");
 }

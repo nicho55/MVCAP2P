@@ -8,9 +8,11 @@ mod room_discovery;
 mod svg_assets;
 
 use bevy::prelude::*;
+#[cfg(target_os = "android")]
 use bevy::render::settings::{Backends, RenderCreation, WgpuLimits, WgpuSettings};
-use bevy::render::RenderPlugin;
 use bevy::render::view::screenshot::{save_to_disk, Screenshot};
+#[cfg(target_os = "android")]
+use bevy::render::RenderPlugin;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum AppState {
@@ -112,7 +114,9 @@ pub fn run_game() {
                     ..default()
                 })
                 .set(bevy::log::LogPlugin {
-                    filter: "info,wgpu=error,naga=warn,webrtc_ice=error,webrtc=error,webrtc_mdns=error".into(),
+                    filter:
+                        "info,wgpu=error,naga=warn,webrtc_ice=error,webrtc=error,webrtc_mdns=error"
+                            .into(),
                     level: bevy::log::Level::INFO,
                     ..default()
                 }),
@@ -173,7 +177,9 @@ fn screenshot_hotkey(keys: Res<ButtonInput<KeyCode>>, mut commands: Commands, mu
         *n += 1;
         let path = format!("screenshot_{}.png", *n);
         info!("screenshot -> {path}");
-        commands.spawn(Screenshot::primary_window()).observe(save_to_disk(path));
+        commands
+            .spawn(Screenshot::primary_window())
+            .observe(save_to_disk(path));
     }
 }
 
@@ -188,7 +194,9 @@ fn auto_shot_exit(
         if !*done && time.elapsed_secs() > args.shot_at {
             *done = true;
             info!("screenshot automático -> {path}");
-            commands.spawn(Screenshot::primary_window()).observe(save_to_disk(path.clone()));
+            commands
+                .spawn(Screenshot::primary_window())
+                .observe(save_to_disk(path.clone()));
         }
     }
     if let Some(at) = args.exit_at {

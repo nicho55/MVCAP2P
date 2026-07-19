@@ -49,7 +49,9 @@ pub fn sync_map(
             None => return,
         },
     };
-    let Some(img) = images.get(&handle) else { return };
+    let Some(img) = images.get(&handle) else {
+        return;
+    };
     let size = img.size_f32();
     for e in &q_map {
         commands.entity(e).despawn();
@@ -65,7 +67,13 @@ pub fn sync_map(
     let is_default = map_state.want.is_none();
     let lp = (*ctx.lp).clone();
     commands
-        .spawn((Mesh3d(plane), MeshMaterial3d(mat), Transform::IDENTITY, MapGround, Visibility::default()))
+        .spawn((
+            Mesh3d(plane),
+            MeshMaterial3d(mat),
+            Transform::IDENTITY,
+            MapGround,
+            Visibility::default(),
+        ))
         .with_children(|p| {
             if is_default {
                 // bosques do mapa padrão (posições casadas com as manchas verdes do SVG)
@@ -124,8 +132,14 @@ pub fn file_drop(
     mut ctx: Ctx3d,
 ) {
     for ev in evr.read() {
-        let FileDragAndDrop::DroppedFile { path_buf, .. } = ev else { continue };
-        let ext = path_buf.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+        let FileDragAndDrop::DroppedFile { path_buf, .. } = ev else {
+            continue;
+        };
+        let ext = path_buf
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_lowercase();
         if !matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "webp") {
             warn!("formato não suportado: .{ext} (use PNG, JPEG ou WebP)");
             continue;
@@ -168,7 +182,15 @@ pub fn file_drop(
                 };
                 info!("criando token de {}", path_buf.display());
                 if session.me.is_gm {
-                    tokens::spawn_token(&mut commands, meta.clone(), &assets, &blobs, &grid.0, &roster, &mut ctx);
+                    tokens::spawn_token(
+                        &mut commands,
+                        meta.clone(),
+                        &assets,
+                        &blobs,
+                        &grid.0,
+                        &roster,
+                        &mut ctx,
+                    );
                     net.broadcast(&Msg::SpawnToken(meta));
                 } else {
                     net.send_gm(&Msg::SpawnTokenReq(meta));

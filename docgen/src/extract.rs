@@ -264,7 +264,7 @@ fn extract_doc_attrs(attrs: &[syn::Attribute]) -> Vec<String> {
     attrs
         .iter()
         .filter(|a| a.path().is_ident("doc"))
-        .filter_map(|a| format_doc_attr(a))
+        .filter_map(format_doc_attr)
         .collect()
 }
 
@@ -279,12 +279,10 @@ fn format_doc_attr(attr: &syn::Attribute) -> Option<String> {
                 }
             }
             syn::Meta::List(list) => {
-                if let Ok(s) = list.parse_args::<syn::Expr>() {
-                    if let syn::Expr::Assign(ass) = s {
-                        if let syn::Expr::Lit(lit) = &*ass.right {
-                            if let syn::Lit::Str(s) = &lit.lit {
-                                return Some(s.value());
-                            }
+                if let Ok(syn::Expr::Assign(ass)) = list.parse_args::<syn::Expr>() {
+                    if let syn::Expr::Lit(lit) = &*ass.right {
+                        if let syn::Lit::Str(s) = &lit.lit {
+                            return Some(s.value());
                         }
                     }
                 }
@@ -301,8 +299,7 @@ fn extract_struct(s: &ItemStruct) -> StructInfo {
         .iter()
         .filter(|a| {
             let path = a.path();
-            path.is_ident("derive")
-                || path.is_ident("derive")
+            path.is_ident("derive") || path.is_ident("derive")
         })
         .flat_map(|a| {
             if let syn::Meta::List(list) = &a.meta {
@@ -392,7 +389,11 @@ fn extract_enum(e: &ItemEnum) -> EnumInfo {
             .filter(|a| a.path().is_ident("derive"))
             .flat_map(|a| {
                 if let syn::Meta::List(list) = &a.meta {
-                    list.tokens.to_string().split(',').map(|s| s.trim().to_string()).collect()
+                    list.tokens
+                        .to_string()
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
                 } else {
                     vec![]
                 }
@@ -450,7 +451,12 @@ fn extract_trait(t: &ItemTrait) -> TraitInfo {
                     Some(FnInfo {
                         name: m.sig.ident.to_string(),
                         doc: extract_doc_attrs(&m.attrs),
-                        inputs: m.sig.inputs.iter().map(|i| quote::quote!(#i).to_string()).collect(),
+                        inputs: m
+                            .sig
+                            .inputs
+                            .iter()
+                            .map(|i| quote::quote!(#i).to_string())
+                            .collect(),
                         output: match &m.sig.output {
                             syn::ReturnType::Default => "()".to_string(),
                             syn::ReturnType::Type(_, ty) => quote::quote!(#ty).to_string(),
@@ -473,7 +479,10 @@ fn extract_impl(i: &ItemImpl) -> ImplInfo {
     let self_ty = &i.self_ty;
     ImplInfo {
         ty: quote::quote!(#self_ty).to_string(),
-        trait_name: i.trait_.as_ref().map(|(_, t, _)| quote::quote!(#t).to_string()),
+        trait_name: i
+            .trait_
+            .as_ref()
+            .map(|(_, t, _)| quote::quote!(#t).to_string()),
         methods: i
             .items
             .iter()
@@ -483,7 +492,12 @@ fn extract_impl(i: &ItemImpl) -> ImplInfo {
                     Some(FnInfo {
                         name: m.sig.ident.to_string(),
                         doc: extract_doc_attrs(&m.attrs),
-                        inputs: m.sig.inputs.iter().map(|i| quote::quote!(#i).to_string()).collect(),
+                        inputs: m
+                            .sig
+                            .inputs
+                            .iter()
+                            .map(|i| quote::quote!(#i).to_string())
+                            .collect(),
                         output: match &m.sig.output {
                             syn::ReturnType::Default => "()".to_string(),
                             syn::ReturnType::Type(_, ty) => quote::quote!(#ty).to_string(),
@@ -520,13 +534,24 @@ fn has_attr(attrs: &[String], name: &str) -> bool {
 fn is_system_fn(f: &FnInfo) -> bool {
     // Bevy systems have specific parameter patterns
     let sys_indicators = [
-        "Res<", "ResMut<", "Query<", "EventReader<", "EventWriter<",
-        "Commands", "NextState<", "Gizmos", "ButtonInput<",
+        "Res<",
+        "ResMut<",
+        "Query<",
+        "EventReader<",
+        "EventWriter<",
+        "Commands",
+        "NextState<",
+        "Gizmos",
+        "ButtonInput<",
     ];
-    f.inputs.iter().any(|i| sys_indicators.iter().any(|ind| i.contains(ind)))
+    f.inputs
+        .iter()
+        .any(|i| sys_indicators.iter().any(|ind| i.contains(ind)))
         || f.name.contains("_system")
 }
 
 fn has_trait_impl(impls: &[ImplInfo], _ty: &str, trait_name: &str) -> bool {
-    impls.iter().any(|i| i.trait_name.as_deref() == Some(trait_name))
+    impls
+        .iter()
+        .any(|i| i.trait_name.as_deref() == Some(trait_name))
 }

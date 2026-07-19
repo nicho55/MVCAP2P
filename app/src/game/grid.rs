@@ -98,10 +98,18 @@ pub fn draw_grid(
                 return;
             }
             for i in x0..=x1 {
-                gizmos.line(v3(Vec2::new(i as f32 * c, min.y)), v3(Vec2::new(i as f32 * c, max.y)), col);
+                gizmos.line(
+                    v3(Vec2::new(i as f32 * c, min.y)),
+                    v3(Vec2::new(i as f32 * c, max.y)),
+                    col,
+                );
             }
             for j in y0..=y1 {
-                gizmos.line(v3(Vec2::new(min.x, j as f32 * c)), v3(Vec2::new(max.x, j as f32 * c)), col);
+                gizmos.line(
+                    v3(Vec2::new(min.x, j as f32 * c)),
+                    v3(Vec2::new(max.x, j as f32 * c)),
+                    col,
+                );
             }
         }
         GridKind::HexFlat => {
@@ -116,7 +124,10 @@ pub fn draw_grid(
                 let r0 = (min.y / (SQRT3 * s) - q as f32 / 2.0).floor() as i32 - 1;
                 for dr in 0..=rows {
                     let cs = hex_corners(&grid.0, (q, r0 + dr));
-                    gizmos.linestrip(cs.iter().copied().map(v3).chain(std::iter::once(v3(cs[0]))), col);
+                    gizmos.linestrip(
+                        cs.iter().copied().map(v3).chain(std::iter::once(v3(cs[0]))),
+                        col,
+                    );
                 }
             }
         }

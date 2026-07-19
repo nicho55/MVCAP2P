@@ -16,7 +16,9 @@ impl Plugin for NetPlugin {
             .init_resource::<Blobs>()
             .add_systems(
                 Update,
-                (net_reconnect, net_poll, peer_greetings, blob_rx).chain().in_set(NetSet),
+                (net_reconnect, net_poll, peer_greetings, blob_rx)
+                    .chain()
+                    .in_set(NetSet),
             );
     }
 }
@@ -59,13 +61,18 @@ impl Net {
 
     pub fn send_to(&mut self, peer: PeerId, msg: &Msg) {
         if let Some(s) = self.socket.as_mut() {
-            let data = bincode::serialize(msg).expect("serialize").into_boxed_slice();
+            let data = bincode::serialize(msg)
+                .expect("serialize")
+                .into_boxed_slice();
             s.channel_mut(0).send(data, peer);
         }
     }
 
     pub fn peers(&self) -> Vec<PeerId> {
-        self.socket.as_ref().map(|s| s.connected_peers().collect()).unwrap_or_default()
+        self.socket
+            .as_ref()
+            .map(|s| s.connected_peers().collect())
+            .unwrap_or_default()
     }
 
     pub fn broadcast(&mut self, msg: &Msg) {
@@ -91,13 +98,22 @@ impl Net {
     /// Envia um blob em chunks; `peer = None` faz broadcast.
     pub fn send_blob_to(&mut self, peer: Option<PeerId>, id: BlobId, data: &[u8]) {
         let chunks = data.chunks(CHUNK).count() as u32;
-        let start = Msg::BlobStart { id, kind: BlobKind::Image, len: data.len() as u32, chunks };
+        let start = Msg::BlobStart {
+            id,
+            kind: BlobKind::Image,
+            len: data.len() as u32,
+            chunks,
+        };
         match peer {
             Some(p) => self.send_to(p, &start),
             None => self.broadcast(&start),
         }
         for (i, c) in data.chunks(CHUNK).enumerate() {
-            let m = Msg::BlobChunk { id, seq: i as u32, data: c.to_vec() };
+            let m = Msg::BlobChunk {
+                id,
+                seq: i as u32,
+                data: c.to_vec(),
+            };
             match peer {
                 Some(p) => self.send_to(p, &m),
                 None => self.broadcast(&m),
@@ -127,7 +143,11 @@ impl Roster {
             }
             e.online = true;
         } else {
-            self.list.push(RosterEntry { meta, peer, online: true });
+            self.list.push(RosterEntry {
+                meta,
+                peer,
+                online: true,
+            });
         }
     }
 
@@ -169,7 +189,12 @@ pub struct Blobs {
 }
 
 impl Blobs {
-    pub fn store(&mut self, id: BlobId, bytes: Vec<u8>, images: &mut Assets<Image>) -> Option<Handle<Image>> {
+    pub fn store(
+        &mut self,
+        id: BlobId,
+        bytes: Vec<u8>,
+        images: &mut Assets<Image>,
+    ) -> Option<Handle<Image>> {
         let img = crate::svg_assets::image_from_encoded(&bytes)?;
         let h = images.add(img);
         self.images.insert(id, h.clone());
@@ -193,7 +218,10 @@ fn net_poll(mut net: ResMut<Net>, mut rx: EventWriter<NetRx>, mut pev: EventWrit
                 net.reconnect = None;
                 return;
             }
-            warn!("socket caiu ({e:?}); reconectando (tentativa {}/{MAX_RETRIES})", net.retries);
+            warn!(
+                "socket caiu ({e:?}); reconectando (tentativa {}/{MAX_RETRIES})",
+                net.retries
+            );
             net.socket = None;
             net.gm_peer = None;
             net.reconnect = Some(Timer::from_seconds(1.5, TimerMode::Once));
@@ -204,14 +232,20 @@ fn net_poll(mut net: ResMut<Net>, mut rx: EventWriter<NetRx>, mut pev: EventWrit
         match state {
             PeerState::Connected => {
                 info!("peer conectado: {peer}");
-                pev.write(PeerEvent { peer, connected: true });
+                pev.write(PeerEvent {
+                    peer,
+                    connected: true,
+                });
             }
             PeerState::Disconnected => {
                 info!("peer desconectado: {peer}");
                 if net.gm_peer == Some(peer) {
                     net.gm_peer = None;
                 }
-                pev.write(PeerEvent { peer, connected: false });
+                pev.write(PeerEvent {
+                    peer,
+                    connected: false,
+                });
             }
         }
     }
@@ -255,7 +289,13 @@ fn blob_rx(
     for NetRx(_, msg) in rx.read() {
         match msg {
             Msg::BlobStart { id, chunks, .. } => {
-                blobs.incoming.insert(*id, Incoming { chunks: *chunks, parts: vec![None; *chunks as usize] });
+                blobs.incoming.insert(
+                    *id,
+                    Incoming {
+                        chunks: *chunks,
+                        parts: vec![None; *chunks as usize],
+                    },
+                );
             }
             Msg::BlobChunk { id, seq, data } => {
                 let complete = if let Some(inc) = blobs.incoming.get_mut(id) {
@@ -269,7 +309,11 @@ fn blob_rx(
                 if complete {
                     let inc = blobs.incoming.remove(id).unwrap();
                     let bytes: Vec<u8> = inc.parts.into_iter().flatten().flatten().collect();
-                    info!("blob {id} completo ({} bytes, {} chunks)", bytes.len(), inc.chunks);
+                    info!(
+                        "blob {id} completo ({} bytes, {} chunks)",
+                        bytes.len(),
+                        inc.chunks
+                    );
                     if blobs.store(*id, bytes, &mut images).is_none() {
                         warn!("blob {id} não decodificou como imagem");
                     }

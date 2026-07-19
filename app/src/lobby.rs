@@ -47,7 +47,13 @@ impl Plugin for LobbyPlugin {
             .add_systems(OnExit(AppState::Lobby), cleanup_lobby)
             .add_systems(
                 Update,
-                (lobby_auto, lobby_clicks, lobby_typing, lobby_reflect, room_poll)
+                (
+                    lobby_auto,
+                    lobby_clicks,
+                    lobby_typing,
+                    lobby_reflect,
+                    room_poll,
+                )
                     .run_if(in_state(AppState::Lobby)),
             );
     }
@@ -322,7 +328,11 @@ fn start_session(
 ) {
     let code = match join_code {
         Some(c) => c,
-        None => args.code.clone().map(|c| c.to_uppercase()).unwrap_or_else(random_code),
+        None => args
+            .code
+            .clone()
+            .map(|c| c.to_uppercase())
+            .unwrap_or_else(random_code),
     };
     let host = signaling_override
         .map(|s| s.to_string())
@@ -332,13 +342,25 @@ fn start_session(
     let url = format!("ws://{host}/tabletop_{code}");
     let nick = {
         let t = form.nick.trim();
-        if t.is_empty() { "Jogador".to_string() } else { t.to_string() }
+        if t.is_empty() {
+            "Jogador".to_string()
+        } else {
+            t.to_string()
+        }
     };
-    let me = PlayerMeta { uuid: rand::random(), nick: nick.clone(), color: form.color, is_gm: gm };
+    let me = PlayerMeta {
+        uuid: rand::random(),
+        nick: nick.clone(),
+        color: form.color,
+        is_gm: gm,
+    };
     net.connect(&url);
     roster.list.clear();
     roster.upsert(me.clone(), None);
-    info!("sessão iniciada — sala {code} ({})", if gm { "mestre" } else { "jogador" });
+    info!(
+        "sessão iniciada — sala {code} ({})",
+        if gm { "mestre" } else { "jogador" }
+    );
     // publica sala no Supabase com IP da LAN (não 127.0.0.1)
     if gm {
         let code = code.clone();
@@ -378,9 +400,29 @@ fn lobby_auto(
         form.color = c % 8;
     }
     if args.gm {
-        start_session(true, None, None, &mut form, &args, &mut net, &mut roster, &mut commands, &mut next);
+        start_session(
+            true,
+            None,
+            None,
+            &mut form,
+            &args,
+            &mut net,
+            &mut roster,
+            &mut commands,
+            &mut next,
+        );
     } else if let Some(code) = args.join.clone() {
-        start_session(false, Some(code.to_uppercase()), None, &mut form, &args, &mut net, &mut roster, &mut commands, &mut next);
+        start_session(
+            false,
+            Some(code.to_uppercase()),
+            None,
+            &mut form,
+            &args,
+            &mut net,
+            &mut roster,
+            &mut commands,
+            &mut next,
+        );
     }
 }
 
@@ -415,7 +457,17 @@ fn lobby_clicks(
     }
     for i in &q_create {
         if *i == Interaction::Pressed {
-            start_session(true, None, None, &mut form, &args, &mut net, &mut roster, &mut commands, &mut next);
+            start_session(
+                true,
+                None,
+                None,
+                &mut form,
+                &args,
+                &mut net,
+                &mut roster,
+                &mut commands,
+                &mut next,
+            );
         }
     }
     for i in &q_join {
@@ -424,14 +476,34 @@ fn lobby_clicks(
             if code.len() < 4 {
                 form.status = "Código inválido (mínimo 4 caracteres)".into();
             } else {
-                start_session(false, Some(code), None, &mut form, &args, &mut net, &mut roster, &mut commands, &mut next);
+                start_session(
+                    false,
+                    Some(code),
+                    None,
+                    &mut form,
+                    &args,
+                    &mut net,
+                    &mut roster,
+                    &mut commands,
+                    &mut next,
+                );
             }
         }
     }
     for (i, btn) in &q_room_entry {
         if *i == Interaction::Pressed {
             form.code = btn.code.clone();
-            start_session(false, Some(btn.code.clone()), Some(&btn.signaling), &mut form, &args, &mut net, &mut roster, &mut commands, &mut next);
+            start_session(
+                false,
+                Some(btn.code.clone()),
+                Some(&btn.signaling),
+                &mut form,
+                &args,
+                &mut net,
+                &mut roster,
+                &mut commands,
+                &mut next,
+            );
         }
     }
 }
@@ -442,7 +514,11 @@ fn lobby_typing(mut form: ResMut<LobbyForm>, mut keys: EventReader<KeyboardInput
             continue;
         }
         if matches!(ev.logical_key, Key::Tab) {
-            form.focus = if form.focus == Focus::Nick { Focus::Code } else { Focus::Nick };
+            form.focus = if form.focus == Focus::Nick {
+                Focus::Code
+            } else {
+                Focus::Nick
+            };
             continue;
         }
         let code_mode = form.focus == Focus::Code;
@@ -515,7 +591,11 @@ fn lobby_reflect(
         b.0 = if form.focus == Focus::Code { GOLD } else { dim };
     }
     for (s, mut b) in &mut q_swatches {
-        b.0 = if s.0 == form.color { Color::WHITE } else { Color::NONE };
+        b.0 = if s.0 == form.color {
+            Color::WHITE
+        } else {
+            Color::NONE
+        };
     }
 }
 
@@ -552,7 +632,9 @@ fn room_poll(
             }
         });
     }
-    let Ok(container) = q_container.single() else { return };
+    let Ok(container) = q_container.single() else {
+        return;
+    };
     for e in q_entries.iter().chain(q_empty.iter()) {
         commands.entity(e).despawn();
     }
@@ -577,7 +659,10 @@ fn room_poll(
                 let label = format!("{}  •  {} ({})", entry.gm_name, entry.code, age);
                 c.spawn((
                     Button,
-                    RoomEntryBtn { code: entry.code.clone(), signaling: entry.room_url.clone() },
+                    RoomEntryBtn {
+                        code: entry.code.clone(),
+                        signaling: entry.room_url.clone(),
+                    },
                     Node {
                         width: Val::Percent(100.0),
                         padding: UiRect::all(Val::Px(8.0)),
@@ -612,11 +697,17 @@ fn detect_lan_ip() -> Option<String> {
     socket.connect("8.8.8.8:53").ok()?;
     let addr = socket.local_addr().ok()?;
     let ip = addr.ip();
-    if ip.is_loopback() { None } else { Some(format!("{ip}:3536")) }
+    if ip.is_loopback() {
+        None
+    } else {
+        Some(format!("{ip}:3536"))
+    }
 }
 
 fn random_code() -> String {
     use rand::Rng;
     let mut rng = rand::thread_rng();
-    (0..5).map(|_| CODE_ALPHABET[rng.gen_range(0..CODE_ALPHABET.len())] as char).collect()
+    (0..5)
+        .map(|_| CODE_ALPHABET[rng.gen_range(0..CODE_ALPHABET.len())] as char)
+        .collect()
 }

@@ -45,8 +45,14 @@ fn main() -> Result<()> {
             },
         ],
         output: OutputConfig {
-            json_dir: workspace_root.join("docs/_data").to_string_lossy().to_string(),
-            mdx_dir: workspace_root.join("docs/content/docs").to_string_lossy().to_string(),
+            json_dir: workspace_root
+                .join("docs/_data")
+                .to_string_lossy()
+                .to_string(),
+            mdx_dir: workspace_root
+                .join("docs/content/docs")
+                .to_string_lossy()
+                .to_string(),
         },
     };
 

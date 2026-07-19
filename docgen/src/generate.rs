@@ -79,7 +79,11 @@ pub fn generate_json(all_crates: &HashMap<String, CrateData>, out_dir: &str) -> 
         // Write the crate index
         let summary = CrateSummary {
             name: crate_name.clone(),
-            modules: crate_data.modules.values().map(|m| ModuleSummary::from(m)).collect(),
+            modules: crate_data
+                .modules
+                .values()
+                .map(ModuleSummary::from)
+                .collect(),
         };
         let index_path = crate_dir.join("index.json");
         fs::write(&index_path, serde_json::to_string_pretty(&summary)?)?;
@@ -107,7 +111,7 @@ pub fn generate_json(all_crates: &HashMap<String, CrateData>, out_dir: &str) -> 
         .iter()
         .map(|(name, data)| CrateSummary {
             name: (*name).clone(),
-            modules: data.modules.values().map(|m| ModuleSummary::from(m)).collect(),
+            modules: data.modules.values().map(ModuleSummary::from).collect(),
         })
         .collect();
     fs::write(&global_path, serde_json::to_string_pretty(&global_summary)?)?;
@@ -129,8 +133,10 @@ fn build_dependency_graph(crate_data: &CrateData) -> DependencyGraph {
 
         // Track use dependencies
         for use_line in &mod_data.uses {
-            for (other_name, _) in &crate_data.modules {
-                if other_name != mod_name && use_line.contains(other_name.replace("::", "__").as_str()) {
+            for other_name in crate_data.modules.keys() {
+                if other_name != mod_name
+                    && use_line.contains(other_name.replace("::", "__").as_str())
+                {
                     edges.push(DepEdge {
                         source: mod_name.clone(),
                         target: other_name.clone(),
@@ -188,8 +194,16 @@ fn generate_crate_overview_md(crate_name: &str, data: &CrateData) -> String {
     md.push_str(&format!("  {}[\"{}\"]\n", crate_name, crate_name));
     for (mod_name, mod_data) in &data.modules {
         let label = mod_name.split("::").last().unwrap_or(mod_name);
-        md.push_str(&format!("  {}[\"{}\"]\n", mod_name.replace("::", "_"), label));
-        md.push_str(&format!("  {} --> {}\n", crate_name, mod_name.replace("::", "_")));
+        md.push_str(&format!(
+            "  {}[\"{}\"]\n",
+            mod_name.replace("::", "_"),
+            label
+        ));
+        md.push_str(&format!(
+            "  {} --> {}\n",
+            crate_name,
+            mod_name.replace("::", "_")
+        ));
         for sub in &mod_data.submodules {
             let sub_mod = format!("{}::{}", mod_name, sub);
             if data.modules.contains_key(&sub_mod) {
@@ -207,15 +221,24 @@ fn generate_crate_overview_md(crate_name: &str, data: &CrateData) -> String {
     for (mod_name, mod_data) in &data.modules {
         let label = mod_name.split("::").last().unwrap_or(mod_name);
         let safe = mod_name.replace("::", "__");
-        md.push_str(&format!("### [`{}`](modules/{}) — `{}`\n\n", label, safe, mod_data.path));
+        md.push_str(&format!(
+            "### [`{}`](modules/{}) — `{}`\n\n",
+            label, safe, mod_data.path
+        ));
         if !mod_data.doc.is_empty() {
             md.push_str(&format!("{}\n\n", mod_data.doc.join("\n")));
         }
         if !mod_data.resources.is_empty() {
-            md.push_str(&format!("- **Resources**: {}\n", mod_data.resources.join(", ")));
+            md.push_str(&format!(
+                "- **Resources**: {}\n",
+                mod_data.resources.join(", ")
+            ));
         }
         if !mod_data.components.is_empty() {
-            md.push_str(&format!("- **Components**: {}\n", mod_data.components.join(", ")));
+            md.push_str(&format!(
+                "- **Components**: {}\n",
+                mod_data.components.join(", ")
+            ));
         }
         if !mod_data.events.is_empty() {
             md.push_str(&format!("- **Events**: {}\n", mod_data.events.join(", ")));
@@ -226,13 +249,23 @@ fn generate_crate_overview_md(crate_name: &str, data: &CrateData) -> String {
         if !mod_data.structs.is_empty() {
             md.push_str(&format!(
                 "- **Structs**: {}\n",
-                mod_data.structs.iter().map(|s| format!("`{}`", s.name)).collect::<Vec<_>>().join(", ")
+                mod_data
+                    .structs
+                    .iter()
+                    .map(|s| format!("`{}`", s.name))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ));
         }
         if !mod_data.enums.is_empty() {
             md.push_str(&format!(
                 "- **Enums**: {}\n",
-                mod_data.enums.iter().map(|e| format!("`{}`", e.name)).collect::<Vec<_>>().join(", ")
+                mod_data
+                    .enums
+                    .iter()
+                    .map(|e| format!("`{}`", e.name))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ));
         }
         md.push('\n');
@@ -391,7 +424,12 @@ fn generate_module_md(mod_name: &str, data: &ModuleData) -> String {
         md.push_str("## Funções\n\n");
         for f in &non_sys_fns {
             md.push_str(&format!("### `{}`\n\n", f.name));
-            md.push_str(&format!("```rust\nfn {}({}) -> {}\n```\n\n", f.name, f.inputs.join(", "), f.output));
+            md.push_str(&format!(
+                "```rust\nfn {}({}) -> {}\n```\n\n",
+                f.name,
+                f.inputs.join(", "),
+                f.output
+            ));
             if !f.doc.is_empty() {
                 for d in &f.doc {
                     md.push_str(&format!("{}\n\n", d));

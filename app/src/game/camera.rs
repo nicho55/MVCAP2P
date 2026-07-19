@@ -6,6 +6,7 @@ use bevy::input::touch::TouchPhase;
 #[cfg(target_os = "android")]
 use bevy::platform::collections::HashMap;
 
+#[cfg(target_os = "android")]
 use super::tokens::TouchDrag;
 use super::UiHovered;
 
@@ -23,7 +24,12 @@ pub struct CamRig {
 
 impl Default for CamRig {
     fn default() -> Self {
-        Self { focus: Vec3::ZERO, yaw: 0.0, pitch: 0.95, dist: 1400.0 }
+        Self {
+            focus: Vec3::ZERO,
+            yaw: 0.0,
+            pitch: 0.95,
+            dist: 1400.0,
+        }
     }
 }
 
@@ -199,7 +205,9 @@ pub fn touch_pan_zoom(
                             let dist = p1.distance(p2);
 
                             // orbit: delta do centro
-                            let dcenter = center - (old + state.fingers.get(&t.id).copied().unwrap_or(t.position)) / 2.0;
+                            let dcenter = center
+                                - (old + state.fingers.get(&t.id).copied().unwrap_or(t.position))
+                                    / 2.0;
                             rig.yaw -= dcenter.x * 0.006;
                             rig.pitch = (rig.pitch + dcenter.y * 0.004).clamp(0.35, 1.45);
 

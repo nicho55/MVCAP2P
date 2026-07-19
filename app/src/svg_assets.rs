@@ -30,7 +30,11 @@ pub fn tfont(assets: &GameAssets, size: f32) -> TextFont {
     }
 }
 
-fn load_svgs(mut commands: Commands, mut images: ResMut<Assets<Image>>, mut fonts: ResMut<Assets<Font>>) {
+fn load_svgs(
+    mut commands: Commands,
+    mut images: ResMut<Assets<Image>>,
+    mut fonts: ResMut<Assets<Font>>,
+) {
     let t0 = std::time::Instant::now();
 
     #[cfg(feature = "svg")]
@@ -54,18 +58,49 @@ fn load_svgs(mut commands: Commands, mut images: ResMut<Assets<Image>>, mut font
     let default_map = ras(include_bytes!("../../assets/svg/map_default.svg"), 2048);
 
     let mut icons = HashMap::new();
-    icons.insert("select", ras(include_bytes!("../../assets/svg/icon_select.svg"), 96));
-    icons.insert("eraser", ras(include_bytes!("../../assets/svg/icon_eraser.svg"), 96));
-    icons.insert("elev_up", ras(include_bytes!("../../assets/svg/icon_elev_up.svg"), 96));
-    icons.insert("elev_down", ras(include_bytes!("../../assets/svg/icon_elev_down.svg"), 96));
-    icons.insert("grid_square", ras(include_bytes!("../../assets/svg/icon_grid_square.svg"), 96));
-    icons.insert("grid_hex", ras(include_bytes!("../../assets/svg/icon_grid_hex.svg"), 96));
-    icons.insert("plus", ras(include_bytes!("../../assets/svg/icon_plus.svg"), 96));
-    icons.insert("minus", ras(include_bytes!("../../assets/svg/icon_minus.svg"), 96));
-    icons.insert("map", ras(include_bytes!("../../assets/svg/icon_map.svg"), 96));
-    icons.insert("token", ras(include_bytes!("../../assets/svg/icon_token.svg"), 96));
+    icons.insert(
+        "select",
+        ras(include_bytes!("../../assets/svg/icon_select.svg"), 96),
+    );
+    icons.insert(
+        "eraser",
+        ras(include_bytes!("../../assets/svg/icon_eraser.svg"), 96),
+    );
+    icons.insert(
+        "elev_up",
+        ras(include_bytes!("../../assets/svg/icon_elev_up.svg"), 96),
+    );
+    icons.insert(
+        "elev_down",
+        ras(include_bytes!("../../assets/svg/icon_elev_down.svg"), 96),
+    );
+    icons.insert(
+        "grid_square",
+        ras(include_bytes!("../../assets/svg/icon_grid_square.svg"), 96),
+    );
+    icons.insert(
+        "grid_hex",
+        ras(include_bytes!("../../assets/svg/icon_grid_hex.svg"), 96),
+    );
+    icons.insert(
+        "plus",
+        ras(include_bytes!("../../assets/svg/icon_plus.svg"), 96),
+    );
+    icons.insert(
+        "minus",
+        ras(include_bytes!("../../assets/svg/icon_minus.svg"), 96),
+    );
+    icons.insert(
+        "map",
+        ras(include_bytes!("../../assets/svg/icon_map.svg"), 96),
+    );
+    icons.insert(
+        "token",
+        ras(include_bytes!("../../assets/svg/icon_token.svg"), 96),
+    );
 
-    let font = Font::try_from_bytes(include_bytes!("../../assets/DejaVuSans.ttf").to_vec()).ok()
+    let font = Font::try_from_bytes(include_bytes!("../../assets/DejaVuSans.ttf").to_vec())
+        .ok()
         .map(|f| fonts.add(f));
     if font.is_none() {
         warn!("nenhuma fonte carregada; acentos podem não renderizar");
@@ -103,7 +138,11 @@ fn rasterize_svg(bytes: &[u8], target: u32) -> Image {
         data.extend_from_slice(&[c.red(), c.green(), c.blue(), c.alpha()]);
     }
     Image::new(
-        Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        Extent3d {
+            width: w,
+            height: h,
+            depth_or_array_layers: 1,
+        },
         TextureDimension::D2,
         data,
         TextureFormat::Rgba8UnormSrgb,
@@ -115,7 +154,11 @@ fn rasterize_svg(bytes: &[u8], target: u32) -> Image {
 fn placeholder_tex(size: u32) -> Image {
     let data = vec![255u8; (size * size * 4) as usize];
     Image::new(
-        Extent3d { width: size, height: size, depth_or_array_layers: 1 },
+        Extent3d {
+            width: size,
+            height: size,
+            depth_or_array_layers: 1,
+        },
         TextureDimension::D2,
         data,
         TextureFormat::Rgba8UnormSrgb,
@@ -128,7 +171,11 @@ pub fn image_from_encoded(bytes: &[u8]) -> Option<Image> {
     let rgba = img.to_rgba8();
     let (w, h) = rgba.dimensions();
     Some(Image::new(
-        Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        Extent3d {
+            width: w,
+            height: h,
+            depth_or_array_layers: 1,
+        },
         TextureDimension::D2,
         rgba.into_raw(),
         TextureFormat::Rgba8UnormSrgb,

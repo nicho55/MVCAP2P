@@ -19,7 +19,9 @@ pub fn list_rooms() -> Result<Vec<RoomEntry>, String> {
         .header("Authorization", &format!("Bearer {SUPABASE_ANON_KEY}"))
         .call()
         .map_err(|e| format!("{e:?}"))?;
-    resp.into_body().read_json::<Vec<RoomEntry>>().map_err(|e| format!("{e:?}"))
+    resp.into_body()
+        .read_json::<Vec<RoomEntry>>()
+        .map_err(|e| format!("{e:?}"))
 }
 
 pub fn create_room(code: &str, gm_name: &str, room_url: &str) -> Result<(), String> {

@@ -55,7 +55,12 @@ fn sz(n: f32, si: &ScreenInfo) -> f32 {
     (n * si.scale).round().max(1.0)
 }
 
-fn tool_button(bar: &mut ChildSpawnerCommands, kind: ToolBtn, icon: Handle<Image>, si: &ScreenInfo) {
+fn tool_button(
+    bar: &mut ChildSpawnerCommands,
+    kind: ToolBtn,
+    icon: Handle<Image>,
+    si: &ScreenInfo,
+) {
     let b = sz(46.0, si);
     bar.spawn((
         Button,
@@ -76,15 +81,33 @@ fn tool_button(bar: &mut ChildSpawnerCommands, kind: ToolBtn, icon: Handle<Image
     .with_children(|b| {
         b.spawn((
             ImageNode::new(icon),
-            Node { width: Val::Percent(100.0), height: Val::Percent(100.0), ..default() },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
         ));
     });
 }
 
 fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si: &ScreenInfo) {
     let gm = session.me.is_gm;
-    let top = sz(if cfg!(target_os = "android") { 36.0 } else { 0.0 }, si);
-    let bottom = sz(if cfg!(target_os = "android") { 60.0 } else { 0.0 }, si);
+    let top = sz(
+        if cfg!(target_os = "android") {
+            36.0
+        } else {
+            0.0
+        },
+        si,
+    );
+    let bottom = sz(
+        if cfg!(target_os = "android") {
+            60.0
+        } else {
+            0.0
+        },
+        si,
+    );
     let p = sz(12.0, si);
     let p2 = sz(8.0, si);
     let r = sz(8.0, si);
@@ -134,7 +157,11 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     TextColor(Color::srgb(0.8, 0.8, 0.8)),
                 ));
                 p.spawn((
-                    Text::new(if gm { "você é o MESTRE" } else { "você é JOGADOR" }),
+                    Text::new(if gm {
+                        "você é o MESTRE"
+                    } else {
+                        "você é JOGADOR"
+                    }),
                     tfont(assets, f2),
                     TextColor(Color::srgb(0.60, 0.58, 0.68)),
                 ));
@@ -162,7 +189,11 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                 ));
                 p.spawn((
                     RosterPanel,
-                    Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(gap), ..default() },
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        row_gap: Val::Px(gap),
+                        ..default()
+                    },
                 ));
             });
             // dica inferior direita
@@ -201,7 +232,11 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                 BorderRadius::all(Val::Px(sz(6.0, si))),
             ))
             .with_children(|b| {
-                b.spawn((Text::new("SAIR"), tfont(assets, sz(13.0, si)), TextColor(Color::srgb(0.95, 0.70, 0.70))));
+                b.spawn((
+                    Text::new("SAIR"),
+                    tfont(assets, sz(13.0, si)),
+                    TextColor(Color::srgb(0.95, 0.70, 0.70)),
+                ));
             });
             // toolbar inferior central
             root.spawn(Node {
@@ -226,21 +261,76 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     BorderRadius::all(Val::Px(sz(10.0, si))),
                 ))
                 .with_children(|bar| {
-                    tool_button(bar, ToolBtn::Tool(ActiveTool::Select), assets.icons["select"].clone(), si);
+                    tool_button(
+                        bar,
+                        ToolBtn::Tool(ActiveTool::Select),
+                        assets.icons["select"].clone(),
+                        si,
+                    );
                     if gm {
                         for i in 0..assets.textures.len() as u8 {
-                            tool_button(bar, ToolBtn::Tool(ActiveTool::Paint(i)), assets.textures[i as usize].clone(), si);
+                            tool_button(
+                                bar,
+                                ToolBtn::Tool(ActiveTool::Paint(i)),
+                                assets.textures[i as usize].clone(),
+                                si,
+                            );
                         }
-                        tool_button(bar, ToolBtn::Tool(ActiveTool::Erase), assets.icons["eraser"].clone(), si);
-                        tool_button(bar, ToolBtn::Tool(ActiveTool::ElevUp), assets.icons["elev_up"].clone(), si);
-                        tool_button(bar, ToolBtn::Tool(ActiveTool::ElevDown), assets.icons["elev_down"].clone(), si);
-                        tool_button(bar, ToolBtn::Grid(GridKind::Square), assets.icons["grid_square"].clone(), si);
-                        tool_button(bar, ToolBtn::Grid(GridKind::HexFlat), assets.icons["grid_hex"].clone(), si);
-                        tool_button(bar, ToolBtn::CellDelta(8.0), assets.icons["plus"].clone(), si);
-                        tool_button(bar, ToolBtn::CellDelta(-8.0), assets.icons["minus"].clone(), si);
-                        tool_button(bar, ToolBtn::Drop(DropMode::Map), assets.icons["map"].clone(), si);
+                        tool_button(
+                            bar,
+                            ToolBtn::Tool(ActiveTool::Erase),
+                            assets.icons["eraser"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::Tool(ActiveTool::ElevUp),
+                            assets.icons["elev_up"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::Tool(ActiveTool::ElevDown),
+                            assets.icons["elev_down"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::Grid(GridKind::Square),
+                            assets.icons["grid_square"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::Grid(GridKind::HexFlat),
+                            assets.icons["grid_hex"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::CellDelta(8.0),
+                            assets.icons["plus"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::CellDelta(-8.0),
+                            assets.icons["minus"].clone(),
+                            si,
+                        );
+                        tool_button(
+                            bar,
+                            ToolBtn::Drop(DropMode::Map),
+                            assets.icons["map"].clone(),
+                            si,
+                        );
                     }
-                    tool_button(bar, ToolBtn::Drop(DropMode::Token), assets.icons["token"].clone(), si);
+                    tool_button(
+                        bar,
+                        ToolBtn::Drop(DropMode::Token),
+                        assets.icons["token"].clone(),
+                        si,
+                    );
                     // botões de escala
                     bar.spawn((
                         Button,
@@ -257,7 +347,11 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                         BorderRadius::all(Val::Px(sz(6.0, si))),
                     ))
                     .with_children(|b| {
-                        b.spawn((Text::new("A-"), tfont(assets, sz(14.0, si)), TextColor(TEXT)));
+                        b.spawn((
+                            Text::new("A-"),
+                            tfont(assets, sz(14.0, si)),
+                            TextColor(TEXT),
+                        ));
                     });
                     bar.spawn((
                         Button,
@@ -273,14 +367,23 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                         BorderRadius::all(Val::Px(sz(6.0, si))),
                     ))
                     .with_children(|b| {
-                        b.spawn((Text::new("A+"), tfont(assets, sz(14.0, si)), TextColor(TEXT)));
+                        b.spawn((
+                            Text::new("A+"),
+                            tfont(assets, sz(14.0, si)),
+                            TextColor(TEXT),
+                        ));
                     });
                 });
             });
         });
 }
 
-pub fn setup_hud(mut commands: Commands, assets: Res<GameAssets>, session: Res<Session>, si: Res<ScreenInfo>) {
+pub fn setup_hud(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    session: Res<Session>,
+    si: Res<ScreenInfo>,
+) {
     spawn_hud(&mut commands, &assets, &session, &si);
 }
 
@@ -371,7 +474,11 @@ pub fn toolbar_visuals(
             ToolBtn::CellDelta(_) => false,
         };
         border.0 = if active { GOLD } else { BTN_BORDER };
-        *bg = BackgroundColor(if active { Color::srgb(0.26, 0.22, 0.34) } else { BTN_BG });
+        *bg = BackgroundColor(if active {
+            Color::srgb(0.26, 0.22, 0.34)
+        } else {
+            BTN_BG
+        });
     }
 }
 
@@ -388,7 +495,7 @@ pub fn roster_panel(
     if !roster.is_changed() && !selection.is_changed() {
         return;
     }
-    let Ok(panel) = q_panel.single() else { return };
+    let Ok(_panel) = q_panel.single() else { return };
     for e in &q_rows {
         commands.entity(e).despawn();
     }
@@ -434,11 +541,19 @@ pub fn roster_panel(
         };
         spawner.with_children(|r| {
             r.spawn((
-                Node { width: Val::Px(dot), height: Val::Px(dot), ..default() },
+                Node {
+                    width: Val::Px(dot),
+                    height: Val::Px(dot),
+                    ..default()
+                },
                 BackgroundColor(palette_color(entry.meta.color)),
                 BorderRadius::all(Val::Px(dot * 0.5)),
             ));
-            r.spawn((Text::new(label), tfont(&*assets, sz(15.0, &si)), TextColor(col)));
+            r.spawn((
+                Text::new(label),
+                tfont(&assets, sz(15.0, &si)),
+                TextColor(col),
+            ));
         });
     }
 }
@@ -449,14 +564,29 @@ pub fn status_label(
     roster: Res<Roster>,
     mut q: Query<(&mut Text, &mut TextColor), With<StatusLabel>>,
 ) {
-    let Ok((mut text, mut color)) = q.single_mut() else { return };
+    let Ok((mut text, mut color)) = q.single_mut() else {
+        return;
+    };
     let (s, c) = if session.me.is_gm {
-        let n = roster.list.iter().filter(|e| e.online && !e.meta.is_gm).count();
-        (format!("{n} jogador(es) conectado(s)"), Color::srgb(0.55, 0.85, 0.55))
+        let n = roster
+            .list
+            .iter()
+            .filter(|e| e.online && !e.meta.is_gm)
+            .count();
+        (
+            format!("{n} jogador(es) conectado(s)"),
+            Color::srgb(0.55, 0.85, 0.55),
+        )
     } else if net.gm_peer.is_some() {
-        ("conectado ao mestre".to_string(), Color::srgb(0.55, 0.85, 0.55))
+        (
+            "conectado ao mestre".to_string(),
+            Color::srgb(0.55, 0.85, 0.55),
+        )
     } else if net.socket.is_some() {
-        ("procurando o mestre...".to_string(), Color::srgb(0.9, 0.8, 0.4))
+        (
+            "procurando o mestre...".to_string(),
+            Color::srgb(0.9, 0.8, 0.4),
+        )
     } else {
         ("reconectando...".to_string(), Color::srgb(0.9, 0.5, 0.4))
     };
@@ -495,8 +625,18 @@ pub fn assign_token_click(
         if *i != Interaction::Pressed {
             continue;
         }
-        set_token_owner(token_id, btn.0, &roster, &mut ctx, &mut q_tokens, &mut q_rings);
-        net.broadcast(&Msg::AssignToken { id: token_id, new_owner: btn.0 });
+        set_token_owner(
+            token_id,
+            btn.0,
+            &roster,
+            &mut ctx,
+            &mut q_tokens,
+            &mut q_rings,
+        );
+        net.broadcast(&Msg::AssignToken {
+            id: token_id,
+            new_owner: btn.0,
+        });
         info!("token {token_id} atribuído ao jogador {}", btn.0);
     }
 }
@@ -519,7 +659,11 @@ pub fn hint_label(
     let tool_s = match *tool {
         ActiveTool::Select => "mover/selecionar",
         ActiveTool::Paint(i) => {
-            let name = assets.tex_names.get(i as usize).copied().unwrap_or("terreno");
+            let name = assets
+                .tex_names
+                .get(i as usize)
+                .copied()
+                .unwrap_or("terreno");
             paint_label = format!("pintar: {name}");
             paint_label.as_str()
         }

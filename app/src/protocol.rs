@@ -67,7 +67,10 @@ pub struct GridCfg {
 
 impl Default for GridCfg {
     fn default() -> Self {
-        Self { kind: GridKind::Square, cell: 64.0 }
+        Self {
+            kind: GridKind::Square,
+            cell: 64.0,
+        }
     }
 }
 
@@ -143,7 +146,12 @@ pub enum Msg {
     /// GM altera configuração do grid.
     Grid(GridCfg),
     /// Início da transferência de um blob (cabeçalho com metadados).
-    BlobStart { id: BlobId, kind: BlobKind, len: u32, chunks: u32 },
+    BlobStart {
+        id: BlobId,
+        kind: BlobKind,
+        len: u32,
+        chunks: u32,
+    },
     /// Um chunk de dados do blob (sequência numerada).
     BlobChunk { id: BlobId, seq: u32, data: Vec<u8> },
     /// GM define/remove a imagem do mapa por blob ID.
@@ -165,5 +173,8 @@ pub enum Msg {
     /// Preview de arrasto (broadcast throttled ~20Hz para todos).
     DragPreview { id: TokenId, x: f32, y: f32 },
     /// GM modifica uma célula de terreno (pintar/esculpir).
-    Terrain { cell: Cell, val: Option<TerrainCell> },
+    Terrain {
+        cell: Cell,
+        val: Option<TerrainCell>,
+    },
 }

@@ -26,7 +26,12 @@ pub struct ScreenInfo {
 
 impl Default for ScreenInfo {
     fn default() -> Self {
-        Self { width: 1366.0, height: 840.0, scale: 1.0, auto_scale: true }
+        Self {
+            width: 1366.0,
+            height: 840.0,
+            scale: 1.0,
+            auto_scale: true,
+        }
     }
 }
 
@@ -77,56 +82,59 @@ impl Plugin for GamePlugin {
             .init_resource::<tokens::TouchDrag>();
         #[cfg(target_os = "android")]
         app.init_resource::<camera::TouchState>();
-        app.add_systems(Startup, (camera::setup_camera, lowpoly::setup_lowpoly, setup_lighting))
-            .add_systems(OnEnter(AppState::InGame), (hud::setup_hud, game_init))
-            .add_systems(OnExit(AppState::InGame), (leave_game, reset_ui_hover))
-            .add_systems(First, screen_update)
-            .add_systems(
-                Update,
-                (
-                    track_ui_hover,
-                    camera::pan_zoom,
-                    #[cfg(target_os = "android")]
-                    camera::touch_pan_zoom,
-                    camera::apply_rig.after(camera::pan_zoom),
-                    grid::draw_grid,
-                    grid::grid_reflow,
-                    map::file_drop,
-                    map::sync_map,
-                    tokens::token_interact,
-                    tokens::token_y_follow.after(tokens::token_interact),
-                    tokens::selection_visual,
-                    tokens::delete_selected,
-                    #[cfg(target_os = "android")]
-                    tokens::touch_interact,
-                    #[cfg(target_os = "android")]
-                    tokens::touch_highlight,
-                    tokens::resolve_pending_art,
-                    tokens::refresh_ring_colors,
-                    terrain::terrain_tool,
-                    terrain::terrain_render.after(terrain::terrain_tool),
-                )
-                    .run_if(in_state(AppState::InGame)),
+        app.add_systems(
+            Startup,
+            (camera::setup_camera, lowpoly::setup_lowpoly, setup_lighting),
+        )
+        .add_systems(OnEnter(AppState::InGame), (hud::setup_hud, game_init))
+        .add_systems(OnExit(AppState::InGame), (leave_game, reset_ui_hover))
+        .add_systems(First, screen_update)
+        .add_systems(
+            Update,
+            (
+                track_ui_hover,
+                camera::pan_zoom,
+                #[cfg(target_os = "android")]
+                camera::touch_pan_zoom,
+                camera::apply_rig.after(camera::pan_zoom),
+                grid::draw_grid,
+                grid::grid_reflow,
+                map::file_drop,
+                map::sync_map,
+                tokens::token_interact,
+                tokens::token_y_follow.after(tokens::token_interact),
+                tokens::selection_visual,
+                tokens::delete_selected,
+                #[cfg(target_os = "android")]
+                tokens::touch_interact,
+                #[cfg(target_os = "android")]
+                tokens::touch_highlight,
+                tokens::resolve_pending_art,
+                tokens::refresh_ring_colors,
+                terrain::terrain_tool,
+                terrain::terrain_render.after(terrain::terrain_tool),
             )
-            .add_systems(
-                Update,
-                (
-                    sync::handle_hello,
-                    sync::handle_core,
-                    sync::handle_tokens,
-                    sync::assign_token_rx,
-                    hud::toolbar_clicks,
-                    hud::toolbar_visuals,
-                    hud::roster_panel,
-                    hud::status_label,
-                    hud::hint_label,
-                    hud::back_btn_click,
-                    hud::scale_btn_click,
-                    hud::assign_token_click,
-                )
-                    .run_if(in_state(AppState::InGame))
-                    .after(NetSet),
-            );
+                .run_if(in_state(AppState::InGame)),
+        )
+        .add_systems(
+            Update,
+            (
+                sync::handle_hello,
+                sync::handle_core,
+                sync::handle_tokens,
+                sync::assign_token_rx,
+                hud::toolbar_clicks,
+                hud::toolbar_visuals,
+                hud::roster_panel,
+                hud::status_label,
+                hud::hint_label,
+                hud::back_btn_click,
+                hud::scale_btn_click,
+                hud::assign_token_click,
+            )
+                .run_if(in_state(AppState::InGame))
+                .after(NetSet),
+        );
     }
 }
 
@@ -209,7 +217,9 @@ fn game_init(
     }
     if let Some(path) = &args.map {
         match std::fs::read(path) {
-            Ok(bytes) => map::import_map_bytes(bytes, &mut blobs, &mut images, &mut net, &mut map_state),
+            Ok(bytes) => {
+                map::import_map_bytes(bytes, &mut blobs, &mut images, &mut net, &mut map_state)
+            }
             Err(e) => warn!("falha lendo mapa {path}: {e}"),
         }
     }
@@ -221,7 +231,15 @@ fn game_init(
                 art: TokenArt::BuiltIn(i as u8),
                 cell,
             };
-            tokens::spawn_token(&mut commands, meta.clone(), &assets, &blobs, &grid.0, &roster, &mut ctx);
+            tokens::spawn_token(
+                &mut commands,
+                meta.clone(),
+                &assets,
+                &blobs,
+                &grid.0,
+                &roster,
+                &mut ctx,
+            );
             net.broadcast(&Msg::SpawnToken(meta));
         }
         info!("tokens de demonstração criados");

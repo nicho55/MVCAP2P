@@ -58,7 +58,10 @@ pub fn spawn_token(
     ctx: &mut Ctx3d,
 ) {
     let s = g.cell / BASE_CELL;
-    let r = token_size(&GridCfg { kind: g.kind, cell: BASE_CELL }) * 0.5;
+    let r = token_size(&GridCfg {
+        kind: g.kind,
+        cell: BASE_CELL,
+    }) * 0.5;
     let c = grid::cell_center(g, meta.cell);
     let top = cell_top(&ctx.terrain, g, meta.cell);
 
@@ -128,7 +131,9 @@ pub fn token_interact(
         return;
     }
     let Ok(win) = windows.single() else { return };
-    let Ok((cam, cam_gt)) = q_cam.single() else { return };
+    let Ok((cam, cam_gt)) = q_cam.single() else {
+        return;
+    };
 
     if buttons.just_pressed(MouseButton::Left) && !ui.0 {
         if let Some(ray) = cursor_ray(win, cam, cam_gt) {
@@ -177,7 +182,11 @@ pub fn token_interact(
             let now = time.elapsed_secs();
             if now - drag.last_tx > 0.05 {
                 drag.last_tx = now;
-                net.broadcast(&Msg::DragPreview { id, x: pos.x, y: pos.y });
+                net.broadcast(&Msg::DragPreview {
+                    id,
+                    x: pos.x,
+                    y: pos.y,
+                });
             }
         }
     }
@@ -231,7 +240,11 @@ pub fn selection_visual(
     mut q_rings: Query<&mut Visibility, With<SelRing>>,
 ) {
     for (tok, children) in &q_tokens {
-        let vis = if sel.0 == Some(tok.meta.id) { Visibility::Inherited } else { Visibility::Hidden };
+        let vis = if sel.0 == Some(tok.meta.id) {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
         for c in children {
             if let Ok(mut v) = q_rings.get_mut(*c) {
                 if *v != vis {
@@ -254,7 +267,9 @@ pub fn delete_selected(
         return;
     }
     let Some(id) = sel.0 else { return };
-    let Some((e, tok)) = q_tokens.iter().find(|(_, t)| t.meta.id == id) else { return };
+    let Some((e, tok)) = q_tokens.iter().find(|(_, t)| t.meta.id == id) else {
+        return;
+    };
     if session.me.is_gm {
         commands.entity(e).despawn();
         net.broadcast(&Msg::RemoveToken { id });
@@ -276,7 +291,10 @@ pub fn resolve_pending_art(
     mut q_art: Query<&mut MeshMaterial3d<StandardMaterial>, With<ArtDisc>>,
 ) {
     for (e, p, children) in &q_pending {
-        if let Some(h) = ctx.mats.art(&mut ctx.materials, &assets, &blobs, TokenArt::Blob(p.0)) {
+        if let Some(h) = ctx
+            .mats
+            .art(&mut ctx.materials, &assets, &blobs, TokenArt::Blob(p.0))
+        {
             for c in children {
                 if let Ok(mut m) = q_art.get_mut(*c) {
                     m.0 = h.clone();
@@ -290,6 +308,8 @@ pub fn resolve_pending_art(
 // ─── Touch interaction + highlight (Android) ─────────────────────────────────
 
 #[derive(Resource, Default)]
+// Campos usados apenas no handler de toque (Android); no desktop ficam ociosos.
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
 pub struct TouchDrag {
     pub token_id: Option<TokenId>,
     pub finger_id: Option<u64>,
@@ -316,7 +336,9 @@ pub fn touch_interact(
         return;
     }
     let Ok(win) = windows.single() else { return };
-    let Ok((cam, cam_gt)) = q_cam.single() else { return };
+    let Ok((cam, cam_gt)) = q_cam.single() else {
+        return;
+    };
 
     for t in touch_ev.read() {
         match t.phase {
@@ -363,7 +385,9 @@ pub fn touch_interact(
                     let pos = ground + drag.grab;
                     let hover_cell = grid::world_to_cell(&grid.0, pos);
                     let lift = cell_top(&terrain, &grid.0, hover_cell) + grid.0.cell * 0.35;
-                    if let Some((_, mut tf, _)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == tid) {
+                    if let Some((_, mut tf, _)) =
+                        q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == tid)
+                    {
                         tf.translation.x = pos.x;
                         tf.translation.z = pos.y;
                         tf.translation.y = lift;
@@ -371,7 +395,11 @@ pub fn touch_interact(
                     let now = time.elapsed_secs();
                     if now - drag.last_tx > 0.05 {
                         drag.last_tx = now;
-                        net.broadcast(&Msg::DragPreview { id: tid, x: pos.x, y: pos.y });
+                        net.broadcast(&Msg::DragPreview {
+                            id: tid,
+                            x: pos.x,
+                            y: pos.y,
+                        });
                     }
                 }
             }
@@ -382,7 +410,9 @@ pub fn touch_interact(
                 }
                 drag.token_id = None;
                 drag.finger_id = None;
-                if let Some((_, mut tf, mut tok)) = q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == tid) {
+                if let Some((_, mut tf, mut tok)) =
+                    q_tokens.iter_mut().find(|(_, _, t)| t.meta.id == tid)
+                {
                     let pos = cursor_ground(win, cam, cam_gt)
                         .map(|g| g + drag.grab)
                         .unwrap_or(Vec2::new(tf.translation.x, tf.translation.z));
@@ -434,7 +464,7 @@ pub fn set_token_owner(
     roster: &Roster,
     ctx: &mut Ctx3d,
     q_tokens: &mut Query<(Entity, &mut Token, &Children)>,
-    mut q_rings: &mut Query<&mut MeshMaterial3d<StandardMaterial>, With<OwnerRing>>,
+    q_rings: &mut Query<&mut MeshMaterial3d<StandardMaterial>, With<OwnerRing>>,
 ) {
     for (_, mut tok, children) in q_tokens.iter_mut() {
         if tok.meta.id != id {
