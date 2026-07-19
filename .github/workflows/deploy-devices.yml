@@ -19,9 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-linux-android
+      # Versão do Rust + target Android vêm do rust-toolchain.toml (fonte única).
+      - name: Rust pinado (rust-toolchain.toml)
+        run: rustup show
 
       - uses: Swatinem/rust-cache@v2
 

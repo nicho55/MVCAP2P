@@ -1,0 +1,7 @@
+# Fonte única da toolchain — honrada pelo rustup local e pelo CI (rust-toolchain.toml).
+# Bump deliberado: alterar o channel aqui atualiza dev e GitHub Actions juntos.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
+targets = ["aarch64-linux-android"]
+profile = "minimal"

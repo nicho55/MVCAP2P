@@ -15,9 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+      # Versão do Rust vem do rust-toolchain.toml (fonte única). rustup show
+      # instala o channel/componentes/targets pinados no arquivo.
+      - name: Rust pinado (rust-toolchain.toml)
+        run: rustup show
 
       - uses: Swatinem/rust-cache@v2
 
