@@ -1,0 +1,48 @@
+name: Release → cria Rodada de Testes
+
+# Quando o programador publica uma Release (versão nova), abre automaticamente
+# a issue "Rodada de Testes" com o que testar e a checklist de sign-off.
+on:
+  release:
+    types: [published]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  open-round:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const rel = context.payload.release;
+            const tag = rel.tag_name;
+            const notes = (rel.body || "_(sem notas — descreva o que testar aqui)_").trim();
+            const dl = rel.html_url;
+            const owner = context.repo.owner, repo = context.repo.repo;
+
+            const body = [
+              `**Versão:** ${tag}`,
+              `**Download:** ${dl}`,
+              ``,
+              `## 🎯 O que testar nesta rodada`,
+              notes,
+              ``,
+              `## ✅ Sign-off dos testers — marque a caixa DEPOIS de testar no seu aparelho`,
+              `- [ ] @${owner} — aparelho: \`___\` — FPS: \`___\` — sync 4p: OK? \`___\``,
+              `- [ ] tester 2 — aparelho: \`___\` — FPS: \`___\` — sync 4p: OK? \`___\``,
+              `- [ ] tester 3 — aparelho: \`___\` — FPS: \`___\` — sync 4p: OK? \`___\``,
+              ``,
+              `## 🤖 Regra de automação`,
+              `Todas as caixas marcadas → \`tested:pass\`, comentário ✅ e fecha (card vai p/ **Done**).`,
+            ].join("\n");
+
+            const issue = await github.rest.issues.create({
+              owner, repo,
+              title: `🧪 Rodada de Testes — ${tag}`,
+              body,
+              labels: ['test-round']
+            });
+            core.info(`Rodada criada: ${issue.data.html_url}`);
