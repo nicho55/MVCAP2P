@@ -26,6 +26,7 @@ bevy = { version = "0.16", default-features = false, features = [
     "png", "smaa_luts", "std", "sysinfo_plugin",
     "tonemapping_luts", "vorbis", "webgl2", "x11",
 ] }
+shared = { path = "../shared" }
 bevy_matchbox = "0.12"
 serde = { version = "1", features = ["derive"] }
 bincode = "1.3"

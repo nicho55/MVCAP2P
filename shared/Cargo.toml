@@ -1,0 +1,14 @@
+[package]
+name = "shared"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Tipos de domínio SEM dependência de engine — reutilizável pelo cliente Bevy
+# e pelo servidor SpacetimeDB (WASM). Ver ADR-009.
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+rand = "0.8"
+
+[dev-dependencies]
+bincode = "1.3"
