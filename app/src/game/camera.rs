@@ -57,8 +57,8 @@ pub fn apply_rig(rig: Res<CamRig>, mut q: Query<&mut Transform, With<MainCamera>
 }
 
 pub fn pan_zoom(
-    mut wheel: EventReader<MouseWheel>,
-    mut motion: EventReader<MouseMotion>,
+    mut wheel: MessageReader<MouseWheel>,
+    mut motion: MessageReader<MouseMotion>,
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
@@ -166,7 +166,7 @@ pub struct TouchState {
 /// - pinch → zoom (scroll equivalent)
 #[cfg(target_os = "android")]
 pub fn touch_pan_zoom(
-    mut touch_ev: EventReader<TouchInput>,
+    mut touch_ev: MessageReader<TouchInput>,
     mut state: ResMut<TouchState>,
     mut rig: ResMut<CamRig>,
     ui: Res<UiHovered>,

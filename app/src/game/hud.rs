@@ -75,7 +75,7 @@ fn tool_button(
             ..default()
         },
         BackgroundColor(BTN_BG),
-        BorderColor(BTN_BORDER),
+        BorderColor::all(BTN_BORDER),
         BorderRadius::all(Val::Px(sz(8.0, si))),
     ))
     .with_children(|b| {
@@ -464,7 +464,7 @@ pub fn toolbar_visuals(
             ToolBtn::Grid(k) => grid.0.kind == *k,
             ToolBtn::CellDelta(_) => false,
         };
-        border.0 = if active { GOLD } else { BTN_BORDER };
+        *border = BorderColor::all(if active { GOLD } else { BTN_BORDER });
         *bg = BackgroundColor(if active {
             Color::srgb(0.26, 0.22, 0.34)
         } else {

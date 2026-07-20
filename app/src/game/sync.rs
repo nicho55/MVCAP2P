@@ -11,7 +11,7 @@ use crate::svg_assets::GameAssets;
 
 /// GM: responde Hello com o estado completo (blobs primeiro — canal ordenado garante a chegada antes do Welcome).
 pub fn handle_hello(
-    mut rx: EventReader<NetRx>,
+    mut rx: MessageReader<NetRx>,
     session: Option<Res<Session>>,
     mut net: ResMut<Net>,
     mut roster: ResMut<Roster>,
@@ -67,7 +67,7 @@ pub fn handle_hello(
 
 /// Estado global: roster, grid, mapa, terreno.
 pub fn handle_core(
-    mut rx: EventReader<NetRx>,
+    mut rx: MessageReader<NetRx>,
     session: Option<Res<Session>>,
     mut net: ResMut<Net>,
     mut roster: ResMut<Roster>,
@@ -133,7 +133,7 @@ pub fn handle_core(
 /// Posições: XZ snap imediato; altura (Y) é resolvida pelo token_y_follow.
 pub fn handle_tokens(
     mut commands: Commands,
-    mut rx: EventReader<NetRx>,
+    mut rx: MessageReader<NetRx>,
     session: Option<Res<Session>>,
     mut net: ResMut<Net>,
     roster: Res<Roster>,
@@ -261,7 +261,7 @@ pub fn handle_tokens(
 
 /// Processa `AssignToken` em jogadores não-mestre: atualiza dono e cor do anel.
 pub fn assign_token_rx(
-    mut rx: EventReader<NetRx>,
+    mut rx: MessageReader<NetRx>,
     session: Option<Res<Session>>,
     roster: Res<Roster>,
     mut ctx: Ctx3d,

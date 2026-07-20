@@ -162,7 +162,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                         ..default()
                     },
                     BackgroundColor(PANEL),
-                    BorderColor(Color::srgb(0.30, 0.26, 0.40)),
+                    BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                     BorderRadius::all(Val::Px(12.0)),
                 ))
                 .with_children(|panel| {
@@ -180,7 +180,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                 ..default()
                             },
                             BackgroundColor(FIELD_BG),
-                            BorderColor(GOLD),
+                            BorderColor::all(GOLD),
                             BorderRadius::all(Val::Px(6.0)),
                         ))
                         .with_children(|f| {
@@ -205,7 +205,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                         ..default()
                                     },
                                     BackgroundColor(palette_color(i)),
-                                    BorderColor(Color::NONE),
+                                    BorderColor::all(Color::NONE),
                                     BorderRadius::all(Val::Px(18.0)),
                                 ));
                             }
@@ -248,7 +248,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                     ..default()
                                 },
                                 BackgroundColor(FIELD_BG),
-                                BorderColor(Color::srgb(0.30, 0.26, 0.40)),
+                                BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                                 BorderRadius::all(Val::Px(6.0)),
                             ))
                             .with_children(|f| {
@@ -285,7 +285,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                         ..default()
                     },
                     BackgroundColor(PANEL),
-                    BorderColor(Color::srgb(0.30, 0.26, 0.40)),
+                    BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                     BorderRadius::all(Val::Px(12.0)),
                 ))
                 .with_children(|panel| {
@@ -510,7 +510,7 @@ fn lobby_clicks(
     }
 }
 
-fn lobby_typing(mut form: ResMut<LobbyForm>, mut keys: EventReader<KeyboardInput>) {
+fn lobby_typing(mut form: ResMut<LobbyForm>, mut keys: MessageReader<KeyboardInput>) {
     for ev in keys.read() {
         if !ev.state.is_pressed() {
             continue;
@@ -587,17 +587,17 @@ fn lobby_reflect(
     }
     let dim = Color::srgb(0.30, 0.26, 0.40);
     for mut b in &mut q_nick_b {
-        b.0 = if form.focus == Focus::Nick { GOLD } else { dim };
+        *b = BorderColor::all(if form.focus == Focus::Nick { GOLD } else { dim });
     }
     for mut b in &mut q_code_b {
-        b.0 = if form.focus == Focus::Code { GOLD } else { dim };
+        *b = BorderColor::all(if form.focus == Focus::Code { GOLD } else { dim });
     }
     for (s, mut b) in &mut q_swatches {
-        b.0 = if s.0 == form.color {
+        *b = BorderColor::all(if s.0 == form.color {
             Color::WHITE
         } else {
             Color::NONE
-        };
+        });
     }
 }
 
@@ -672,7 +672,7 @@ fn room_poll(
                         ..default()
                     },
                     BackgroundColor(ROW_BG),
-                    BorderColor(Color::srgb(0.30, 0.26, 0.40)),
+                    BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                     BorderRadius::all(Val::Px(6.0)),
                 ))
                 .with_children(|b| {

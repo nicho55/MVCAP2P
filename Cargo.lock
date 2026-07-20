@@ -1110,6 +1110,7 @@ dependencies = [
  "image",
  "ktx2",
  "rectangle-pack",
+ "ruzstd",
  "serde",
  "thiserror 2.0.18",
  "tracing",
@@ -5794,6 +5795,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 
 [[package]]
+name = "ruzstd"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7c1c839d570d835527c9a5e4db7cb2198683a988cb9d7293fc8674e6bd58fc8"
+dependencies = [
+ "twox-hash",
+]
+
+[[package]]
 name = "ryu"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6826,6 +6836,12 @@ dependencies = [
  "tokio-util",
  "webrtc-util",
 ]
+
+[[package]]
+name = "twox-hash"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8464ec13c3691491391d9fce00f6416c9a48e46972f72d7865688be2080192c9"
 
 [[package]]
 name = "typeid"

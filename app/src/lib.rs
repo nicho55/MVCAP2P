@@ -189,7 +189,7 @@ fn auto_shot_exit(
     args: Res<CliArgs>,
     mut commands: Commands,
     mut done: Local<bool>,
-    mut exit: EventWriter<AppExit>,
+    mut exit: MessageWriter<AppExit>,
 ) {
     if let Some(path) = &args.shot {
         if !*done && time.elapsed_secs() > args.shot_at {

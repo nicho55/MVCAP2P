@@ -116,7 +116,7 @@ pub fn import_map_bytes(
 }
 
 pub fn file_drop(
-    mut evr: EventReader<FileDragAndDrop>,
+    mut evr: MessageReader<FileDragAndDrop>,
     drop_mode: Res<DropMode>,
     session: Res<Session>,
     mut net: ResMut<Net>,

@@ -21,10 +21,10 @@ bevy = { version = "0.18", default-features = false, features = [
     "mesh_picking", "bevy_pbr", "bevy_picking",
     "bevy_render", "bevy_scene", "bevy_sprite",
     "sprite_picking", "bevy_state", "bevy_text",
-    "bevy_ui", "ui_picking", "bevy_window", "bevy_winit",
+    "bevy_ui", "bevy_ui_render", "ui_picking", "bevy_window", "bevy_winit",
     "custom_cursor", "default_font", "hdr", "multi_threaded",
     "png", "smaa_luts", "std", "sysinfo_plugin",
-    "tonemapping_luts", "vorbis", "webgl2", "x11",
+    "tonemapping_luts", "vorbis", "webgl2", "x11", "zstd_rust",
 ] }
 shared = { path = "../shared" }
 bevy_matchbox = "0.14"
