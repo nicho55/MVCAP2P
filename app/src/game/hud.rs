@@ -244,17 +244,23 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                 bottom: Val::Px(p + bottom),
                 left: Val::Px(0.0),
                 width: Val::Percent(100.0),
+                padding: UiRect::horizontal(Val::Px(p)),
                 justify_content: JustifyContent::Center,
                 ..default()
             })
             .with_children(|wrap| {
-                // painel da toolbar + escala
+                // painel da toolbar + escala — quebra em linhas p/ caber em telas
+                // estreitas (celular) sem escapar da tela.
                 wrap.spawn((
                     Node {
                         flex_direction: FlexDirection::Row,
+                        flex_wrap: FlexWrap::Wrap,
+                        max_width: Val::Percent(100.0),
                         column_gap: Val::Px(gap2),
+                        row_gap: Val::Px(gap2),
                         padding: UiRect::all(Val::Px(p2)),
                         align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
                         ..default()
                     },
                     BackgroundColor(PANEL),

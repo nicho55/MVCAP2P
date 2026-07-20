@@ -116,6 +116,7 @@ case "$( uname )" in                #(
 esac
 
 # Use a writable temp dir (root /tmp partition is full)
+mkdir -p "${APP_HOME}/build/tmp"
 export JAVA_OPTS="${JAVA_OPTS} -Djava.io.tmpdir=${APP_HOME}/build/tmp -Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar

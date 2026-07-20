@@ -46,7 +46,14 @@ fn screen_update(mut si: ResMut<ScreenInfo>, q_win: Query<&Window>) {
         si.width = w;
         si.height = h;
         if si.auto_scale {
-            si.scale = (w / 900.0).clamp(0.5, 2.0);
+            // Escala responsiva: no mobile a tela é estreita e de DPI alto, então
+            // baseamos numa referência menor e com piso maior para manter alvos
+            // de toque confortáveis (~44 px lógicos). Desktop acompanha a largura.
+            si.scale = if cfg!(target_os = "android") {
+                (w / 430.0).clamp(0.85, 1.6)
+            } else {
+                (w / 900.0).clamp(0.75, 2.0)
+            };
         }
     }
 }

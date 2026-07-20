@@ -41,3 +41,6 @@ opencode.json
 *.local.properties
 local.properties
 app/android/local.properties
+
+# lib nativa Rust (regenerada por cargo-ndk a cada build)
+/app/android/app/src/main/jniLibs/*/libtabletop.so

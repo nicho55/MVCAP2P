@@ -46,7 +46,7 @@ jobs:
             build --release -p tabletop
 
       - name: Montar APK (gradle)
-        run: cd app/android && ./gradlew assembleDebug --no-daemon
+        run: cd app/android && mkdir -p build/tmp && ./gradlew assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:

@@ -224,8 +224,10 @@ fn toggle_btn(
             GfxToggleBtn(opt),
             Node {
                 width: Val::Px(sz(190.0, si)),
+                min_height: Val::Px(sz(44.0, si)),
                 padding: UiRect::all(Val::Px(sz(7.0, si))),
-                margin: UiRect::all(Val::Px(sz(2.0, si))),
+                margin: UiRect::all(Val::Px(sz(3.0, si))),
+                align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
             },
@@ -248,13 +250,19 @@ pub fn spawn_gfx_ui(
     assets: Res<GameAssets>,
     si: Res<ScreenInfo>,
 ) {
+    // Fica abaixo do botão SAIR (mesmo canto sup. direito) para não sobrepor.
+    let top_clear = if cfg!(target_os = "android") {
+        sz(84.0, &si)
+    } else {
+        sz(46.0, &si)
+    };
     commands
         .spawn((
             GfxUiRoot,
             Node {
                 position_type: PositionType::Absolute,
                 right: Val::Px(sz(8.0, &si)),
-                top: Val::Px(sz(8.0, &si)),
+                top: Val::Px(top_clear),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::FlexEnd,
                 row_gap: Val::Px(sz(4.0, &si)),
@@ -266,7 +274,10 @@ pub fn spawn_gfx_ui(
                 Button,
                 GfxOpenBtn,
                 Node {
-                    padding: UiRect::axes(Val::Px(sz(12.0, &si)), Val::Px(sz(7.0, &si))),
+                    min_height: Val::Px(sz(44.0, &si)),
+                    padding: UiRect::axes(Val::Px(sz(14.0, &si)), Val::Px(sz(7.0, &si))),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
                     ..default()
                 },
                 BackgroundColor(PANEL),
@@ -287,6 +298,8 @@ pub fn spawn_gfx_ui(
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexEnd,
                     padding: UiRect::all(Val::Px(sz(6.0, &si))),
+                    max_width: Val::Vw(70.0),
+                    max_height: Val::Vh(72.0),
                     ..default()
                 },
                 BackgroundColor(PANEL),
