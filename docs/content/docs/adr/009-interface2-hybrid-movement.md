@@ -13,17 +13,19 @@ exploração em tempo real e combate tático, resiliente/determinística, alvo
 
 ## Achado que muda o ponto de partida
 
-O ecossistema pedido exige **Bevy 0.19**; estamos no **0.16**:
+O novo stack exige upgrade de engine; estamos no **Bevy 0.16**. O teto é definido
+pelo **`bevy_matchbox`** (transporte do GGRS), cuja última versão (0.14) exige
+**Bevy ^0.18** — **não há matchbox para 0.19**. Logo, o alvo é **Bevy 0.18**, com
+o conjunto compatível:
 
-| Lib | Exige Bevy |
+| Lib | Versão (Bevy 0.18) |
 |---|---|
-| bevy_ggrs 0.22 | ^0.19 |
-| bevy_rapier3d 0.35 | ^0.19 |
-| bevy-inspector-egui 0.37 | ^0.19 |
-| bevy_egui 0.41 | ^0.19 |
-| bevy_matchbox 0.14 | ^0.18 |
+| bevy_matchbox | 0.14 (teto → define o alvo) |
+| bevy_ggrs | 0.21 |
+| bevy_rapier3d | 0.34 |
+| bevy-inspector-egui | 0.36 (traz bevy_egui compatível) |
 
-➡️ **Pré-requisito gate:** migração **Bevy 0.16 → 0.19** antes do novo stack.
+➡️ **Pré-requisito gate:** migração **Bevy 0.16 → 0.18** antes do novo stack.
 
 ## Decisões do Arquiteto (blockers resolvidos)
 
@@ -51,7 +53,7 @@ de tempo-real/turnos (modelo "lista de solicitações"); **matchbox** = signalin
 
 **P0 — Fundação (gate):**
 - **T1** Workspace virtual + extrair crate `shared` (domínio sem Bevy). ← *começa aqui*
-- **T2** Upgrade Bevy 0.16 → 0.19 (client). Rede de segurança: 12 testes + CI.
+- **T2** Upgrade Bevy 0.16 → 0.18 (client). Rede de segurança: 12 testes + CI.
 
 **P1 — Semana 1 (Infra + UI 2.0):**
 - **T3** bevy_egui + bevy-inspector-egui (Inspetor Superior, topo da tela).
