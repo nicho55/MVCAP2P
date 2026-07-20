@@ -38,7 +38,7 @@ pub struct PeerEvent {
 #[derive(Resource, Clone)]
 pub struct Session {
     pub me: PlayerMeta,
-    pub code: String,
+    pub code: RoomCode,
 }
 
 const MAX_RETRIES: u32 = 5;

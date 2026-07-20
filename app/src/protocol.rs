@@ -82,6 +82,64 @@ pub fn palette_color(i: u8) -> Color {
     ColorIdx::new(i).color()
 }
 
+/// Código curto de sala (ex.: `K7WM2`). **Sempre válido**: só caracteres do
+/// `CODE_ALPHABET`, dentro do limite de tamanho. Nasce de `generate` (aleatório)
+/// ou da entrada do usuário via `parse` (estrito) / `sanitized` (best-effort).
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct RoomCode(String);
+
+impl RoomCode {
+    /// Comprimento dos códigos gerados.
+    pub const LEN: usize = 5;
+
+    /// Gera um código aleatório válido.
+    pub fn generate() -> Self {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let s = (0..Self::LEN)
+            .map(|_| CODE_ALPHABET[rng.gen_range(0..CODE_ALPHABET.len())] as char)
+            .collect();
+        RoomCode(s)
+    }
+
+    /// Valida estritamente: normaliza (trim + maiúsculas) e exige 3..=8
+    /// caracteres, todos do `CODE_ALPHABET`. Retorna `None` se inválido.
+    pub fn parse(s: &str) -> Option<Self> {
+        let up = s.trim().to_uppercase();
+        let ok = (3..=8).contains(&up.len()) && up.bytes().all(|b| CODE_ALPHABET.contains(&b));
+        ok.then_some(RoomCode(up))
+    }
+
+    /// Melhor esforço: mantém só caracteres válidos (maiúsculas), limita o
+    /// tamanho e, se sobrar vazio, gera um novo. Nunca falha.
+    pub fn sanitized(s: &str) -> Self {
+        let up: String = s
+            .trim()
+            .to_uppercase()
+            .bytes()
+            .filter(|b| CODE_ALPHABET.contains(b))
+            .take(8)
+            .map(char::from)
+            .collect();
+        if up.is_empty() {
+            Self::generate()
+        } else {
+            RoomCode(up)
+        }
+    }
+
+    /// Referência à string do código (para URL, Supabase, etc.).
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::fmt::Display for RoomCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// Remonta um blob a partir das partes recebidas por chunk. `parts[seq]` é o
 /// pedaço da posição `seq` (ordem de chegada é irrelevante). Retorna `None`
 /// enquanto qualquer parte ainda faltar.
@@ -322,5 +380,30 @@ mod tests {
         let wire = bincode::serialize(&200u8).expect("serialize u8");
         let c: ColorIdx = bincode::deserialize(&wire).expect("deserialize");
         assert!((c.get() as usize) < PALETTE.len());
+    }
+
+    #[test]
+    fn room_code_generate_is_always_valid() {
+        for _ in 0..100 {
+            let c = RoomCode::generate();
+            assert_eq!(c.as_str().len(), RoomCode::LEN);
+            assert!(RoomCode::parse(c.as_str()).is_some());
+        }
+    }
+
+    #[test]
+    fn room_code_parse_validates_and_normalizes() {
+        assert_eq!(RoomCode::parse("  k7wm2 ").unwrap().as_str(), "K7WM2"); // trim+upper
+        assert!(RoomCode::parse("ab").is_none()); // curto demais
+        assert!(RoomCode::parse("ABCDEFGHI").is_none()); // longo demais
+        assert!(RoomCode::parse("K7W-2").is_none()); // char fora do alfabeto
+        assert!(RoomCode::parse("K0O1I").is_none()); // 0/O/1/I não estão no alfabeto
+    }
+
+    #[test]
+    fn room_code_sanitized_never_fails() {
+        assert_eq!(RoomCode::sanitized("k7-w!m2").as_str(), "K7WM2"); // filtra inválidos
+        assert!(RoomCode::parse(RoomCode::sanitized("!@#").as_str()).is_some());
+        // garbage -> gera
     }
 }

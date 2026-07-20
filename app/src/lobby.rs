@@ -326,13 +326,15 @@ fn start_session(
     commands: &mut Commands,
     next: &mut NextState<AppState>,
 ) {
-    let code = match join_code {
-        Some(c) => c,
+    // Código informado (join/CLI): valida estrito e, se vier torto, saneia.
+    let normalize = |s: &str| RoomCode::parse(s).unwrap_or_else(|| RoomCode::sanitized(s));
+    let code: RoomCode = match join_code {
+        Some(c) => normalize(&c),
         None => args
             .code
-            .clone()
-            .map(|c| c.to_uppercase())
-            .unwrap_or_else(random_code),
+            .as_deref()
+            .map(normalize)
+            .unwrap_or_else(RoomCode::generate),
     };
     let host = signaling_override
         .map(|s| s.to_string())
@@ -372,7 +374,7 @@ fn start_session(
         };
         let ph = publish_host.clone();
         std::thread::spawn(move || {
-            let _ = room_discovery::create_room(&code, &nick, &ph);
+            let _ = room_discovery::create_room(code.as_str(), &nick, &ph);
         });
         info!("sala publicada no Supabase com host {publish_host}");
     }
@@ -702,12 +704,4 @@ fn detect_lan_ip() -> Option<String> {
     } else {
         Some(format!("{ip}:3536"))
     }
-}
-
-fn random_code() -> String {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    (0..5)
-        .map(|_| CODE_ALPHABET[rng.gen_range(0..CODE_ALPHABET.len())] as char)
-        .collect()
 }

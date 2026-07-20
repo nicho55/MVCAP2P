@@ -22,9 +22,10 @@ RUN rustup component add clippy rustfmt rust-analyzer
 
 RUN cargo install cargo-ndk
 
-# Ativa sccache como wrapper do rustc (acelera rebuilds)
+# Ativa sccache como wrapper do rustc (acelera rebuilds).
+# IMPORTANTE: rustc-wrapper é chave de [build], não de [target.*].
 RUN mkdir -p /root/.cargo && \
-    printf '[target."cfg(all())"]\nrustc-wrapper = "sccache"\n' >> /root/.cargo/config.toml
+    printf '[build]\nrustc-wrapper = "sccache"\n' >> /root/.cargo/config.toml
 
 # OpenCode CLI
 RUN curl -fsSL https://opencode.ai/install | bash && ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode

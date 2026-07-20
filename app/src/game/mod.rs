@@ -202,7 +202,7 @@ fn leave_game(
     if is_gm {
         if let Some(code) = code {
             std::thread::spawn(move || {
-                let _ = room_discovery::delete_room(&code);
+                let _ = room_discovery::delete_room(code.as_str());
             });
         }
     }
