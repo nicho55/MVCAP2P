@@ -537,7 +537,7 @@ pub fn roster_panel(
                     height: Val::Px(dot),
                     ..default()
                 },
-                BackgroundColor(palette_color(entry.meta.color)),
+                BackgroundColor(entry.meta.color.color()),
                 BorderRadius::all(Val::Px(dot * 0.5)),
             ));
             r.spawn((

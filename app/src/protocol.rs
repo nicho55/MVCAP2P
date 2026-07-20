@@ -41,10 +41,45 @@ pub const PALETTE: [(f32, f32, f32); 8] = [
     (0.839, 0.251, 0.624), // rosa
 ];
 
-/// Retorna uma cor da paleta pelo índice (com wrap seguro).
+/// Índice de cor na paleta — **sempre válido** (0..PALETTE.len()). Estados
+/// inválidos são inexprimíveis: o construtor reduz qualquer `u8` ao intervalo,
+/// e a (de)serialização passa pelo construtor (`serde(try_from/into = u8)`),
+/// então na rede continua sendo 1 byte, mas sem índice inválido possível.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[serde(into = "u8", from = "u8")]
+pub struct ColorIdx(u8);
+
+impl ColorIdx {
+    /// Reduz qualquer valor ao intervalo válido (wrap), garantindo o invariante.
+    pub fn new(v: u8) -> Self {
+        ColorIdx(v % PALETTE.len() as u8)
+    }
+    /// Índice cru, garantidamente em 0..PALETTE.len().
+    pub fn get(self) -> u8 {
+        self.0
+    }
+    /// Cor da paleta (indexação segura pelo invariante do tipo).
+    pub fn color(self) -> Color {
+        let (r, g, b) = PALETTE[self.0 as usize];
+        Color::srgb(r, g, b)
+    }
+}
+
+impl From<ColorIdx> for u8 {
+    fn from(c: ColorIdx) -> u8 {
+        c.0
+    }
+}
+
+impl From<u8> for ColorIdx {
+    fn from(v: u8) -> Self {
+        ColorIdx::new(v)
+    }
+}
+
+/// Cor da paleta por índice cru — conveniência para iterar a paleta na UI.
 pub fn palette_color(i: u8) -> Color {
-    let (r, g, b) = PALETTE[i as usize % PALETTE.len()];
-    Color::srgb(r, g, b)
+    ColorIdx::new(i).color()
 }
 
 /// Remonta um blob a partir das partes recebidas por chunk. `parts[seq]` é o
@@ -119,7 +154,7 @@ pub struct PlayerMeta {
     pub uuid: PlayerUuid,
     pub nick: String,
     /// Índice da cor na paleta.
-    pub color: u8,
+    pub color: ColorIdx,
     /// Se é o Mestre (autoridade do jogo).
     pub is_gm: bool,
 }
@@ -263,5 +298,29 @@ mod tests {
             parts[seq] = Some(chunks[seq].clone());
         }
         assert_eq!(reassemble_blob(&parts).as_deref(), Some(data.as_slice()));
+    }
+
+    #[test]
+    fn color_idx_is_always_valid() {
+        for v in 0u8..=255 {
+            let c = ColorIdx::new(v);
+            assert!((c.get() as usize) < PALETTE.len());
+            let _ = c.color(); // nunca entra em pânico
+        }
+        assert_eq!(
+            ColorIdx::new(0).color(),
+            ColorIdx::new(PALETTE.len() as u8).color()
+        );
+    }
+
+    #[test]
+    fn color_idx_serde_is_one_byte_and_validates() {
+        // Serializa como u8 puro (1 byte)...
+        let bytes = bincode::serialize(&ColorIdx::new(3)).expect("serialize");
+        assert_eq!(bytes.len(), 1);
+        // ...e um byte "inválido" na rede (200) é reduzido ao intervalo ao ler.
+        let wire = bincode::serialize(&200u8).expect("serialize u8");
+        let c: ColorIdx = bincode::deserialize(&wire).expect("deserialize");
+        assert!((c.get() as usize) < PALETTE.len());
     }
 }

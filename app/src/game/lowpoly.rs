@@ -24,7 +24,7 @@ pub struct LowPoly {
 #[derive(Resource, Default)]
 pub struct Mats {
     terrain: HashMap<(u8, i8), Handle<StandardMaterial>>,
-    rings: HashMap<u8, Handle<StandardMaterial>>,
+    rings: HashMap<ColorIdx, Handle<StandardMaterial>>,
     art: HashMap<TokenArt, Handle<StandardMaterial>>,
     gold: Option<Handle<StandardMaterial>>,
     gray_ring: Option<Handle<StandardMaterial>>,
@@ -96,13 +96,13 @@ impl Mats {
     pub fn ring(
         &mut self,
         materials: &mut Assets<StandardMaterial>,
-        color_idx: u8,
+        color_idx: ColorIdx,
     ) -> Handle<StandardMaterial> {
         if let Some(h) = self.rings.get(&color_idx) {
             return h.clone();
         }
         let h = materials.add(StandardMaterial {
-            base_color: palette_color(color_idx),
+            base_color: color_idx.color(),
             perceptual_roughness: 0.55,
             reflectance: 0.25,
             ..Default::default()

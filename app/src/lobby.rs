@@ -351,7 +351,7 @@ fn start_session(
     let me = PlayerMeta {
         uuid: rand::random(),
         nick: nick.clone(),
-        color: form.color,
+        color: ColorIdx::new(form.color),
         is_gm: gm,
     };
     net.connect(&url);
