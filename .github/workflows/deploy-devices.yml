@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Versão do Rust + target Android vêm do rust-toolchain.toml (fonte única).
       - name: Rust pinado (rust-toolchain.toml)
@@ -58,7 +58,7 @@ jobs:
     needs: build
     runs-on: [self-hosted, android-farm]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/download-artifact@v4
         with:
