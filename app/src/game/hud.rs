@@ -270,7 +270,7 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     tool_button(
                         bar,
                         ToolBtn::Tool(ActiveTool::Select),
-                        assets.icons["select"].clone(),
+                        assets.icon("select"),
                         si,
                     );
                     if gm {
@@ -285,56 +285,41 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                         tool_button(
                             bar,
                             ToolBtn::Tool(ActiveTool::Erase),
-                            assets.icons["eraser"].clone(),
+                            assets.icon("eraser"),
                             si,
                         );
                         tool_button(
                             bar,
                             ToolBtn::Tool(ActiveTool::ElevUp),
-                            assets.icons["elev_up"].clone(),
+                            assets.icon("elev_up"),
                             si,
                         );
                         tool_button(
                             bar,
                             ToolBtn::Tool(ActiveTool::ElevDown),
-                            assets.icons["elev_down"].clone(),
+                            assets.icon("elev_down"),
                             si,
                         );
                         tool_button(
                             bar,
                             ToolBtn::Grid(GridKind::Square),
-                            assets.icons["grid_square"].clone(),
+                            assets.icon("grid_square"),
                             si,
                         );
                         tool_button(
                             bar,
                             ToolBtn::Grid(GridKind::HexFlat),
-                            assets.icons["grid_hex"].clone(),
+                            assets.icon("grid_hex"),
                             si,
                         );
-                        tool_button(
-                            bar,
-                            ToolBtn::CellDelta(8.0),
-                            assets.icons["plus"].clone(),
-                            si,
-                        );
-                        tool_button(
-                            bar,
-                            ToolBtn::CellDelta(-8.0),
-                            assets.icons["minus"].clone(),
-                            si,
-                        );
-                        tool_button(
-                            bar,
-                            ToolBtn::Drop(DropMode::Map),
-                            assets.icons["map"].clone(),
-                            si,
-                        );
+                        tool_button(bar, ToolBtn::CellDelta(8.0), assets.icon("plus"), si);
+                        tool_button(bar, ToolBtn::CellDelta(-8.0), assets.icon("minus"), si);
+                        tool_button(bar, ToolBtn::Drop(DropMode::Map), assets.icon("map"), si);
                     }
                     tool_button(
                         bar,
                         ToolBtn::Drop(DropMode::Token),
-                        assets.icons["token"].clone(),
+                        assets.icon("token"),
                         si,
                     );
                     // botões de escala

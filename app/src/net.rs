@@ -61,10 +61,10 @@ impl Net {
 
     pub fn send_to(&mut self, peer: PeerId, msg: &Msg) {
         if let Some(s) = self.socket.as_mut() {
-            let data = bincode::serialize(msg)
-                .expect("serialize")
-                .into_boxed_slice();
-            s.channel_mut(0).send(data, peer);
+            match bincode::serialize(msg) {
+                Ok(data) => s.channel_mut(0).send(data.into_boxed_slice(), peer),
+                Err(e) => warn!("falha ao serializar msg p/ envio: {e}"),
+            }
         }
     }
 
@@ -307,15 +307,17 @@ fn blob_rx(
                     false
                 };
                 if complete {
-                    let inc = blobs.incoming.remove(id).unwrap();
-                    let bytes: Vec<u8> = inc.parts.into_iter().flatten().flatten().collect();
-                    info!(
-                        "blob {id} completo ({} bytes, {} chunks)",
-                        bytes.len(),
-                        inc.chunks
-                    );
-                    if blobs.store(*id, bytes, &mut images).is_none() {
-                        warn!("blob {id} não decodificou como imagem");
+                    if let Some(inc) = blobs.incoming.remove(id) {
+                        if let Some(bytes) = reassemble_blob(&inc.parts) {
+                            info!(
+                                "blob {id} completo ({} bytes, {} chunks)",
+                                bytes.len(),
+                                inc.chunks
+                            );
+                            if blobs.store(*id, bytes, &mut images).is_none() {
+                                warn!("blob {id} não decodificou como imagem");
+                            }
+                        }
                     }
                 }
             }

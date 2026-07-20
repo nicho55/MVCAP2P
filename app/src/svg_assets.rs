@@ -22,6 +22,14 @@ pub struct GameAssets {
     pub font: Option<Handle<Font>>,
 }
 
+impl GameAssets {
+    /// Handle do ícone por nome, com fallback seguro — nunca entra em pânico se
+    /// o ícone não estiver carregado (retorna um handle vazio).
+    pub fn icon(&self, name: &str) -> Handle<Image> {
+        self.icons.get(name).cloned().unwrap_or_default()
+    }
+}
+
 pub fn tfont(assets: &GameAssets, size: f32) -> TextFont {
     TextFont {
         font: assets.font.clone().unwrap_or_default(),

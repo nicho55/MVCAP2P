@@ -47,6 +47,16 @@ pub fn palette_color(i: u8) -> Color {
     Color::srgb(r, g, b)
 }
 
+/// Remonta um blob a partir das partes recebidas por chunk. `parts[seq]` é o
+/// pedaço da posição `seq` (ordem de chegada é irrelevante). Retorna `None`
+/// enquanto qualquer parte ainda faltar.
+pub fn reassemble_blob(parts: &[Option<Vec<u8>>]) -> Option<Vec<u8>> {
+    if parts.iter().any(Option::is_none) {
+        return None;
+    }
+    Some(parts.iter().flatten().flatten().copied().collect())
+}
+
 /// Tipo de grid do tabuleiro.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum GridKind {
@@ -233,5 +243,25 @@ mod tests {
             let bytes2 = bincode::serialize(&back).expect("reserialize");
             assert_eq!(bytes, bytes2, "roundtrip instável para {m:?}");
         }
+    }
+
+    #[test]
+    fn blob_reassembles_regardless_of_fill_order() {
+        // Dados maiores que 2 chunks para exercitar o fatiamento real.
+        let data: Vec<u8> = (0..(CHUNK * 2 + 123)).map(|i| (i % 251) as u8).collect();
+        let chunks: Vec<Vec<u8>> = data.chunks(CHUNK).map(<[u8]>::to_vec).collect();
+        let n = chunks.len();
+        assert!(n >= 3, "esperado múltiplos chunks");
+
+        let mut parts: Vec<Option<Vec<u8>>> = vec![None; n];
+        // Enquanto faltar parte, remontar deve dar None.
+        parts[n - 1] = Some(chunks[n - 1].clone());
+        assert_eq!(reassemble_blob(&parts), None);
+
+        // Preenche na ORDEM INVERSA; ao completar, remonta idêntico ao original.
+        for seq in (0..n).rev() {
+            parts[seq] = Some(chunks[seq].clone());
+        }
+        assert_eq!(reassemble_blob(&parts).as_deref(), Some(data.as_slice()));
     }
 }
