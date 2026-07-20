@@ -178,3 +178,60 @@ pub enum Msg {
         val: Option<TerrainCell>,
     },
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn palette_color_never_panics_and_wraps() {
+        // Qualquer u8 é aceito sem pânico...
+        for i in 0u8..=255 {
+            let _ = palette_color(i);
+        }
+        // ...e um índice além do tamanho volta ao início (wrap seguro).
+        assert_eq!(palette_color(0), palette_color(PALETTE.len() as u8));
+    }
+
+    #[test]
+    fn msg_bincode_roundtrip_is_stable() {
+        // Serializar -> desserializar -> serializar deve dar os mesmos bytes.
+        // (Msg não deriva PartialEq, então comparamos os bytes.)
+        let msgs = [
+            Msg::PlayerLeft(42),
+            Msg::MoveTokenReq {
+                id: 7,
+                cell: (-3, 5),
+            },
+            Msg::TokenMoved {
+                id: 7,
+                cell: (10, -2),
+            },
+            Msg::RemoveToken { id: 99 },
+            Msg::AssignToken {
+                id: 1,
+                new_owner: 1234,
+            },
+            Msg::DragPreview {
+                id: 2,
+                x: 1.5,
+                y: -2.5,
+            },
+            Msg::Grid(GridCfg {
+                kind: GridKind::HexFlat,
+                cell: 48.0,
+            }),
+            Msg::BlobChunk {
+                id: 5,
+                seq: 3,
+                data: vec![1, 2, 3, 4],
+            },
+        ];
+        for m in msgs {
+            let bytes = bincode::serialize(&m).expect("serialize");
+            let back: Msg = bincode::deserialize(&bytes).expect("deserialize");
+            let bytes2 = bincode::serialize(&back).expect("reserialize");
+            assert_eq!(bytes, bytes2, "roundtrip instável para {m:?}");
+        }
+    }
+}

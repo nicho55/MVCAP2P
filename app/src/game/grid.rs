@@ -157,3 +157,56 @@ pub fn grid_reflow(
     }
     trender.full = true;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{cell_center, hex_corners, world_to_cell};
+    use crate::protocol::{GridCfg, GridKind};
+    use bevy::prelude::Vec2;
+
+    fn cfg(kind: GridKind) -> GridCfg {
+        GridCfg { kind, cell: 64.0 }
+    }
+
+    /// Propriedade central: o centro de uma célula sempre mapeia de volta a ela.
+    #[test]
+    fn square_center_roundtrips_to_same_cell() {
+        let g = cfg(GridKind::Square);
+        for x in -30..30 {
+            for y in -30..30 {
+                let c = (x, y);
+                assert_eq!(world_to_cell(&g, cell_center(&g, c)), c, "square {c:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn hex_center_roundtrips_to_same_cell() {
+        let g = cfg(GridKind::HexFlat);
+        for x in -20..20 {
+            for y in -20..20 {
+                let c = (x, y);
+                assert_eq!(world_to_cell(&g, cell_center(&g, c)), c, "hex {c:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn square_center_has_known_value() {
+        let g = cfg(GridKind::Square); // cell = 64
+        assert_eq!(cell_center(&g, (0, 0)), Vec2::new(32.0, 32.0));
+    }
+
+    #[test]
+    fn hex_has_six_corners_on_its_circle() {
+        let g = cfg(GridKind::HexFlat);
+        let cell = (2, -1);
+        let center = cell_center(&g, cell);
+        let s = g.cell * 0.5;
+        let corners = hex_corners(&g, cell);
+        assert_eq!(corners.len(), 6);
+        for corner in corners {
+            assert!((center.distance(corner) - s).abs() < 1e-3);
+        }
+    }
+}
