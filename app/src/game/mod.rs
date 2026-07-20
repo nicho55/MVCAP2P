@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod graphics;
 pub mod grid;
 pub mod hud;
 pub mod lowpoly;
@@ -79,16 +80,24 @@ impl Plugin for GamePlugin {
             .init_resource::<terrain::TerrainRender>()
             .init_resource::<tokens::Selection>()
             .init_resource::<tokens::Dragging>()
-            .init_resource::<tokens::TouchDrag>();
+            .init_resource::<tokens::TouchDrag>()
+            .init_resource::<graphics::GraphicsSettings>();
         #[cfg(target_os = "android")]
         app.init_resource::<camera::TouchState>();
         app.add_systems(
             Startup,
             (camera::setup_camera, lowpoly::setup_lowpoly, setup_lighting),
         )
-        .add_systems(OnEnter(AppState::InGame), (hud::setup_hud, game_init))
-        .add_systems(OnExit(AppState::InGame), (leave_game, reset_ui_hover))
+        .add_systems(
+            OnEnter(AppState::InGame),
+            (hud::setup_hud, game_init, graphics::spawn_gfx_ui),
+        )
+        .add_systems(
+            OnExit(AppState::InGame),
+            (leave_game, reset_ui_hover, graphics::despawn_gfx_ui),
+        )
         .add_systems(First, screen_update)
+        .add_systems(Update, graphics::apply_graphics)
         .add_systems(
             Update,
             (
@@ -131,6 +140,9 @@ impl Plugin for GamePlugin {
                 hud::back_btn_click,
                 hud::scale_btn_click,
                 hud::assign_token_click,
+                graphics::gfx_open_click,
+                graphics::gfx_toggle_click,
+                graphics::gfx_panel_visuals,
             )
                 .run_if(in_state(AppState::InGame))
                 .after(NetSet),
@@ -143,6 +155,8 @@ fn setup_lighting(mut commands: Commands) {
         DirectionalLight {
             illuminance: 11_000.0,
             color: Color::srgb(1.0, 0.97, 0.90),
+            // Estado inicial; GraphicsSettings::apply_graphics ajusta em runtime
+            // (desligado por padrão no Android).
             shadows_enabled: true,
             ..default()
         },

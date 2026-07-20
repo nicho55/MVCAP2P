@@ -55,6 +55,7 @@ impl Default for CliArgs {
     }
 }
 
+#[cfg(not(target_os = "android"))]
 fn parse_args() -> CliArgs {
     let mut a = CliArgs::default();
     let mut it = std::env::args().skip(1);

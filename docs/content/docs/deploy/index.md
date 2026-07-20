@@ -91,6 +91,16 @@ O job `build` compila na nuvem (~15–30 min na 1ª vez, com cache depois); o jo
 `deploy` instala e mede em todos os celulares. Baixe o artifact **perf-reports**
 ao final.
 
+## Ajustando qualidade gráfica no aparelho
+
+Cada nova versão traz o painel **"Gráficos"** (canto superior direito, dentro da
+partida). Ele liga/desliga em runtime as opções que mais pesam em GPU fraca —
+**MSAA**, **sombras**, **HDR**, **árvores**, **grade** e **economia (30 fps)**.
+
+Fluxo de certificação sugerido por aparelho: entre numa sala, abra **Gráficos**
+e alterne uma opção por vez observando o `gfxinfo`/fps do relatório. Assim você
+isola o custo de cada recurso no dispositivo real. Detalhes na **ADR-008**.
+
 ## Lendo os relatórios
 
 Cada aparelho gera `MODELO_SERIAL.txt` + `.png` em `reports/`:

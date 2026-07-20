@@ -74,7 +74,11 @@ pub fn draw_grid(
     grid: Res<GridRes>,
     rig: Res<CamRig>,
     map_state: Res<MapState>,
+    settings: Res<super::graphics::GraphicsSettings>,
 ) {
+    if !settings.grid_overlay {
+        return;
+    }
     let reach = (rig.dist * 1.3).clamp(400.0, 2600.0);
     let f = Vec2::new(rig.focus.x, rig.focus.z);
     let mut min = f - Vec2::splat(reach);

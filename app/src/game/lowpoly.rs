@@ -262,6 +262,10 @@ fn hex_prism_mesh() -> Mesh {
 }
 
 /// Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa.
+/// Marcador nas árvores low-poly — permite ligar/desligar a vegetação (perf).
+#[derive(Component)]
+pub struct Vegetation;
+
 pub fn spawn_tree(
     parent: &mut ChildSpawnerCommands,
     lp: &LowPoly,
@@ -278,6 +282,7 @@ pub fn spawn_tree(
         .spawn((
             Transform::from_xyz(pos.x, 0.0, pos.y),
             Visibility::default(),
+            Vegetation,
         ))
         .with_children(|t| {
             t.spawn((

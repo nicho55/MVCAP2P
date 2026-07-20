@@ -42,6 +42,9 @@ pub fn setup_camera(mut commands: Commands) {
             ..default()
         }),
         Transform::default(),
+        // Componente MSAA presente para ser ajustado em runtime por
+        // GraphicsSettings (apply_graphics define o nível real no 1º frame).
+        Msaa::Off,
         MainCamera,
     ));
 }
