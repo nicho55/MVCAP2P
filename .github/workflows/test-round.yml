@@ -1,0 +1,52 @@
+name: Rodada de Testes — automação de checkbox
+
+# Lê as caixas de sign-off das issues rotuladas "test-round".
+# Quando TODOS os testers marcam, fecha a issue (o Project move o card p/ Done).
+on:
+  issues:
+    types: [edited, opened, labeled]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  tally:
+    if: contains(join(github.event.issue.labels.*.name, ','), 'test-round')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Contabiliza sign-offs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || "";
+            // Considera apenas caixas na seção de sign-off dos testers.
+            const lines = body.split(/\r?\n/);
+            const boxes = lines.filter(l => /^\s*-\s*\[[ xX]\]/.test(l));
+            const done  = boxes.filter(l => /^\s*-\s*\[[xX]\]/.test(l)).length;
+            const total = boxes.length;
+            core.info(`Sign-offs: ${done}/${total}`);
+            if (total === 0) { core.info("Sem checklist; nada a fazer."); return; }
+
+            const owner = context.repo.owner, repo = context.repo.repo, number = issue.number;
+            const hasLabel = n => (issue.labels || []).some(l => (l.name||l) === n);
+
+            if (done === total) {
+              if (!hasLabel('tested:pass')) {
+                await github.rest.issues.addLabels({ owner, repo, issue_number: number, labels: ['tested:pass'] });
+                try { await github.rest.issues.removeLabel({ owner, repo, issue_number: number, name: 'tested:fail' }); } catch (e) {}
+                await github.rest.issues.createComment({ owner, repo, issue_number: number,
+                  body: `✅ **Todos os ${total} testers aprovaram.** Fechando a rodada — o card vai para **Done** e a próxima tarefa é liberada.` });
+                await github.rest.issues.update({ owner, repo, issue_number: number, state: 'closed', state_reason: 'completed' });
+              }
+            } else {
+              // progresso parcial: atualiza um comentário-placar
+              const marker = "<!-- test-round-progress -->";
+              const bar = "█".repeat(done) + "░".repeat(total - done);
+              const text = `${marker}\n🧪 Progresso dos testes: **${done}/${total}** ${bar}`;
+              const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: number });
+              const prev = comments.find(c => (c.body||"").includes(marker));
+              if (prev) await github.rest.issues.updateComment({ owner, repo, comment_id: prev.id, body: text });
+              else await github.rest.issues.createComment({ owner, repo, issue_number: number, body: text });
+            }
