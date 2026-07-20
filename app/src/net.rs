@@ -331,7 +331,7 @@ fn net_reconnect(mut net: ResMut<Net>, time: Res<Time>) {
         return;
     }
     let finished = match net.reconnect.as_mut() {
-        Some(t) => t.tick(time.delta()).finished(),
+        Some(t) => t.tick(time.delta()).is_finished(),
         None => false,
     };
     if finished {

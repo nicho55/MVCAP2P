@@ -45,6 +45,12 @@ pub fn setup_camera(mut commands: Commands) {
         // Componente MSAA presente para ser ajustado em runtime por
         // GraphicsSettings (apply_graphics define o nível real no 1º frame).
         Msaa::Off,
+        // Bevy 0.18: AmbientLight virou componente (por câmera), não Resource.
+        AmbientLight {
+            color: Color::srgb(0.85, 0.88, 1.0),
+            brightness: 350.0,
+            ..default()
+        },
         MainCamera,
     ));
 }

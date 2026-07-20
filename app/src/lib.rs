@@ -109,7 +109,7 @@ pub fn run_game() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title,
-                        resolution: (1366.0_f32, 840.0_f32).into(),
+                        resolution: bevy::window::WindowResolution::new(1366, 840),
                         ..default()
                     }),
                     ..default()
