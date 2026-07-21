@@ -47,5 +47,5 @@ fn import_map_bytes(bytes : Vec < u8 >, blobs : & mut Blobs, images : & mut Asse
 
 ### `file_drop`
 
-**Parâmetros**: `mut evr : EventReader < FileDragAndDrop >`, `drop_mode : Res < DropMode >`, `session : Res < Session >`, `mut net : ResMut < Net >`, `mut blobs : ResMut < Blobs >`, `mut images : ResMut < Assets < Image > >`, `mut map_state : ResMut < MapState >`, `mut commands : Commands`, `assets : Res < GameAssets >`, `grid : Res < GridRes >`, `roster : Res < Roster >`, `windows : Query < & Window >`, `q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >`, `mut ctx : Ctx3d`
+**Parâmetros**: `mut evr : MessageReader < FileDragAndDrop >`, `drop_mode : Res < DropMode >`, `session : Res < Session >`, `mut net : ResMut < Net >`, `mut blobs : ResMut < Blobs >`, `mut images : ResMut < Assets < Image > >`, `mut map_state : ResMut < MapState >`, `mut commands : Commands`, `assets : Res < GameAssets >`, `grid : Res < GridRes >`, `roster : Res < Roster >`, `windows : Query < & Window >`, `q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >`, `mut ctx : Ctx3d`
 

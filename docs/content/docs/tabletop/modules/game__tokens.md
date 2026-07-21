@@ -72,7 +72,7 @@ fn selection_visual(sel : Res < Selection >, q_tokens : Query < (& Token , & Chi
 ### `touch_interact`
 
 ```rust
-fn touch_interact(mut touch_ev : EventReader < TouchInput >, windows : Query < & Window >, q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >, mut q_tokens : Query < (Entity , & mut Transform , & mut Token) >, session : Res < Session >, tool : Res < ActiveTool >, mut sel : ResMut < Selection >, mut drag : ResMut < TouchDrag >, mut net : ResMut < Net >, grid : Res < GridRes >, terrain : Res < Terrain >, time : Res < Time >) -> ()
+fn touch_interact(mut touch_ev : MessageReader < TouchInput >, windows : Query < & Window >, q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >, mut q_tokens : Query < (Entity , & mut Transform , & mut Token) >, session : Res < Session >, tool : Res < ActiveTool >, mut sel : ResMut < Selection >, mut drag : ResMut < TouchDrag >, mut net : ResMut < Net >, grid : Res < GridRes >, terrain : Res < Terrain >, time : Res < Time >) -> ()
 ```
 
 ### `touch_highlight`
@@ -86,7 +86,7 @@ fn touch_highlight(drag : Res < TouchDrag >, sel : Res < Selection >, time : Res
 ### `set_token_owner`
 
 ```rust
-fn set_token_owner(id : TokenId, new_owner : PlayerUuid, roster : & Roster, ctx : & mut Ctx3d, q_tokens : & mut Query < (Entity , & mut Token , & Children) >, mut q_rings : & mut Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >) -> ()
+fn set_token_owner(id : TokenId, new_owner : PlayerUuid, roster : & Roster, ctx : & mut Ctx3d, q_tokens : & mut Query < (Entity , & mut Token , & Children) >, q_rings : & mut Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >) -> ()
 ```
 
  Troca o dono de um token e atualiza a cor do anel.

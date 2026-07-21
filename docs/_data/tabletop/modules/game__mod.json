@@ -249,7 +249,7 @@
     }
   ],
   "uses": [
-    "use bevy :: pbr :: CascadeShadowConfigBuilder ;",
+    "use bevy :: light :: CascadeShadowConfigBuilder ;",
     "use bevy :: prelude :: * ;",
     "use crate :: net :: { Blobs , Net , NetSet , Roster , Session } ;",
     "use crate :: protocol :: * ;",

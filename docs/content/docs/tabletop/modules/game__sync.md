@@ -7,7 +7,7 @@
 ### `handle_hello`
 
 ```rust
-fn handle_hello(mut rx : EventReader < NetRx >, session : Option < Res < Session > >, mut net : ResMut < Net >, mut roster : ResMut < Roster >, grid : Res < GridRes >, terrain : Res < Terrain >, map_state : Res < MapState >, blobs : Res < Blobs >, q_tokens : Query < & Token >) -> ()
+fn handle_hello(mut rx : MessageReader < NetRx >, session : Option < Res < Session > >, mut net : ResMut < Net >, mut roster : ResMut < Roster >, grid : Res < GridRes >, terrain : Res < Terrain >, map_state : Res < MapState >, blobs : Res < Blobs >, q_tokens : Query < & Token >) -> ()
 ```
 
  GM: responde Hello com o estado completo (blobs primeiro — canal ordenado garante a chegada antes do Welcome).
@@ -15,7 +15,7 @@ fn handle_hello(mut rx : EventReader < NetRx >, session : Option < Res < Session
 ### `handle_core`
 
 ```rust
-fn handle_core(mut rx : EventReader < NetRx >, session : Option < Res < Session > >, mut net : ResMut < Net >, mut roster : ResMut < Roster >, mut grid : ResMut < GridRes >, mut terrain : ResMut < Terrain >, mut trender : ResMut < TerrainRender >, mut map_state : ResMut < MapState >) -> ()
+fn handle_core(mut rx : MessageReader < NetRx >, session : Option < Res < Session > >, mut net : ResMut < Net >, mut roster : ResMut < Roster >, mut grid : ResMut < GridRes >, mut terrain : ResMut < Terrain >, mut trender : ResMut < TerrainRender >, mut map_state : ResMut < MapState >) -> ()
 ```
 
  Estado global: roster, grid, mapa, terreno.
@@ -23,7 +23,7 @@ fn handle_core(mut rx : EventReader < NetRx >, session : Option < Res < Session 
 ### `assign_token_rx`
 
 ```rust
-fn assign_token_rx(mut rx : EventReader < NetRx >, session : Option < Res < Session > >, roster : Res < Roster >, mut ctx : Ctx3d, mut q_tokens : Query < (Entity , & mut Token , & Children) >, mut q_rings : Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >) -> ()
+fn assign_token_rx(mut rx : MessageReader < NetRx >, session : Option < Res < Session > >, roster : Res < Roster >, mut ctx : Ctx3d, mut q_tokens : Query < (Entity , & mut Token , & Children) >, mut q_rings : Query < & mut MeshMaterial3d < StandardMaterial > , With < OwnerRing > >) -> ()
 ```
 
  Processa `AssignToken` em jogadores não-mestre: atualiza dono e cor do anel.
@@ -36,7 +36,7 @@ fn assign_token_rx(mut rx : EventReader < NetRx >, session : Option < Res < Sess
 
  Posições: XZ snap imediato; altura (Y) é resolvida pelo token_y_follow.
 
-**Parâmetros**: `mut commands : Commands`, `mut rx : EventReader < NetRx >`, `session : Option < Res < Session > >`, `mut net : ResMut < Net >`, `roster : Res < Roster >`, `grid : Res < GridRes >`, `blobs : Res < Blobs >`, `assets : Res < GameAssets >`, `mut q_tokens : Query < (Entity , & mut Transform , & mut Token) >`, `mut drag : ResMut < Dragging >`, `mut ctx : Ctx3d`
+**Parâmetros**: `mut commands : Commands`, `mut rx : MessageReader < NetRx >`, `session : Option < Res < Session > >`, `mut net : ResMut < Net >`, `roster : Res < Roster >`, `grid : Res < GridRes >`, `blobs : Res < Blobs >`, `assets : Res < GameAssets >`, `mut q_tokens : Query < (Entity , & mut Transform , & mut Token) >`, `mut drag : ResMut < Dragging >`, `mut ctx : Ctx3d`
 
 
 ## Fluxo de Sincronização (Hello → Welcome)

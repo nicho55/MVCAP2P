@@ -37,7 +37,7 @@ fn apply_rig(rig : Res < CamRig >, mut q : Query < & mut Transform , With < Main
 ### `pan_zoom`
 
 ```rust
-fn pan_zoom(mut wheel : EventReader < MouseWheel >, mut motion : EventReader < MouseMotion >, buttons : Res < ButtonInput < MouseButton > >, keys : Res < ButtonInput < KeyCode > >, time : Res < Time >, mut rig : ResMut < CamRig >, ui : Res < UiHovered >) -> ()
+fn pan_zoom(mut wheel : MessageReader < MouseWheel >, mut motion : MessageReader < MouseMotion >, buttons : Res < ButtonInput < MouseButton > >, keys : Res < ButtonInput < KeyCode > >, time : Res < Time >, mut rig : ResMut < CamRig >, ui : Res < UiHovered >) -> ()
 ```
 
 ### `cursor_ray`
@@ -75,7 +75,7 @@ fn ray_point_dist(ray : & Ray3d, p : Vec3) -> f32
 ### `touch_pan_zoom`
 
 ```rust
-fn touch_pan_zoom(mut touch_ev : EventReader < TouchInput >, mut state : ResMut < TouchState >, mut rig : ResMut < CamRig >, ui : Res < UiHovered >, drag : Res < TouchDrag >) -> ()
+fn touch_pan_zoom(mut touch_ev : MessageReader < TouchInput >, mut state : ResMut < TouchState >, mut rig : ResMut < CamRig >, ui : Res < UiHovered >, drag : Res < TouchDrag >) -> ()
 ```
 
  Touch-based camera pan/zoom/orbit (Android).

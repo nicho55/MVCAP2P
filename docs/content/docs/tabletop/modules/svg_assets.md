@@ -60,3 +60,7 @@ fn image_from_encoded(bytes : & [u8]) -> Option < Image >
 
 - `build`
 
+### `impl GameAssets`
+
+- `icon`
+

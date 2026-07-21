@@ -56,7 +56,7 @@ fn grid_reflow(grid : Res < GridRes >, mut trender : ResMut < TerrainRender >, m
 
  Desenha o grid no chão (XZ) em volta do foco da câmera, limitado ao mapa.
 
-**Parâmetros**: `mut gizmos : Gizmos`, `grid : Res < GridRes >`, `rig : Res < CamRig >`, `map_state : Res < MapState >`
+**Parâmetros**: `mut gizmos : Gizmos`, `grid : Res < GridRes >`, `rig : Res < CamRig >`, `map_state : Res < MapState >`, `settings : Res < super :: graphics :: GraphicsSettings >`
 
 ## Constantes
 

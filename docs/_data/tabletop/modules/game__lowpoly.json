@@ -53,7 +53,7 @@
         },
         {
           "name": "rings",
-          "ty": "HashMap < u8 , Handle < StandardMaterial > >",
+          "ty": "HashMap < ColorIdx , Handle < StandardMaterial > >",
           "doc": [],
           "attributes": []
         },
@@ -142,6 +142,23 @@
         "# [doc = \" Contexto agrupado para spawn de tokens/terreno 3D (evita estourar o limite de params).\"]",
         "# [derive (SystemParam)]"
       ]
+    },
+    {
+      "name": "Vegetation",
+      "doc": [
+        " Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa.",
+        " Marcador nas árvores low-poly — permite ligar/desligar a vegetação (perf)."
+      ],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [doc = \" Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa.\"]",
+        "# [doc = \" Marcador nas árvores low-poly — permite ligar/desligar a vegetação (perf).\"]",
+        "# [derive (Component)]"
+      ]
     }
   ],
   "enums": [],
@@ -189,9 +206,7 @@
     },
     {
       "name": "spawn_tree",
-      "doc": [
-        " Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa."
-      ],
+      "doc": [],
       "inputs": [
         "parent : & mut ChildSpawnerCommands",
         "lp : & LowPoly",
@@ -238,7 +253,7 @@
           "inputs": [
             "& mut self",
             "materials : & mut Assets < StandardMaterial >",
-            "color_idx : u8"
+            "color_idx : ColorIdx"
           ],
           "output": "Handle < StandardMaterial >",
           "generics": "",
@@ -344,8 +359,8 @@
     "use bevy :: asset :: RenderAssetUsages ;",
     "use bevy :: ecs :: hierarchy :: ChildSpawnerCommands ;",
     "use bevy :: ecs :: system :: SystemParam ;",
+    "use bevy :: mesh :: PrimitiveTopology ;",
     "use bevy :: prelude :: * ;",
-    "use bevy :: render :: mesh :: PrimitiveTopology ;",
     "use std :: collections :: HashMap ;",
     "use super :: terrain :: Terrain ;",
     "use crate :: net :: Blobs ;",
@@ -358,7 +373,9 @@
     "LowPoly",
     "Mats"
   ],
-  "components": [],
+  "components": [
+    "Vegetation"
+  ],
   "systems": [
     "setup_lowpoly",
     "spawn_tree"

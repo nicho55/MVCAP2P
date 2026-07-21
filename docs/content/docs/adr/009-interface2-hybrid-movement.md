@@ -1,7 +1,7 @@
 # ADR-009: Fase Interface 2.0 + Movimentação Híbrida — Plano e Decisões
 
 **Data:** 2026-07-20
-**Status:** Aceito (em execução)
+**Status:** Substituído por ADR-011
 
 ## Contexto
 

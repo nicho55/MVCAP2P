@@ -99,7 +99,8 @@
         "mut gizmos : Gizmos",
         "grid : Res < GridRes >",
         "rig : Res < CamRig >",
-        "map_state : Res < MapState >"
+        "map_state : Res < MapState >",
+        "settings : Res < super :: graphics :: GraphicsSettings >"
       ],
       "output": "()",
       "generics": "",
@@ -138,7 +139,9 @@
     "use super :: tokens :: Token ;",
     "use crate :: protocol :: * ;"
   ],
-  "submodules": [],
+  "submodules": [
+    "tests"
+  ],
   "bevy_plugins": [],
   "resources": [
     "GridRes"

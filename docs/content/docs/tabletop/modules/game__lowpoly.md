@@ -18,13 +18,21 @@
 | Campo | Tipo |
 |-------|------|
 | `terrain` | `HashMap < (u8 , i8) , Handle < StandardMaterial > >` |
-| `rings` | `HashMap < u8 , Handle < StandardMaterial > >` |
+| `rings` | `HashMap < ColorIdx , Handle < StandardMaterial > >` |
 | `art` | `HashMap < TokenArt , Handle < StandardMaterial > >` |
 | `gold` | `Option < Handle < StandardMaterial > >` |
 | `gray_ring` | `Option < Handle < StandardMaterial > >` |
 | `pending` | `Option < Handle < StandardMaterial > >` |
 | `trunk` | `Option < Handle < StandardMaterial > >` |
 | `leaves` | `[Option < Handle < StandardMaterial > > ; 2]` |
+
+## Components (Bevy)
+
+### `Vegetation`
+
+ Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa.
+
+ Marcador nas árvores low-poly — permite ligar/desligar a vegetação (perf).
 
 ## Structs
 
@@ -66,8 +74,6 @@ fn hex_prism_mesh() -> Mesh
 **Parâmetros**: `mut commands : Commands`, `mut meshes : ResMut < Assets < Mesh > >`
 
 ### `spawn_tree`
-
- Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa.
 
 **Parâmetros**: `parent : & mut ChildSpawnerCommands`, `lp : & LowPoly`, `mats : & mut Mats`, `materials : & mut Assets < StandardMaterial >`, `pos : Vec2`, `size : f32`, `variant : usize`
 

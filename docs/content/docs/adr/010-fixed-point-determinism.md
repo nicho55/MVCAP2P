@@ -1,7 +1,7 @@
 # ADR-010: Física Determinística — Rapier Restrito + Fallback Ponto Fixo
 
 **Data:** 2026-07-20
-**Status:** Aceito
+**Status:** Substituído por ADR-011
 
 ## Contexto
 

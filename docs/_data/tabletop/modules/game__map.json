@@ -123,7 +123,7 @@
       "name": "file_drop",
       "doc": [],
       "inputs": [
-        "mut evr : EventReader < FileDragAndDrop >",
+        "mut evr : MessageReader < FileDragAndDrop >",
         "drop_mode : Res < DropMode >",
         "session : Res < Session >",
         "mut net : ResMut < Net >",

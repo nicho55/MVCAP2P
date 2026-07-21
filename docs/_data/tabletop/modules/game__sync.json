@@ -11,7 +11,7 @@
         " GM: responde Hello com o estado completo (blobs primeiro — canal ordenado garante a chegada antes do Welcome)."
       ],
       "inputs": [
-        "mut rx : EventReader < NetRx >",
+        "mut rx : MessageReader < NetRx >",
         "session : Option < Res < Session > >",
         "mut net : ResMut < Net >",
         "mut roster : ResMut < Roster >",
@@ -34,7 +34,7 @@
         " Estado global: roster, grid, mapa, terreno."
       ],
       "inputs": [
-        "mut rx : EventReader < NetRx >",
+        "mut rx : MessageReader < NetRx >",
         "session : Option < Res < Session > >",
         "mut net : ResMut < Net >",
         "mut roster : ResMut < Roster >",
@@ -58,7 +58,7 @@
       ],
       "inputs": [
         "mut commands : Commands",
-        "mut rx : EventReader < NetRx >",
+        "mut rx : MessageReader < NetRx >",
         "session : Option < Res < Session > >",
         "mut net : ResMut < Net >",
         "roster : Res < Roster >",
@@ -82,7 +82,7 @@
         " Processa `AssignToken` em jogadores não-mestre: atualiza dono e cor do anel."
       ],
       "inputs": [
-        "mut rx : EventReader < NetRx >",
+        "mut rx : MessageReader < NetRx >",
         "session : Option < Res < Session > >",
         "roster : Res < Roster >",
         "mut ctx : Ctx3d",

@@ -9,7 +9,7 @@
 | Campo | Tipo |
 |-------|------|
 | `me` | `PlayerMeta` |
-| `code` | `String` |
+| `code` | `RoomCode` |
 
 ### `Net`
 
@@ -35,17 +35,6 @@
 | `images` | `HashMap < BlobId , Handle < Image > >` |
 | `incoming` | `HashMap < BlobId , Incoming >` |
 
-## Events (Bevy)
-
-### `NetRx`
-
-### `PeerEvent`
-
-| Campo | Tipo |
-|-------|------|
-| `peer` | `PeerId` |
-| `connected` | `bool` |
-
 ## Structs
 
 ### `NetPlugin`
@@ -55,6 +44,19 @@
 ### `NetSet`
 
 **Derives**: SystemSet, Debug, Clone, PartialEq, Eq, Hash
+
+### `NetRx`
+
+**Derives**: Message
+
+### `PeerEvent`
+
+**Derives**: Message
+
+| Campo | Tipo |
+|-------|------|
+| `peer` | `PeerId` |
+| `connected` | `bool` |
 
 ### `RosterEntry`
 
@@ -80,19 +82,19 @@
 ### `net_poll`
 
 ```rust
-fn net_poll(mut net : ResMut < Net >, mut rx : EventWriter < NetRx >, mut pev : EventWriter < PeerEvent >) -> ()
+fn net_poll(mut net : ResMut < Net >, mut rx : MessageWriter < NetRx >, mut pev : MessageWriter < PeerEvent >) -> ()
 ```
 
 ### `peer_greetings`
 
 ```rust
-fn peer_greetings(mut ev : EventReader < PeerEvent >, mut net : ResMut < Net >, session : Option < Res < Session > >, mut roster : ResMut < Roster >) -> ()
+fn peer_greetings(mut ev : MessageReader < PeerEvent >, mut net : ResMut < Net >, session : Option < Res < Session > >, mut roster : ResMut < Roster >) -> ()
 ```
 
 ### `blob_rx`
 
 ```rust
-fn blob_rx(mut rx : EventReader < NetRx >, mut blobs : ResMut < Blobs >, mut images : ResMut < Assets < Image > >) -> ()
+fn blob_rx(mut rx : MessageReader < NetRx >, mut blobs : ResMut < Blobs >, mut images : ResMut < Assets < Image > >) -> ()
 ```
 
 ### `net_reconnect`

@@ -160,6 +160,29 @@
           "is_handler": false
         }
       ]
+    },
+    {
+      "ty": "GameAssets",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "icon",
+          "doc": [
+            " Handle do ícone por nome, com fallback seguro — nunca entra em pânico se",
+            " o ícone não estiver carregado (retorna um handle vazio)."
+          ],
+          "inputs": [
+            "& self",
+            "name : & str"
+          ],
+          "output": "Handle < Image >",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
     }
   ],
   "uses": [
