@@ -8,7 +8,7 @@ pub mod sync;
 pub mod terrain;
 pub mod tokens;
 
-use bevy::pbr::CascadeShadowConfigBuilder;
+use bevy::light::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 
 use crate::net::{Blobs, Net, NetSet, Roster, Session};
@@ -175,11 +175,6 @@ fn setup_lighting(mut commands: Commands) {
         }
         .build(),
     ));
-    commands.insert_resource(AmbientLight {
-        color: Color::srgb(0.85, 0.88, 1.0),
-        brightness: 350.0,
-        ..default()
-    });
 }
 
 fn leave_game(

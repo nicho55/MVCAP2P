@@ -9,8 +9,8 @@ pub struct NetPlugin;
 
 impl Plugin for NetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<NetRx>()
-            .add_event::<PeerEvent>()
+        app.add_message::<NetRx>()
+            .add_message::<PeerEvent>()
             .init_resource::<Net>()
             .init_resource::<Roster>()
             .init_resource::<Blobs>()
@@ -26,10 +26,10 @@ impl Plugin for NetPlugin {
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NetSet;
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct NetRx(pub PeerId, pub Msg);
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct PeerEvent {
     pub peer: PeerId,
     pub connected: bool,
@@ -203,7 +203,7 @@ impl Blobs {
     }
 }
 
-fn net_poll(mut net: ResMut<Net>, mut rx: EventWriter<NetRx>, mut pev: EventWriter<PeerEvent>) {
+fn net_poll(mut net: ResMut<Net>, mut rx: MessageWriter<NetRx>, mut pev: MessageWriter<PeerEvent>) {
     if net.socket.is_none() {
         return;
     }
@@ -261,7 +261,7 @@ fn net_poll(mut net: ResMut<Net>, mut rx: EventWriter<NetRx>, mut pev: EventWrit
 }
 
 fn peer_greetings(
-    mut ev: EventReader<PeerEvent>,
+    mut ev: MessageReader<PeerEvent>,
     mut net: ResMut<Net>,
     session: Option<Res<Session>>,
     mut roster: ResMut<Roster>,
@@ -282,7 +282,7 @@ fn peer_greetings(
 }
 
 fn blob_rx(
-    mut rx: EventReader<NetRx>,
+    mut rx: MessageReader<NetRx>,
     mut blobs: ResMut<Blobs>,
     mut images: ResMut<Assets<Image>>,
 ) {
@@ -331,7 +331,7 @@ fn net_reconnect(mut net: ResMut<Net>, time: Res<Time>) {
         return;
     }
     let finished = match net.reconnect.as_mut() {
-        Some(t) => t.tick(time.delta()).finished(),
+        Some(t) => t.tick(time.delta()).is_finished(),
         None => false,
     };
     if finished {

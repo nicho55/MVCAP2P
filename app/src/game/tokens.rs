@@ -319,7 +319,7 @@ pub struct TouchDrag {
 
 #[cfg(target_os = "android")]
 pub fn touch_interact(
-    mut touch_ev: EventReader<TouchInput>,
+    mut touch_ev: MessageReader<TouchInput>,
     windows: Query<&Window>,
     q_cam: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut q_tokens: Query<(Entity, &mut Transform, &mut Token)>,

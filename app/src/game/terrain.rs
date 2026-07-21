@@ -75,7 +75,7 @@ enum Op {
 
 pub fn terrain_tool(
     buttons: Res<ButtonInput<MouseButton>>,
-    mut touch_ev: EventReader<TouchInput>,
+    mut touch_ev: MessageReader<TouchInput>,
     tool: Res<ActiveTool>,
     ui: Res<UiHovered>,
     drag: Res<TouchDrag>,

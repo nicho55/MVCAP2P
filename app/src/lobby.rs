@@ -162,8 +162,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                         ..default()
                     },
                     BackgroundColor(PANEL),
-                    BorderColor(Color::srgb(0.30, 0.26, 0.40)),
-                    BorderRadius::all(Val::Px(12.0)),
+                    BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                 ))
                 .with_children(|panel| {
                     panel.spawn((Text::new("APELIDO"), tfont(&assets, 13.0), TextColor(MUTED)));
@@ -180,8 +179,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                 ..default()
                             },
                             BackgroundColor(FIELD_BG),
-                            BorderColor(GOLD),
-                            BorderRadius::all(Val::Px(6.0)),
+                            BorderColor::all(GOLD),
                         ))
                         .with_children(|f| {
                             f.spawn((NickText, Text::new(""), tfont(&assets, 18.0), TextColor(TEXT)));
@@ -205,8 +203,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                         ..default()
                                     },
                                     BackgroundColor(palette_color(i)),
-                                    BorderColor(Color::NONE),
-                                    BorderRadius::all(Val::Px(18.0)),
+                                    BorderColor::all(Color::NONE),
                                 ));
                             }
                         });
@@ -223,7 +220,6 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                 ..default()
                             },
                             BackgroundColor(Color::srgb(0.55, 0.42, 0.12)),
-                            BorderRadius::all(Val::Px(8.0)),
                         ))
                         .with_children(|b| {
                             b.spawn((Text::new("CRIAR SALA (MESTRE)"), tfont(&assets, 18.0), TextColor(Color::srgb(0.98, 0.95, 0.88))));
@@ -248,8 +244,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                     ..default()
                                 },
                                 BackgroundColor(FIELD_BG),
-                                BorderColor(Color::srgb(0.30, 0.26, 0.40)),
-                                BorderRadius::all(Val::Px(6.0)),
+                                BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                             ))
                             .with_children(|f| {
                                 f.spawn((CodeText, Text::new(""), tfont(&assets, 18.0), TextColor(TEXT)));
@@ -265,7 +260,6 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                     ..default()
                                 },
                                 BackgroundColor(Color::srgb(0.22, 0.32, 0.52)),
-                                BorderRadius::all(Val::Px(8.0)),
                             ))
                             .with_children(|b| {
                                 b.spawn((Text::new("ENTRAR"), tfont(&assets, 17.0), TextColor(TEXT)));
@@ -285,8 +279,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                         ..default()
                     },
                     BackgroundColor(PANEL),
-                    BorderColor(Color::srgb(0.30, 0.26, 0.40)),
-                    BorderRadius::all(Val::Px(12.0)),
+                    BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                 ))
                 .with_children(|panel| {
                     panel.spawn((Text::new("SALAS ABERTAS"), tfont(&assets, 14.0), TextColor(GOLD)));
@@ -510,7 +503,7 @@ fn lobby_clicks(
     }
 }
 
-fn lobby_typing(mut form: ResMut<LobbyForm>, mut keys: EventReader<KeyboardInput>) {
+fn lobby_typing(mut form: ResMut<LobbyForm>, mut keys: MessageReader<KeyboardInput>) {
     for ev in keys.read() {
         if !ev.state.is_pressed() {
             continue;
@@ -587,17 +580,17 @@ fn lobby_reflect(
     }
     let dim = Color::srgb(0.30, 0.26, 0.40);
     for mut b in &mut q_nick_b {
-        b.0 = if form.focus == Focus::Nick { GOLD } else { dim };
+        *b = BorderColor::all(if form.focus == Focus::Nick { GOLD } else { dim });
     }
     for mut b in &mut q_code_b {
-        b.0 = if form.focus == Focus::Code { GOLD } else { dim };
+        *b = BorderColor::all(if form.focus == Focus::Code { GOLD } else { dim });
     }
     for (s, mut b) in &mut q_swatches {
-        b.0 = if s.0 == form.color {
+        *b = BorderColor::all(if s.0 == form.color {
             Color::WHITE
         } else {
             Color::NONE
-        };
+        });
     }
 }
 
@@ -672,8 +665,7 @@ fn room_poll(
                         ..default()
                     },
                     BackgroundColor(ROW_BG),
-                    BorderColor(Color::srgb(0.30, 0.26, 0.40)),
-                    BorderRadius::all(Val::Px(6.0)),
+                    BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                 ))
                 .with_children(|b| {
                     b.spawn((Text::new(label), tfont(&assets, 12.0), TextColor(TEXT)));

@@ -4,6 +4,7 @@
 
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::prelude::*;
+use bevy::render::view::Hdr;
 use bevy::winit::{UpdateMode, WinitSettings};
 use std::time::Duration;
 
@@ -100,8 +101,10 @@ impl Default for GraphicsSettings {
 /// Aplica as opções ao mundo sempre que `GraphicsSettings` muda (e uma vez ao
 /// iniciar, pois o recurso conta como "changed" no primeiro acesso).
 pub fn apply_graphics(
+    mut commands: Commands,
     settings: Res<GraphicsSettings>,
-    mut cam: Query<(&mut Camera, &mut Msaa), With<MainCamera>>,
+    cam: Query<Entity, With<MainCamera>>,
+    mut msaa_q: Query<&mut Msaa, With<MainCamera>>,
     mut light: Query<&mut DirectionalLight>,
     mut veg: Query<&mut Visibility, With<Vegetation>>,
     mut winit: ResMut<WinitSettings>,
@@ -109,9 +112,16 @@ pub fn apply_graphics(
     if !settings.is_changed() {
         return;
     }
-    for (mut camera, mut msaa) in &mut cam {
-        camera.hdr = settings.hdr;
+    for mut msaa in &mut msaa_q {
         *msaa = settings.msaa.to_msaa();
+    }
+    // Bevy 0.18: HDR é o componente marcador `Hdr` na câmera (não `Camera.hdr`).
+    for cam_entity in &cam {
+        if settings.hdr {
+            commands.entity(cam_entity).insert(Hdr);
+        } else {
+            commands.entity(cam_entity).remove::<Hdr>();
+        }
     }
     for mut l in &mut light {
         l.shadows_enabled = settings.shadows;
@@ -232,7 +242,6 @@ fn toggle_btn(
                 ..default()
             },
             BackgroundColor(if opt.is_on(s) { ON } else { BTN_BG }),
-            BorderRadius::all(Val::Px(sz(6.0, si))),
         ))
         .with_children(|b| {
             b.spawn((
@@ -281,7 +290,6 @@ pub fn spawn_gfx_ui(
                     ..default()
                 },
                 BackgroundColor(PANEL),
-                BorderRadius::all(Val::Px(sz(6.0, &si))),
             ))
             .with_children(|b| {
                 b.spawn((
@@ -303,7 +311,6 @@ pub fn spawn_gfx_ui(
                     ..default()
                 },
                 BackgroundColor(PANEL),
-                BorderRadius::all(Val::Px(sz(8.0, &si))),
             ))
             .with_children(|panel| {
                 for opt in GfxOption::ALL {

@@ -75,8 +75,7 @@ fn tool_button(
             ..default()
         },
         BackgroundColor(BTN_BG),
-        BorderColor(BTN_BORDER),
-        BorderRadius::all(Val::Px(sz(8.0, si))),
+        BorderColor::all(BTN_BORDER),
     ))
     .with_children(|b| {
         b.spawn((
@@ -110,8 +109,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
     );
     let p = sz(12.0, si);
     let p2 = sz(8.0, si);
-    let r = sz(8.0, si);
-    let r2 = sz(6.0, si);
     let gap = sz(4.0, si);
     let gap2 = sz(6.0, si);
     let f0 = sz(22.0, si);
@@ -142,7 +139,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     ..default()
                 },
                 BackgroundColor(PANEL),
-                BorderRadius::all(Val::Px(r)),
             ))
             .with_children(|p| {
                 p.spawn((
@@ -179,7 +175,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     ..default()
                 },
                 BackgroundColor(PANEL),
-                BorderRadius::all(Val::Px(r)),
             ))
             .with_children(|p| {
                 p.spawn((
@@ -207,7 +202,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     ..default()
                 },
                 BackgroundColor(PANEL_SOFT),
-                BorderRadius::all(Val::Px(r2)),
             ))
             .with_children(|p| {
                 p.spawn((
@@ -229,7 +223,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                     ..default()
                 },
                 BackgroundColor(Color::srgba(0.30, 0.12, 0.12, 0.85)),
-                BorderRadius::all(Val::Px(sz(6.0, si))),
             ))
             .with_children(|b| {
                 b.spawn((
@@ -264,7 +257,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                         ..default()
                     },
                     BackgroundColor(PANEL),
-                    BorderRadius::all(Val::Px(sz(10.0, si))),
                 ))
                 .with_children(|bar| {
                     tool_button(
@@ -335,7 +327,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                             ..default()
                         },
                         BackgroundColor(BTN_BG),
-                        BorderRadius::all(Val::Px(sz(6.0, si))),
                     ))
                     .with_children(|b| {
                         b.spawn((
@@ -355,7 +346,6 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                             ..default()
                         },
                         BackgroundColor(BTN_BG),
-                        BorderRadius::all(Val::Px(sz(6.0, si))),
                     ))
                     .with_children(|b| {
                         b.spawn((
@@ -464,7 +454,7 @@ pub fn toolbar_visuals(
             ToolBtn::Grid(k) => grid.0.kind == *k,
             ToolBtn::CellDelta(_) => false,
         };
-        border.0 = if active { GOLD } else { BTN_BORDER };
+        *border = BorderColor::all(if active { GOLD } else { BTN_BORDER });
         *bg = BackgroundColor(if active {
             Color::srgb(0.26, 0.22, 0.34)
         } else {
@@ -517,7 +507,6 @@ pub fn roster_panel(
                     ..default()
                 },
                 BackgroundColor(Color::srgba(0.20, 0.18, 0.26, 0.50)),
-                BorderRadius::all(Val::Px(dot * 0.5)),
             ))
         } else {
             commands.spawn((
@@ -538,7 +527,6 @@ pub fn roster_panel(
                     ..default()
                 },
                 BackgroundColor(entry.meta.color.color()),
-                BorderRadius::all(Val::Px(dot * 0.5)),
             ));
             r.spawn((
                 Text::new(label),
