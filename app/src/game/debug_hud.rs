@@ -41,6 +41,7 @@ pub fn spawn_debug_hud(
                 min_width: Val::Px(sz(220.0, &si)),
                 ..default()
             },
+            ZIndex(52),
             BackgroundColor(PANEL),
         ))
         .with_children(|root| {

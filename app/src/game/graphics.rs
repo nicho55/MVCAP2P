@@ -304,6 +304,7 @@ pub fn spawn_gfx_ui(
                 row_gap: Val::Px(sz(4.0, &si)),
                 ..default()
             },
+            ZIndex(51),
         ))
         .with_children(|root| {
             root.spawn((

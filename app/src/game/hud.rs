@@ -122,6 +122,7 @@ fn spawn_hud(
                 position_type: PositionType::Absolute,
                 ..default()
             },
+            ZIndex(50),
         ))
         .with_children(|root| {
             // left column: info panel + roster, stacked vertically
