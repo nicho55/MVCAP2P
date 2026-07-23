@@ -83,6 +83,27 @@ joystick_input.after(HudWriteSet),
 - Desktop: `.after(track_ui_hover).after(tokens::delete_selected).after(HudWriteSet)`
 - Android: `.after(track_ui_hover).after(tokens::touch_interact).after(HudWriteSet)`
 
+### ChunkRender: conflito entre 3 systems pós-merge
+
+Após os PRs #36 (graphics) e #37 (debug_hud) serem mergeados, surgiu um novo B0002 no Android: três systems acessam `ChunkRender` após `HudWriteSet` sem ordenação entre si:
+
+| System | Acesso | Bloco |
+|---|---|---|
+| `graphics::apply_graphics` | `ResMut<ChunkRender>` | `.after(HudWriteSet)` |
+| `terrain::chunk_render_system` | `ResMut<ChunkRender>` | `.after(HudWriteSet)` |
+| `debug_hud::update_debug_hud` | `Res<ChunkRender>` | `.after(HudWriteSet)` |
+
+Fix: ordenação explícita entre os três:
+```rust
+terrain::chunk_render_system
+    .after(terrain::terrain_tool)
+    .after(graphics::apply_graphics),
+
+debug_hud::update_debug_hud
+    .after(graphics::apply_graphics)
+    .after(terrain::chunk_render_system),
+```
+
 ## Consequences
 
 ### Positivas

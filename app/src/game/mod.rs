@@ -179,7 +179,9 @@ impl Plugin for GamePlugin {
                     .after(hud::assign_token_click)
                     .after(SyncSet),
                 graphics::gfx_panel_visuals.after(graphics::gfx_toggle_click),
-                debug_hud::update_debug_hud,
+                debug_hud::update_debug_hud
+                    .after(graphics::apply_graphics)
+                    .after(terrain::chunk_render_system),
             )
                 .run_if(in_state(AppState::InGame))
                 .after(HudWriteSet)
@@ -225,7 +227,9 @@ impl Plugin for GamePlugin {
                     .after(track_ui_hover)
                     .after(tokens::touch_interact)
                     .after(HudWriteSet),
-                terrain::chunk_render_system.after(terrain::terrain_tool),
+                terrain::chunk_render_system
+                    .after(terrain::terrain_tool)
+                    .after(graphics::apply_graphics),
                 grid::grid_reflow
                     .after(terrain::terrain_tool)
                     .after(SyncSet)
