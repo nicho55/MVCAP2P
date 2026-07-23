@@ -482,70 +482,75 @@ pub fn roster_panel(
     assets: Res<GameAssets>,
     si: Res<ScreenInfo>,
     q_panel: Query<Entity, With<RosterPanel>>,
+    q_new_panel: Query<(), Added<RosterPanel>>,
     q_rows: Query<Entity, With<RosterRow>>,
 ) {
-    if !roster.is_changed() && !selection.is_changed() {
+    // `q_new_panel` força repopular quando o HUD é reconstruído (rotação/escala
+    // respawnam o painel vazio via hud_responsive).
+    if !roster.is_changed() && !selection.is_changed() && q_new_panel.is_empty() {
         return;
     }
-    let Ok(_panel) = q_panel.single() else { return };
+    let Ok(panel) = q_panel.single() else { return };
     for e in &q_rows {
         commands.entity(e).despawn();
     }
     let has_sel = session.me.is_gm && selection.0.is_some();
-    for entry in &roster.list {
-        let mut label = entry.meta.nick.clone();
-        if entry.meta.is_gm {
-            label.push_str(" [GM]");
+    commands.entity(panel).with_children(|panel| {
+        for entry in &roster.list {
+            let mut label = entry.meta.nick.clone();
+            if entry.meta.is_gm {
+                label.push_str(" [GM]");
+            }
+            if entry.meta.uuid == session.me.uuid {
+                label.push_str(" (você)");
+            }
+            let col = if entry.online {
+                Color::srgb(0.92, 0.90, 0.95)
+            } else {
+                Color::srgb(0.45, 0.43, 0.50)
+            };
+            let dot = sz(14.0, &si);
+            let mut spawner = if has_sel && !entry.meta.is_gm {
+                panel.spawn((
+                    Button,
+                    RosterRow,
+                    AssignTokenBtn(entry.meta.uuid),
+                    Node {
+                        flex_direction: FlexDirection::Row,
+                        column_gap: Val::Px(sz(8.0, &si)),
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgba(0.20, 0.18, 0.26, 0.50)),
+                ))
+            } else {
+                panel.spawn((
+                    RosterRow,
+                    Node {
+                        flex_direction: FlexDirection::Row,
+                        column_gap: Val::Px(sz(8.0, &si)),
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                ))
+            };
+            spawner.with_children(|r| {
+                r.spawn((
+                    Node {
+                        width: Val::Px(dot),
+                        height: Val::Px(dot),
+                        ..default()
+                    },
+                    BackgroundColor(entry.meta.color.color()),
+                ));
+                r.spawn((
+                    Text::new(label),
+                    tfont(&assets, sz(15.0, &si)),
+                    TextColor(col),
+                ));
+            });
         }
-        if entry.meta.uuid == session.me.uuid {
-            label.push_str(" (você)");
-        }
-        let col = if entry.online {
-            Color::srgb(0.92, 0.90, 0.95)
-        } else {
-            Color::srgb(0.45, 0.43, 0.50)
-        };
-        let dot = sz(14.0, &si);
-        let mut spawner = if has_sel && !entry.meta.is_gm {
-            commands.spawn((
-                Button,
-                RosterRow,
-                AssignTokenBtn(entry.meta.uuid),
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(sz(8.0, &si)),
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                BackgroundColor(Color::srgba(0.20, 0.18, 0.26, 0.50)),
-            ))
-        } else {
-            commands.spawn((
-                RosterRow,
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(sz(8.0, &si)),
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-            ))
-        };
-        spawner.with_children(|r| {
-            r.spawn((
-                Node {
-                    width: Val::Px(dot),
-                    height: Val::Px(dot),
-                    ..default()
-                },
-                BackgroundColor(entry.meta.color.color()),
-            ));
-            r.spawn((
-                Text::new(label),
-                tfont(&assets, sz(15.0, &si)),
-                TextColor(col),
-            ));
-        });
-    }
+    });
 }
 
 pub fn status_label(
@@ -708,18 +713,20 @@ pub fn hint_label(
 
 pub fn hud_responsive(
     si: Res<ScreenInfo>,
-    mut last: Local<(f32, f32, f32)>,
+    mut last: Local<f32>,
     q_root: Query<Entity, With<HudRoot>>,
     mut commands: Commands,
     assets: Res<GameAssets>,
     session: Res<Session>,
     device: Res<DeviceProfile>,
 ) {
-    let cur = (si.width, si.height, si.scale);
-    if *last == cur && !q_root.is_empty() {
+    // Reconstrói só quando a escala muda. Rotação/resize são absorvidos pelo
+    // layout Percent/Absolute — respawnar a cada content-rect-change do Android
+    // (irregular, ver winit) causava o flicker (#43).
+    if !q_root.is_empty() && (si.scale - *last).abs() < 0.01 {
         return;
     }
-    *last = cur;
+    *last = si.scale;
     for e in &q_root {
         commands.entity(e).despawn();
     }
