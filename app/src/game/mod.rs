@@ -9,6 +9,7 @@ pub mod ruler;
 pub mod sync;
 pub mod terrain;
 pub mod tokens;
+pub mod toolbar;
 pub mod virtual_joystick;
 
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
@@ -146,6 +147,7 @@ impl Plugin for GamePlugin {
                 reset_ui_hover,
                 graphics::despawn_gfx_ui,
                 debug_hud::despawn_debug_hud,
+                toolbar::despawn_toolbar,
             ),
         )
         .add_systems(First, screen_update)
@@ -166,9 +168,10 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
-                hud::toolbar_clicks.after(SyncSet),
-                hud::delete_btn_click.after(hud::toolbar_clicks),
-                hud::assign_token_click.after(hud::delete_btn_click),
+                toolbar::toolbar_clicks.after(SyncSet),
+                toolbar::toolbar_shortcuts.after(SyncSet),
+                toolbar::delete_btn_click.after(toolbar::toolbar_clicks),
+                hud::assign_token_click.after(toolbar::delete_btn_click),
                 hud::scale_btn_click.after(SyncSet),
                 hud::back_btn_click,
                 graphics::gfx_open_click,
@@ -181,12 +184,18 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
-                hud::toolbar_visuals.after(hud::toolbar_clicks),
-                hud::hint_label.after(hud::toolbar_clicks),
-                hud::delete_btn_visibility.after(hud::delete_btn_click),
+                toolbar::toolbar_visuals.after(toolbar::toolbar_clicks),
+                toolbar::toolbar_responsive.after(hud::scale_btn_click),
+                toolbar::toolbar_options_visibility
+                    .after(toolbar::toolbar_clicks)
+                    .after(toolbar::toolbar_responsive),
+                toolbar::delete_btn_visibility
+                    .after(toolbar::delete_btn_click)
+                    .after(toolbar::toolbar_responsive),
+                hud::hint_label.after(toolbar::toolbar_clicks),
                 hud::roster_panel
                     .after(hud::scale_btn_click)
-                    .after(hud::delete_btn_click)
+                    .after(toolbar::delete_btn_click)
                     .after(SyncSet),
                 hud::status_label
                     .after(hud::assign_token_click)
