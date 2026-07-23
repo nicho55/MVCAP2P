@@ -404,18 +404,18 @@ pub fn gfx_panel_visuals(
 
 pub fn gfx_responsive(
     si: Res<ScreenInfo>,
-    mut last: Local<(f32, f32, f32)>,
+    mut last: Local<f32>,
     q_root: Query<Entity, With<GfxUiRoot>>,
     mut commands: Commands,
     settings: Res<GraphicsSettings>,
     assets: Res<GameAssets>,
     device: Res<DeviceProfile>,
 ) {
-    let cur = (si.width, si.height, si.scale);
-    if *last == cur && !q_root.is_empty() {
+    // Ver hud_responsive: só a escala exige respawn (#43).
+    if !q_root.is_empty() && (si.scale - *last).abs() < 0.01 {
         return;
     }
-    *last = cur;
+    *last = si.scale;
     for e in &q_root {
         commands.entity(e).despawn();
     }

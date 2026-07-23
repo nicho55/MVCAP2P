@@ -1,5 +1,6 @@
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
+use bevy::ui::IsDefaultUiCamera;
 
 #[cfg(target_os = "android")]
 use bevy::input::touch::TouchPhase;
@@ -52,6 +53,21 @@ pub fn setup_camera(mut commands: Commands) {
             ..default()
         },
         MainCamera,
+    ));
+
+    // Câmera de UI dedicada: renderiza a interface num passe separado, por cima
+    // do 3D (order=1, sem limpar o buffer). No Android a sub-passe de UI da
+    // câmera 3D falhava de forma intermitente (Bevy #14710), sumindo o HUD sobre
+    // o mapa. Um passe próprio garante a composição da UI sobre a cena. (#43)
+    commands.spawn((
+        Camera2d,
+        Camera {
+            order: 1,
+            clear_color: ClearColorConfig::None,
+            ..default()
+        },
+        Msaa::Off,
+        IsDefaultUiCamera,
     ));
 }
 
