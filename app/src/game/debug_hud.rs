@@ -95,10 +95,7 @@ pub fn update_debug_hud(
 
     let chunks = render.as_ref().map(|r| r.ents.len()).unwrap_or(0);
 
-    let peers = net
-        .as_ref()
-        .map(|n| n.peers().len())
-        .unwrap_or(0);
+    let peers = net.as_ref().map(|n| n.peers().len()).unwrap_or(0);
 
     let players = roster.as_ref().map(|r| r.list.len()).unwrap_or(0);
 
