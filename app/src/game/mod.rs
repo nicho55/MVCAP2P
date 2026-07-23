@@ -144,7 +144,7 @@ impl Plugin for GamePlugin {
                 sync::handle_hello,
                 sync::handle_core.after(sync::handle_hello),
                 sync::handle_tokens.after(sync::handle_core),
-                sync::assign_token_rx.after(sync::handle_core),
+                sync::assign_token_rx.after(sync::handle_tokens),
             )
                 .in_set(SyncSet)
                 .run_if(in_state(AppState::InGame))
@@ -191,11 +191,17 @@ impl Plugin for GamePlugin {
             Update,
             (
                 track_ui_hover,
-                camera::pan_zoom,
+                camera::pan_zoom.after(track_ui_hover),
                 #[cfg(target_os = "android")]
                 camera::touch_pan_zoom.after(camera::pan_zoom),
+                #[cfg(not(target_os = "android"))]
                 camera::apply_rig
                     .after(camera::pan_zoom)
+                    .after(virtual_joystick::joystick_apply),
+                #[cfg(target_os = "android")]
+                camera::apply_rig
+                    .after(camera::pan_zoom)
+                    .after(camera::touch_pan_zoom)
                     .after(virtual_joystick::joystick_apply),
                 map::sync_map.after(SyncSet),
                 map::file_drop.after(map::sync_map).after(HudWriteSet),
@@ -203,7 +209,9 @@ impl Plugin for GamePlugin {
                     .after(track_ui_hover)
                     .after(map::file_drop)
                     .after(HudWriteSet),
-                tokens::token_y_follow.after(tokens::token_interact),
+                tokens::token_y_follow
+                    .after(tokens::token_interact)
+                    .after(terrain::terrain_tool),
                 tokens::delete_selected.after(tokens::token_interact),
                 tokens::selection_visual
                     .after(tokens::token_interact)
@@ -214,22 +222,31 @@ impl Plugin for GamePlugin {
                     .after(tokens::delete_selected)
                     .after(HudWriteSet),
                 #[cfg(target_os = "android")]
-                tokens::touch_highlight,
-                tokens::resolve_pending_art,
-                tokens::refresh_ring_colors,
+                tokens::touch_highlight
+                    .after(tokens::touch_interact),
+                tokens::resolve_pending_art
+                    .after(map::file_drop)
+                    .after(terrain::terrain_tool),
+                tokens::refresh_ring_colors
+                    .after(tokens::resolve_pending_art),
                 #[cfg(not(target_os = "android"))]
                 terrain::terrain_tool
                     .after(track_ui_hover)
                     .after(tokens::delete_selected)
-                    .after(HudWriteSet),
+                    .after(HudWriteSet)
+                    .after(graphics::apply_graphics),
                 #[cfg(target_os = "android")]
                 terrain::terrain_tool
                     .after(track_ui_hover)
                     .after(tokens::touch_interact)
-                    .after(HudWriteSet),
+                    .after(HudWriteSet)
+                    .after(graphics::apply_graphics),
                 terrain::chunk_render_system
                     .after(terrain::terrain_tool)
-                    .after(graphics::apply_graphics),
+                    .after(graphics::apply_graphics)
+                    .after(camera::apply_rig)
+                    .after(grid::grid_reflow)
+                    .after(tokens::refresh_ring_colors),
                 grid::grid_reflow
                     .after(terrain::terrain_tool)
                     .after(SyncSet)
@@ -237,7 +254,7 @@ impl Plugin for GamePlugin {
                 grid::draw_grid
                     .after(map::sync_map)
                     .after(map::file_drop)
-                    .after(camera::pan_zoom),
+                    .after(camera::apply_rig),
             )
                 .run_if(in_state(AppState::InGame))
                 .after(HudWriteSet)

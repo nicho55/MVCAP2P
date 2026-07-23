@@ -303,6 +303,7 @@ impl Plugin for VirtualJoystickPlugin {
                         joystick_apply
                             .after(joystick_input)
                             .after(super::camera::pan_zoom)
+                            .after(super::camera::touch_pan_zoom)
                             .after(HudWriteSet),
                     )
                         .run_if(in_state(AppState::InGame)),

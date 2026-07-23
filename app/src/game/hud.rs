@@ -668,19 +668,18 @@ pub fn delete_btn_visibility(
 
 pub fn delete_btn_click(
     q: Query<&Interaction, (Changed<Interaction>, With<DeleteBtn>)>,
-    sel: Res<TokenSelection>,
     session: Res<Session>,
     mut net: ResMut<Net>,
     mut commands: Commands,
     q_tokens: Query<(Entity, &Token)>,
-    mut sel_mut: ResMut<TokenSelection>,
+    mut sel: ResMut<TokenSelection>,
 ) {
     for i in &q {
         if *i != Interaction::Pressed {
             continue;
         }
         delete_selected_entity(&sel, &session, &mut net, &mut commands, &q_tokens);
-        sel_mut.0 = None;
+        sel.0 = None;
     }
 }
 
