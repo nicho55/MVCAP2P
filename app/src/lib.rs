@@ -1,5 +1,6 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+mod device;
 mod game;
 mod lobby;
 mod net;
@@ -7,6 +8,9 @@ mod protocol;
 mod room_discovery;
 mod svg_assets;
 pub mod transcode;
+mod ui_layer;
+
+pub use device::DeviceProfile;
 
 use bevy::prelude::*;
 #[cfg(target_os = "android")]
@@ -23,7 +27,8 @@ pub enum AppState {
     InGame,
 }
 
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Debug, Clone, serde::Deserialize)]
+#[serde(default)]
 pub struct CliArgs {
     pub gm: bool,
     pub join: Option<String>,
@@ -79,11 +84,21 @@ fn parse_args() -> CliArgs {
     a
 }
 
+#[cfg(target_os = "android")]
+fn read_android_args() -> Option<CliArgs> {
+    let path = "/data/local/tmp/tabletop_args.json";
+    let data = std::fs::read_to_string(path).ok()?;
+    let parsed: CliArgs = serde_json::from_str(&data).ok()?;
+    let _ = std::fs::remove_file(path);
+    info!("args lidos de {path}: {parsed:?}");
+    Some(parsed)
+}
+
 pub fn run_game() {
     #[cfg(not(target_os = "android"))]
     let args = parse_args();
     #[cfg(target_os = "android")]
-    let args = CliArgs::default();
+    let args = read_android_args().unwrap_or_default();
 
     #[cfg(not(target_os = "android"))]
     let mut title = String::from("Tabletop P2P");
@@ -101,6 +116,7 @@ pub fn run_game() {
 
     let mut app = App::new();
     app.insert_resource(args)
+        .insert_resource(DeviceProfile::detect())
         .insert_resource(ClearColor(Color::srgb(0.075, 0.065, 0.10)));
 
     #[cfg(not(target_os = "android"))]
@@ -157,6 +173,7 @@ pub fn run_game() {
         .add_plugins((
             svg_assets::SvgAssetsPlugin,
             net::NetPlugin,
+            ui_layer::UiLayerPlugin,
             lobby::LobbyPlugin,
             game::GamePlugin,
         ))

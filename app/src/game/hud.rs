@@ -12,6 +12,7 @@ use crate::net::{Net, Roster, Session};
 use crate::protocol::*;
 use crate::svg_assets::{tfont, GameAssets};
 use crate::AppState;
+use crate::DeviceProfile;
 
 use super::grid::GridRes;
 
@@ -93,24 +94,16 @@ fn tool_button(
     });
 }
 
-fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si: &ScreenInfo) {
+fn spawn_hud(
+    commands: &mut Commands,
+    assets: &GameAssets,
+    session: &Session,
+    si: &ScreenInfo,
+    device: &DeviceProfile,
+) {
     let gm = session.me.is_gm;
-    let top = sz(
-        if cfg!(target_os = "android") {
-            36.0
-        } else {
-            0.0
-        },
-        si,
-    );
-    let bottom = sz(
-        if cfg!(target_os = "android") {
-            60.0
-        } else {
-            0.0
-        },
-        si,
-    );
+    let top = sz(if device.is_mobile() { 36.0 } else { 0.0 }, si);
+    let bottom = sz(if device.is_mobile() { 60.0 } else { 0.0 }, si);
     let p = sz(12.0, si);
     let p2 = sz(8.0, si);
     let gap = sz(4.0, si);
@@ -398,8 +391,9 @@ pub fn setup_hud(
     assets: Res<GameAssets>,
     session: Res<Session>,
     si: Res<ScreenInfo>,
+    device: Res<DeviceProfile>,
 ) {
-    spawn_hud(&mut commands, &assets, &session, &si);
+    spawn_hud(&mut commands, &assets, &session, &si, &device);
 }
 
 pub fn scale_btn_click(
@@ -410,6 +404,7 @@ pub fn scale_btn_click(
     q_old_hud: Query<Entity, With<HudRoot>>,
     assets: Res<GameAssets>,
     session: Res<Session>,
+    device: Res<DeviceProfile>,
 ) {
     let delta = if q_up.iter().any(|i| *i == Interaction::Pressed) {
         SCALE_STEP
@@ -429,7 +424,7 @@ pub fn scale_btn_click(
     for e in &q_old_hud {
         commands.entity(e).despawn();
     }
-    spawn_hud(&mut commands, &assets, &session, &si);
+    spawn_hud(&mut commands, &assets, &session, &si, &device);
 }
 
 pub fn toolbar_clicks(
@@ -693,6 +688,7 @@ pub fn hint_label(
     drop_mode: Res<DropMode>,
     tool: Res<ActiveTool>,
     assets: Res<GameAssets>,
+    device: Res<DeviceProfile>,
     mut q: Query<&mut Text, With<HintLabel>>,
 ) {
     if !(drop_mode.is_changed() || tool.is_changed()) {
@@ -719,7 +715,7 @@ pub fn hint_label(
         ActiveTool::ElevUp => "elevar terreno",
         ActiveTool::ElevDown => "rebaixar terreno",
     };
-    if cfg!(target_os = "android") {
+    if device.is_mobile() {
         text.0 = format!(
             "Ferramenta: {tool_s}  |  soltar imagem cria: {mode}\n1 dedo: mover câmera  |  2 dedos: girar  |  pinça: zoom  |  toque token: arrastar"
         );

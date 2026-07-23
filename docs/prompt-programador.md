@@ -19,54 +19,66 @@ Você é o programador do projeto MVCAP2P — um VTT tático 3D P2P em Rust/Bevy
 
 ## Tarefas (em ordem de prioridade)
 
+Todas as issues abaixo estão no status **Ready** no board. Ao começar cada uma, mova para **In Progress**. Ao abrir PR, mova para **In Review**.
+
 ### 1. Commitar código pendente (URGENTE)
-Há ~585 linhas não commitadas (ADR-012, ADR-013, virtual_joystick). Faça:
+Há código não commitado (ADR-012, ADR-013, virtual_joystick). Faça:
 ```bash
 git status
 git diff --stat
 ```
 Revise as mudanças, crie um commit coerente e abra PR vinculado à issue #4.
 
-### 2. Issue #28 — Sistema de Chunks (CRÍTICO para performance)
-O terreno atual cria 1 entidade ECS por célula — não escala no J7. Precisa migrar para chunks 8×8:
+### 2. Issue #32 — CLI Args no Android (habilita testes automatizados)
+As flags CLI (`--gm`, `--demo`, `--exit-at`) não funcionam no Android. Implementar leitura de `/data/local/tmp/tabletop_args.json` no boot. Desbloqueia todos os testes automatizados no celular.
+```bash
+gh issue view 32 --repo nicho55/MVCAP2P
+```
 
-Leia a issue:
+### 3. Issue #28 — Texture Atlas + LOD (chunks já implementados)
+A base do sistema de chunks JÁ ESTÁ implementada (`ChunkRender`, `chunk_render_system()`, `build_chunk_mesh()`). O que falta:
+- **Texture atlas**: hoje `dominant_terrain()` usa 1 cor por chunk, células com texturas diferentes renderizam errado. Usar vertex colors ou paleta UV.
+- **LOD médio**: chunks distantes (4-6) devem usar mesh simplificada (1 quad)
 ```bash
 gh issue view 28 --repo nicho55/MVCAP2P
 ```
 
-Arquivos principais a modificar:
-- `app/src/game/terrain.rs` — substituir `TerrainRender` por `ChunkRender`, reescrever `terrain_render()` como `chunk_render_system()`
-- `app/src/game/lowpoly.rs` — mesh merge (gerar 1 mesh com N prismas)
-- `app/src/game/graphics.rs` — adicionar `draw_distance: u32` no `GraphicsSettings`
-- `shared/src/lib.rs` — sem mudança no protocolo
-
-Pontos de atenção:
-- `Terrain` HashMap continua como fonte de verdade — chunks são SÓ renderização
-- `set_cell()` deve marcar chunk como dirty: `dirty.insert((cell.0 >> 3, cell.1 >> 3))`
-- Welcome com `full = true` marca todos os chunks como dirty
-- Texture atlas: 1 material para todo o terreno (paleta como imagem, UV por célula)
-
-### 3. Issue #10 — Detecção de Dispositivo no Bootstrap
-Detectar plataforma, resolução, DPI e input mode (touch/mouse) no `PreStartup`. Criar resource `DeviceProfile` acessível por toda a aplicação.
+### 4. Issue #10 — Detecção de Dispositivo no Bootstrap
+Criar resource `DeviceProfile` em `PreStartup`: plataforma, DPI, input mode (touch/mouse).
+Hoje `cfg!(target_os = "android")` está hardcoded — migrar branching de runtime para `DeviceProfile`.
 ```bash
 gh issue view 10 --repo nicho55/MVCAP2P
 ```
 
-### 4. Issue #13 — Orçamento de Performance
-Definir constantes de limite no crate `shared/`:
-- RAM: 600 MB | Token: 256 KB, 256x256 WebP | Mapa: 2 MB, 2048x2048 | Som: 128 KB Opus
-- Pipeline de transcoding PNG/JPEG → WebP na importação
-- Rejeitar uploads acima do limite com feedback
+### 5. Issue #13 — Orçamento de Performance
+Constantes de limite em `shared/src/lib.rs` (módulo `limits`). Pipeline de transcoding PNG/JPEG → WebP.
 ```bash
 gh issue view 13 --repo nicho55/MVCAP2P
+```
+
+### 6. Issue #11 — UI Engine SVG+PNG
+Camada de UI independente que não é destruída nas transições de AppState. Expandir `svg_assets.rs`.
+```bash
+gh issue view 11 --repo nicho55/MVCAP2P
+```
+
+### 7. Issue #12 — Telas Conceituais (Lobby/Jogo/Teste)
+Debug HUD para sala de testes (FPS, RAM, entities, draw calls). Recomendado: flag `is_test_room` na Session.
+```bash
+gh issue view 12 --repo nicho55/MVCAP2P
+```
+
+### 8. Issue #21 — Grid, Réguas, LoS e Fundação IA
+Elevação no grid, réguas (raio/cone/linha), Line of Sight, API de pathfinding A*.
+```bash
+gh issue view 21 --repo nicho55/MVCAP2P
 ```
 
 ## Como escrever código neste projeto
 
 ANTES de implementar qualquer feature, estude o código que já existe no projeto. Leia os arquivos que vai modificar e os vizinhos. O projeto tem um estilo próprio — siga ele, não invente outro.
 
-Exemplo: antes de criar o sistema de chunks, leia `terrain.rs`, `lowpoly.rs`, `grid.rs` e `sync.rs` inteiros. Entenda como `TerrainRender` funciona, como `Ctx3d` agrupa resources, como meshes são criadas em `lowpoly.rs`. Sua implementação deve parecer escrita pela mesma pessoa que escreveu o resto.
+Exemplo: antes de criar o sistema de chunks, leia `terrain.rs`, `lowpoly.rs`, `grid.rs` e `sync.rs` inteiros. Entenda como `ChunkRender` funciona, como `Ctx3d` agrupa resources, como meshes são criadas em `lowpoly.rs`. Sua implementação deve parecer escrita pela mesma pessoa que escreveu o resto.
 
 Para features mais complexas (mesh merge, texture atlas, LOD), pesquise exemplos de como fazer em Bevy 0.18 — mas sempre adapte ao contexto do projeto. Não copie soluções genéricas com 5 camadas de abstração. Este projeto roda num J7. Cada struct, cada trait, cada alocação conta.
 
@@ -87,6 +99,67 @@ Para features mais complexas (mesh merge, texture atlas, LOD), pesquise exemplos
 5. Prefira editar arquivos existentes. Não crie abstrações além do necessário.
 6. Documente decisões arquiteturais em ADR se a mudança for significativa (`docs/content/docs/adr/`).
 7. A SSOT (`docs/content/docs/spec/index.md`) descreve como os sistemas devem funcionar — consulte antes de implementar.
+8. **Mover issue no board ao trabalhar:**
+   - **Ao começar** uma issue → mover para **In Progress**
+   - **Ao abrir PR** → mover para **In Review**
+   - Usar os comandos abaixo (trocar `ISSUE_NUM` pelo número da issue):
+
+```bash
+# Pegar o item ID da issue no projeto
+ITEM_ID=$(gh api graphql -f query='query { user(login:"nicho55") { projectV2(number:1) { items(first:50) { nodes { id content { ... on Issue { number } } } } } } }' --jq ".data.user.projectV2.items.nodes[] | select(.content.number == ISSUE_NUM) | .id")
+
+# Mover para In Progress
+gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: { projectId:"PVT_kwHOAo_kxM4Bd9Dv" itemId:"'"$ITEM_ID"'" fieldId:"PVTSSF_lAHOAo_kxM4Bd9DvzhYazX4" value:{singleSelectOptionId:"47fc9ee4"} }) { projectV2Item { id } } }'
+
+# Mover para In Review (ao abrir PR)
+gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: { projectId:"PVT_kwHOAo_kxM4Bd9Dv" itemId:"'"$ITEM_ID"'" fieldId:"PVTSSF_lAHOAo_kxM4Bd9DvzhYazX4" value:{singleSelectOptionId:"df73e18b"} }) { projectV2Item { id } } }'
+```
+
+## Teste no Celular (Action Runner)
+
+O projeto tem um **runner self-hosted** (`neps-pc`, labels: `self-hosted, Linux, X64, android-farm`) com um **Motorola MG06 conectado via USB**. O workflow `deploy-devices.yml` builda o APK, instala no celular e coleta métricas automaticamente.
+
+### Como funciona
+
+1. **A cada push em `main` ou PR**, o workflow roda automaticamente
+2. Build do APK na nuvem (ubuntu-latest)
+3. Deploy + coleta no runner local (instala, roda 20s, coleta gfxinfo/meminfo/logcat/screenshot)
+4. Resultados salvos como **artefato `perf-reports`** no GitHub Actions
+
+### Como acessar os erros
+
+```bash
+# Ver o último workflow run
+gh run list --repo nicho55/MVCAP2P --workflow deploy-devices.yml --limit 5
+
+# Ver logs completos de um run específico
+gh run view <RUN_ID> --repo nicho55/MVCAP2P --log
+
+# Baixar os relatórios (logcat, métricas, screenshots)
+gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
+cat /tmp/reports/*.txt    # logcat + métricas por device
+```
+
+### O que está nos relatórios
+
+Cada `*.txt` contém:
+- **gfxinfo**: frames renderizados, janked frames
+- **meminfo**: RAM total usada pelo app
+- **logcat**: se app rodando → últimas 80 linhas do app. Se crashou → crash logs (AndroidRuntime, DEBUG, libc)
+- **screenshot** (`.png`): estado visual da tela
+
+### Trigger manual
+
+```bash
+gh workflow run deploy-devices.yml --repo nicho55/MVCAP2P
+```
+
+### Se o app crashar
+
+O script detecta crash (PID desapareceu) e captura os logs de crash do Android. Procure no relatório por:
+- `FATAL EXCEPTION` — crash Java/Kotlin
+- `signal 11 (SIGSEGV)` ou `signal 6 (SIGABRT)` — crash nativo (Rust/Vulkan)
+- `backtrace:` — stack trace nativo
 
 ## Começar
 
@@ -97,5 +170,5 @@ gh issue list --repo nicho55/MVCAP2P --label "prio:P0" --json number,title
 cat AGENTS.md
 ```
 
-Comece pelo item 1 (commit pendente), depois vá para o #28 (chunks).
+Comece pelo item 1 (commit pendente), depois #32 (CLI args Android), depois #28 (texture atlas + LOD).
 ```

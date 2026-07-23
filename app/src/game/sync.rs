@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::grid::{self, GridRes};
 use super::lowpoly::Ctx3d;
 use super::map::MapState;
-use super::terrain::{self, Terrain, TerrainRender};
+use super::terrain::{self, ChunkRender, Terrain};
 use super::tokens::{set_token_owner, spawn_token, Dragging, OwnerRing, Token};
 use crate::net::{Blobs, Net, NetRx, Roster, Session};
 use crate::protocol::*;
@@ -73,7 +73,7 @@ pub fn handle_core(
     mut roster: ResMut<Roster>,
     mut grid: ResMut<GridRes>,
     mut terrain: ResMut<Terrain>,
-    mut trender: ResMut<TerrainRender>,
+    mut trender: ResMut<ChunkRender>,
     mut map_state: ResMut<MapState>,
 ) {
     let Some(sess) = session else { return };
