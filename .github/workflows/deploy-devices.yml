@@ -7,8 +7,11 @@ name: deploy-devices
 #  - check: analisa os relatórios e cria issue de regressão se KPIs falharem.
 on:
   push:
-    tags: ['v*']              # criar tag v0.2.0 = lançar versão
-  workflow_dispatch:          # ou botão "Run workflow" no site
+    branches: [main]             # testar a cada push em main
+    tags: ['v*']                 # criar tag v0.2.0 = lançar versão
+  pull_request:
+    branches: [main]             # testar PRs antes de mergear
+  workflow_dispatch:             # ou botão "Run workflow" no site
     inputs:
       launch_seconds:
         description: 'segundos rodando em cada aparelho p/ medir fps'

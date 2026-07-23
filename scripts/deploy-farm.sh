@@ -69,6 +69,7 @@ for S in "${SERIALS[@]}"; do
     FAIL=1
   fi
 
+  PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
   REP="$OUT/${TAG}.txt"
   {
     echo "device=$S model=$M android=$R api=$SDK abi=$A"
@@ -76,8 +77,13 @@ for S in "${SERIALS[@]}"; do
     adb -s "$S" shell dumpsys gfxinfo "$PKG" | sed -n '/Total frames rendered/,/Number Slow/p'
     echo "--- meminfo ---"
     adb -s "$S" shell dumpsys meminfo "$PKG" | grep -E "TOTAL( |:)" | head -1
-    echo "--- últimas linhas do log do app ---"
-    adb -s "$S" logcat -d -t 40 --pid="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')" 2>/dev/null || true
+    if [ -n "$PID" ]; then
+      echo "--- últimas linhas do log do app ---"
+      adb -s "$S" logcat -d -t 80 --pid="$PID" 2>/dev/null || true
+    else
+      echo "--- CRASH LOG ---"
+      adb -s "$S" logcat -d -t 200 -s AndroidRuntime:E DEBUG:* libc:F tabletop:* 2>/dev/null || true
+    fi
   } > "$REP" 2>&1
   adb -s "$S" exec-out screencap -p > "$OUT/${TAG}.png" 2>/dev/null || true
   adb -s "$S" pull /data/local/tmp/tabletop_shot.png "$OUT/${TAG}_app.png" 2>/dev/null || true
