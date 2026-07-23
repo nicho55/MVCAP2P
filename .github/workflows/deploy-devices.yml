@@ -17,6 +17,10 @@ on:
         description: 'segundos rodando em cada aparelho p/ medir fps'
         default: '20'
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
