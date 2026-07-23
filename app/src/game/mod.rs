@@ -138,15 +138,7 @@ impl Plugin for GamePlugin {
             Startup,
             (camera::setup_camera, lowpoly::setup_lowpoly, setup_lighting),
         )
-        .add_systems(
-            OnEnter(AppState::InGame),
-            (
-                hud::setup_hud,
-                game_init,
-                graphics::spawn_gfx_ui,
-                debug_hud::spawn_debug_hud,
-            ),
-        )
+        .add_systems(OnEnter(AppState::InGame), game_init)
         .add_systems(
             OnExit(AppState::InGame),
             (

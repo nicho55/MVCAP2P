@@ -19,15 +19,6 @@ pub struct DebugHudRoot;
 #[derive(Component)]
 pub struct DebugText;
 
-pub fn spawn_debug_hud(
-    mut commands: Commands,
-    session: Res<Session>,
-    assets: Res<GameAssets>,
-    si: Res<ScreenInfo>,
-) {
-    spawn_debug_hud_inner(&mut commands, &session, &assets, &si);
-}
-
 fn spawn_debug_hud_inner(
     commands: &mut Commands,
     session: &Session,
@@ -82,11 +73,8 @@ pub fn debug_hud_responsive(
     session: Res<Session>,
     assets: Res<GameAssets>,
 ) {
-    if !si.is_changed() {
-        return;
-    }
     let cur = (si.width, si.height, si.scale);
-    if *last == cur {
+    if *last == cur && !q_root.is_empty() {
         return;
     }
     *last = cur;

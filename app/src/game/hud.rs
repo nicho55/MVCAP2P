@@ -387,16 +387,6 @@ fn spawn_hud(
         });
 }
 
-pub fn setup_hud(
-    mut commands: Commands,
-    assets: Res<GameAssets>,
-    session: Res<Session>,
-    si: Res<ScreenInfo>,
-    device: Res<DeviceProfile>,
-) {
-    spawn_hud(&mut commands, &assets, &session, &si, &device);
-}
-
 pub fn scale_btn_click(
     q_down: Query<&Interaction, (Changed<Interaction>, With<ScaleDownBtn>)>,
     q_up: Query<&Interaction, (Changed<Interaction>, With<ScaleUpBtn>)>,
@@ -725,11 +715,8 @@ pub fn hud_responsive(
     session: Res<Session>,
     device: Res<DeviceProfile>,
 ) {
-    if !si.is_changed() {
-        return;
-    }
     let cur = (si.width, si.height, si.scale);
-    if *last == cur {
+    if *last == cur && !q_root.is_empty() {
         return;
     }
     *last = cur;

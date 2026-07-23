@@ -49,8 +49,7 @@ screencap() {
 
 set_rotation() {
   adb -s "$1" shell settings put system accelerometer_rotation 0 2>/dev/null || true
-  adb -s "$1" shell content insert --uri content://settings/system \
-    --bind name:s:user_rotation --bind "value:i:$2" 2>/dev/null || true
+  adb -s "$1" shell settings put system user_rotation "$2" 2>/dev/null || true
 }
 
 for S in "${SERIALS[@]}"; do

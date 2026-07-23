@@ -279,17 +279,6 @@ fn toggle_btn(
         });
 }
 
-/// Cria o botão "Gráficos" (canto superior direito) e o painel (oculto).
-pub fn spawn_gfx_ui(
-    mut commands: Commands,
-    settings: Res<GraphicsSettings>,
-    assets: Res<GameAssets>,
-    si: Res<ScreenInfo>,
-    device: Res<DeviceProfile>,
-) {
-    spawn_gfx_ui_inner(&mut commands, &settings, &assets, &si, &device);
-}
-
 fn spawn_gfx_ui_inner(
     commands: &mut Commands,
     settings: &GraphicsSettings,
@@ -422,11 +411,8 @@ pub fn gfx_responsive(
     assets: Res<GameAssets>,
     device: Res<DeviceProfile>,
 ) {
-    if !si.is_changed() {
-        return;
-    }
     let cur = (si.width, si.height, si.scale);
-    if *last == cur {
+    if *last == cur && !q_root.is_empty() {
         return;
     }
     *last = cur;
