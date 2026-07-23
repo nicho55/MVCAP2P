@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # deploy-farm.sh — instala + inicia o APK em TODOS os devices adb conectados
-# (USB ou WiFi), coleta modelo/Android/fps/memória e uma screenshot por aparelho.
+# (USB ou WiFi), captura screenshots multi-tela e coleta métricas.
 # Uso: ./scripts/deploy-farm.sh   (env: APK, OUT, LAUNCH_SECONDS)
 set -uo pipefail
 
@@ -30,6 +30,29 @@ fi
 echo "📱 Devices: ${SERIALS[*]}"
 FAIL=0
 
+push_args() {
+  echo "$2" | adb -s "$1" shell "cat > /data/local/tmp/tabletop_args.json"
+}
+
+launch_app() {
+  adb -s "$1" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+}
+
+stop_app() {
+  adb -s "$1" shell am force-stop "$PKG" 2>/dev/null || true
+  sleep 1
+}
+
+screencap() {
+  adb -s "$1" exec-out screencap -p > "$2" 2>/dev/null || true
+}
+
+set_rotation() {
+  adb -s "$1" shell settings put system accelerometer_rotation 0 2>/dev/null || true
+  adb -s "$1" shell content insert --uri content://settings/system \
+    --bind name:s:user_rotation --bind "value:i:$2" 2>/dev/null || true
+}
+
 for S in "${SERIALS[@]}"; do
   M=$(adb -s "$S" shell getprop ro.product.model      | tr -d '\r')
   R=$(adb -s "$S" shell getprop ro.build.version.release | tr -d '\r')
@@ -53,29 +76,55 @@ for S in "${SERIALS[@]}"; do
     fi
   fi
 
-  # Limpa logcat antes de lançar para ter logs limpos do app
+  # Forçar landscape antes de começar
+  set_rotation "$S" 1
+  sleep 1
+
+  # ── Rodada 1/4: Lobby ──────────────────────────────────────────
+  echo "  📸 1/4 Lobby"
+  stop_app "$S"
+  push_args "$S" '{}'
+  launch_app "$S"
+  sleep 3
+  screencap "$S" "$OUT/${TAG}_01-lobby.png"
+  stop_app "$S"
+
+  # ── Rodada 2/4: Jogo landscape ─────────────────────────────────
+  echo "  📸 2/4 Jogo landscape"
   adb -s "$S" logcat -c 2>/dev/null || true
-
-  # Zera métricas e inicia pelo LAUNCHER (robusto p/ NativeActivity).
-  # Empurra config file para testes automatizados (--gm --demo, screenshot, exit).
-  # exit_at = LAUNCH_SECONDS + 5 para coleta de métricas antes do app fechar.
-  EXIT_AT=$((LAUNCH_SECONDS + 5))
-  ARGS_JSON='{"gm":true,"demo":true,"code":"TESTE","shot":"/data/local/tmp/tabletop_shot.png","shot_at":10.0,"exit_at":'"$EXIT_AT"'.0}'
-  echo "$ARGS_JSON" | adb -s "$S" shell "cat > /data/local/tmp/tabletop_args.json"
+  EXIT_AT=$((LAUNCH_SECONDS + 30))
+  push_args "$S" '{"gm":true,"demo":true,"code":"VISUAL","exit_at":'"$EXIT_AT"'.0}'
   adb -s "$S" shell dumpsys gfxinfo "$PKG" reset >/dev/null 2>&1 || true
-  adb -s "$S" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
-
-  # Captura PID logo após lançar (para logcat por PID mesmo se crashar)
+  launch_app "$S"
   sleep 2
   LAUNCH_PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
   if [ -z "$LAUNCH_PID" ]; then
-    echo "  ⚠️  app não iniciou (PID não encontrado 2s após launch)." >&2
+    echo "  ⚠️  app não iniciou (PID não encontrado)." >&2
     FAIL=1
   else
-    echo "  ▶ PID=$LAUNCH_PID, rodando ${LAUNCH_SECONDS}s para coletar frames..."
+    echo "  ▶ PID=$LAUNCH_PID"
   fi
+  sleep 4
+  screencap "$S" "$OUT/${TAG}_02-game-landscape.png"
 
-  sleep "$((LAUNCH_SECONDS - 2))"
+  # ── Rodada 3/4: Jogo portrait ──────────────────────────────────
+  echo "  📸 3/4 Jogo portrait"
+  set_rotation "$S" 0
+  sleep 2
+  screencap "$S" "$OUT/${TAG}_03-game-portrait.png"
+
+  # ── Rodada 4/4: Jogo landscape restaurado ──────────────────────
+  echo "  📸 4/4 Jogo landscape restaurado"
+  set_rotation "$S" 1
+  sleep 2
+  screencap "$S" "$OUT/${TAG}_04-game-restored.png"
+
+  # Esperar restante do LAUNCH_SECONDS para métricas (rodadas gastam ~14s)
+  REMAINING=$((LAUNCH_SECONDS - 14))
+  if [ "$REMAINING" -gt 0 ]; then
+    echo "  ⏳ ${REMAINING}s restantes para coleta de métricas..."
+    sleep "$REMAINING"
+  fi
 
   # Verifica se app ainda está rodando
   PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
@@ -84,6 +133,7 @@ for S in "${SERIALS[@]}"; do
     FAIL=1
   fi
 
+  # Coleta métricas e logs
   REP="$OUT/${TAG}.txt"
   {
     echo "device=$S model=$M android=$R api=$SDK abi=$A"
@@ -105,9 +155,14 @@ for S in "${SERIALS[@]}"; do
     echo "--- logcat completo (últimas 300 linhas, sem filtro) ---"
     adb -s "$S" logcat -d -t 300 2>/dev/null | tail -300 || true
   } > "$REP" 2>&1
-  adb -s "$S" exec-out screencap -p > "$OUT/${TAG}.png" 2>/dev/null || true
-  adb -s "$S" pull /data/local/tmp/tabletop_shot.png "$OUT/${TAG}_app.png" 2>/dev/null || true
+
+  stop_app "$S"
+
+  # Restaurar auto-rotate
+  adb -s "$S" shell settings put system accelerometer_rotation 1 2>/dev/null || true
+
   echo "  ✓ relatório: $REP"
+  echo "  ✓ screenshots: 01-lobby, 02-landscape, 03-portrait, 04-restored"
 done
 
 echo ""
