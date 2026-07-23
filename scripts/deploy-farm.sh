@@ -53,6 +53,9 @@ for S in "${SERIALS[@]}"; do
     fi
   fi
 
+  # Limpa logcat antes de lançar para ter logs limpos do app
+  adb -s "$S" logcat -c 2>/dev/null || true
+
   # Zera métricas e inicia pelo LAUNCHER (robusto p/ NativeActivity).
   # Empurra config file para testes automatizados (--gm --demo, screenshot, exit).
   # exit_at = LAUNCH_SECONDS + 5 para coleta de métricas antes do app fechar.
@@ -62,16 +65,25 @@ for S in "${SERIALS[@]}"; do
   adb -s "$S" shell dumpsys gfxinfo "$PKG" reset >/dev/null 2>&1 || true
   adb -s "$S" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 
-  echo "  ▶ rodando ${LAUNCH_SECONDS}s para coletar frames..."
-  sleep "$LAUNCH_SECONDS"
+  # Captura PID logo após lançar (para logcat por PID mesmo se crashar)
+  sleep 2
+  LAUNCH_PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
+  if [ -z "$LAUNCH_PID" ]; then
+    echo "  ⚠️  app não iniciou (PID não encontrado 2s após launch)." >&2
+    FAIL=1
+  else
+    echo "  ▶ PID=$LAUNCH_PID, rodando ${LAUNCH_SECONDS}s para coletar frames..."
+  fi
 
-  # O app crashou? (pid some se caiu — mas exit_at causa saída normal)
-  # Captura PID aqui — se vazio, app já saiu (esperado pelo exit_at timer)
+  sleep "$((LAUNCH_SECONDS - 2))"
+
+  # Verifica se app ainda está rodando
   PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
   if [ -z "$PID" ]; then
-    echo "  ⚠️  app não está mais rodando (crash ou exit_at precoce)." >&2
+    echo "  ⚠️  app não está mais rodando (crash)." >&2
     FAIL=1
   fi
+
   REP="$OUT/${TAG}.txt"
   {
     echo "device=$S model=$M android=$R api=$SDK abi=$A"
@@ -80,14 +92,18 @@ for S in "${SERIALS[@]}"; do
     echo "--- meminfo ---"
     adb -s "$S" shell dumpsys meminfo "$PKG" | grep -E "TOTAL( |:)" | head -1
     if [ -n "$PID" ]; then
-      echo "--- últimas linhas do log do app ---"
+      echo "--- log do app (rodando, PID=$PID) ---"
       adb -s "$S" logcat -d -t 80 --pid="$PID" 2>/dev/null || true
+    elif [ -n "$LAUNCH_PID" ]; then
+      echo "--- log do app (crashou, PID original=$LAUNCH_PID) ---"
+      adb -s "$S" logcat -d --pid="$LAUNCH_PID" 2>/dev/null || true
+      echo "--- crash logs (AndroidRuntime/DEBUG/libc) ---"
+      adb -s "$S" logcat -d -s AndroidRuntime:E DEBUG:* libc:F 2>/dev/null || true
     else
-      echo "--- LOG (app não está rodando) ---"
-      adb -s "$S" logcat -d -t 200 -s AndroidRuntime:E DEBUG:* libc:F "$PKG":* tabletop:* NativeActivity:* 2>/dev/null || true
-      echo "--- logcat geral (últimas 100 linhas) ---"
-      adb -s "$S" logcat -d -t 100 2>/dev/null | grep -iE "tabletop|fatal|signal|crash|vulkan|gpu|panic" || true
+      echo "--- app nunca iniciou ---"
     fi
+    echo "--- logcat completo (últimas 300 linhas, sem filtro) ---"
+    adb -s "$S" logcat -d -t 300 2>/dev/null | tail -300 || true
   } > "$REP" 2>&1
   adb -s "$S" exec-out screencap -p > "$OUT/${TAG}.png" 2>/dev/null || true
   adb -s "$S" pull /data/local/tmp/tabletop_shot.png "$OUT/${TAG}_app.png" 2>/dev/null || true
