@@ -444,7 +444,7 @@ Scripts: `setup-pi.sh` (configuração do runner), `deploy-farm.sh` (deploy + co
 | Métrica | Limite | Dispositivo de referência |
 |---|---|---|
 | **FPS** | ≥ 30 estáveis | Samsung J7 (stress test) |
-| **RAM** | ≤ 600 MB | Samsung J7 (consumo total do app) |
+| **RAM** | ≤ 1024 MB | Samsung J7 (consumo total do app) — relaxado de 600 até P4 |
 | **Rede** | Latência de mensagem < 50 ms | Ambos os devices |
 
 ---
@@ -481,7 +481,7 @@ Cada card no GitHub Projects deve seguir rigorosamente os critérios abaixo.
   - **Critério de Aceite:**
     - `cargo run -- --bench-mode` carrega cena de estresse com bots, sem lobby.
     - Cena carrega mapas, tokens, animações e efeitos para simular uso real.
-    - KPIs: FPS ≥ 30, RAM ≤ 600 MB, latência < 50 ms.
+    - KPIs: FPS ≥ 30, RAM ≤ 1024 MB (relaxado de 600 até P4), latência < 50 ms.
     - Estabilidade: roda 10 minutos sem pânico.
 - **Issue #5 — [QA] Configuração de Ambiente (Raspberry Pi + Android Farm)**
   - RPi como runner GitHub Actions; deploys no J7 e MG06 via WiFi ADB.

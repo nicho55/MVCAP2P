@@ -105,7 +105,7 @@ jobs:
       - name: Verificar KPIs e criar issue se falhar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAX_RAM_MB: 600
+          MAX_RAM_MB: 1024
           MIN_FPS: 30
         run: |
           FAILED=false

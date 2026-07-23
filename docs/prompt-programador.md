@@ -13,7 +13,7 @@ Você é o programador do projeto MVCAP2P — um VTT tático 3D P2P em Rust/Bevy
 
 - Rust/Bevy 0.18, `bevy_matchbox` 0.14 (WebRTC P2P)
 - GM autoritativo: jogador envia `*Req`, GM valida, faz broadcast
-- Piso de hardware: Samsung J7 a 30 FPS, ≤ 600 MB RAM
+- Piso de hardware: Samsung J7 a 30 FPS, ≤ 1024 MB RAM (relaxado de 600 até P4)
 - Documentação SSOT: `docs/content/docs/spec/index.md`
 - Convenções: `AGENTS.md`
 

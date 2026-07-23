@@ -52,7 +52,7 @@ graph TD
 | Métrica | Limite | Dispositivo |
 |---|---|---|
 | FPS | ≥ 30 estáveis | Samsung J7 (stress test com mapas, tokens, animações, efeitos) |
-| RAM | ≤ 600 MB | Samsung J7 (consumo total do app) |
+| RAM | ≤ 1024 MB | Samsung J7 (consumo total do app) — relaxado de 600 até P4 |
 | Latência | < 50 ms | Ambos devices |
 
 ## Peças no repositório

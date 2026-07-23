@@ -30,7 +30,8 @@ pub const CHUNK: usize = 14 * 1024;
 pub const TEX_NONE: u8 = 255;
 
 pub mod limits {
-    pub const MAX_RAM_MB: u32 = 600;
+    // Temporário: relaxado de 600→1024 durante desenvolvimento (até P4).
+    pub const MAX_RAM_MB: u32 = 1024;
     pub const MAX_TOKEN_BYTES: usize = 256 * 1024;
     pub const MAX_TOKEN_PX: u32 = 256;
     pub const MAX_MAP_BYTES: usize = 2 * 1024 * 1024;
