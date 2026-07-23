@@ -193,12 +193,7 @@ pub fn edges(g: &GridCfg, terrain: &Terrain, cell: Cell) -> Vec<Edge> {
 }
 
 /// Find cells that provide cover from a target (LoS blocked from target to these cells).
-pub fn cover_cells(
-    g: &GridCfg,
-    terrain: &Terrain,
-    target: Cell,
-    search_radius: u32,
-) -> Vec<Cell> {
+pub fn cover_cells(g: &GridCfg, terrain: &Terrain, target: Cell, search_radius: u32) -> Vec<Cell> {
     cells_in_radius(g, target, search_radius)
         .into_iter()
         .filter(|&c| c != target && !line_of_sight(g, terrain, target, c))
