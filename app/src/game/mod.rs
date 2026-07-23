@@ -60,19 +60,37 @@ fn screen_update(
     let Ok(win) = q_win.single() else { return };
     let w = win.resolution.width();
     let h = win.resolution.height();
-    if (w - si.width).abs() > 1.0 || (h - si.height).abs() > 1.0 {
-        si.width = w;
-        si.height = h;
-    }
-    if si.auto_scale {
-        let new_scale = if device.is_mobile() {
+
+    let old_w = si.width;
+    let old_h = si.height;
+    let auto = si.auto_scale;
+    let old_scale = si.scale;
+
+    let dim_changed = (w - old_w).abs() > 1.0 || (h - old_h).abs() > 1.0;
+    let new_scale = if auto {
+        let s = if device.is_mobile() {
             (h / si.ref_h).clamp(0.85, 1.6)
         } else {
             (w / si.ref_w).clamp(0.75, 2.0)
         };
-        if (new_scale - si.scale).abs() > 0.001 {
-            si.scale = new_scale;
+        if (s - old_scale).abs() > 0.001 {
+            Some(s)
+        } else {
+            None
         }
+    } else {
+        None
+    };
+
+    if !dim_changed && new_scale.is_none() {
+        return;
+    }
+    if dim_changed {
+        si.width = w;
+        si.height = h;
+    }
+    if let Some(s) = new_scale {
+        si.scale = s;
     }
 }
 

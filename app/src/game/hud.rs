@@ -718,6 +718,7 @@ pub fn hint_label(
 
 pub fn hud_responsive(
     si: Res<ScreenInfo>,
+    mut last: Local<(f32, f32, f32)>,
     q_root: Query<Entity, With<HudRoot>>,
     mut commands: Commands,
     assets: Res<GameAssets>,
@@ -727,6 +728,11 @@ pub fn hud_responsive(
     if !si.is_changed() {
         return;
     }
+    let cur = (si.width, si.height, si.scale);
+    if *last == cur {
+        return;
+    }
+    *last = cur;
     for e in &q_root {
         commands.entity(e).despawn();
     }

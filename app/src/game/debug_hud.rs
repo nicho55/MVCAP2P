@@ -76,6 +76,7 @@ pub fn despawn_debug_hud(mut commands: Commands, q: Query<Entity, With<DebugHudR
 
 pub fn debug_hud_responsive(
     si: Res<ScreenInfo>,
+    mut last: Local<(f32, f32, f32)>,
     q_root: Query<Entity, With<DebugHudRoot>>,
     mut commands: Commands,
     session: Res<Session>,
@@ -84,6 +85,11 @@ pub fn debug_hud_responsive(
     if !si.is_changed() {
         return;
     }
+    let cur = (si.width, si.height, si.scale);
+    if *last == cur {
+        return;
+    }
+    *last = cur;
     for e in &q_root {
         commands.entity(e).despawn();
     }
