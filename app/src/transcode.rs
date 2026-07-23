@@ -49,11 +49,7 @@ pub fn transcode(raw: &[u8], kind: AssetKind) -> Result<TranscodeResult, Transco
         });
     }
 
-    let thumb_img = img.resize(
-        limits::THUMB_PX,
-        limits::THUMB_PX,
-        FilterType::Triangle,
-    );
+    let thumb_img = img.resize(limits::THUMB_PX, limits::THUMB_PX, FilterType::Triangle);
     let thumb = encode_webp(&thumb_img);
 
     Ok(TranscodeResult {
