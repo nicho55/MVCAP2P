@@ -286,8 +286,9 @@ fn spawn_gfx_ui_inner(
     si: &ScreenInfo,
     device: &DeviceProfile,
 ) {
+    // Limpa a coluna SAIR + escala (A-/A+) do HUD no canto superior-direito.
     let top_clear = if device.is_mobile() {
-        sz(84.0, si)
+        sz(120.0, si)
     } else {
         sz(46.0, si)
     };

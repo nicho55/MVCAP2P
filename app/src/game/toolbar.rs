@@ -258,13 +258,17 @@ fn spawn_toolbar_inner(
     let bottom = sz(if device.is_mobile() { 60.0 } else { 0.0 }, si);
 
     // Root ancorado conforme orientação: paisagem = faixa inferior central;
-    // retrato = coluna na lateral direita, centralizada na vertical.
+    // retrato = coluna na lateral direita.
     let root = if portrait {
+        // Ancorada por top+bottom (não centralizada em 100% da altura): fica
+        // sempre ABAIXO dos controles do topo (SAIR/escala/Gráficos) e ACIMA da
+        // zona reservada aos joysticks (#24), em qualquer escala — se centralizada,
+        // a coluna sobe atrás dos controles quando a escala cresce (Select some).
         Node {
             position_type: PositionType::Absolute,
             right: Val::Px(p),
-            top: Val::Px(0.0),
-            height: Val::Percent(100.0),
+            top: Val::Px(sz(172.0, si)),
+            bottom: Val::Px(p + bottom),
             flex_direction: FlexDirection::Row,
             align_items: AlignItems::Center,
             column_gap: Val::Px(gap),
@@ -290,7 +294,8 @@ fn spawn_toolbar_inner(
     };
     let cap = |n: &mut Node| {
         if portrait {
-            n.max_height = Val::Vh(82.0);
+            // Em escala alta a coluna quebra em 2 colunas dentro da banda.
+            n.max_height = Val::Vh(62.0);
         } else {
             n.max_width = Val::Vw(96.0);
         }
