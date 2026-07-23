@@ -1,8 +1,10 @@
+use bevy::asset::RenderAssetUsages;
 use bevy::input::touch::TouchPhase;
+use bevy::mesh::PrimitiveTopology;
 use bevy::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-use super::camera::{cursor_ground, MainCamera};
+use super::camera::{cursor_ground, CamRig, MainCamera};
 use super::grid::{self, GridRes};
 use super::lowpoly::Ctx3d;
 use super::tokens::TouchDrag;
@@ -11,20 +13,38 @@ use crate::net::{Net, Session};
 use crate::protocol::*;
 use crate::svg_assets::GameAssets;
 
+pub const CHUNK_SIZE: i32 = 8;
+
+pub type ChunkCoord = (i32, i32);
+
+pub fn cell_to_chunk(cell: Cell) -> ChunkCoord {
+    (cell.0 >> 3, cell.1 >> 3)
+}
+
 #[derive(Resource, Default)]
 pub struct Terrain {
     pub cells: HashMap<Cell, TerrainCell>,
 }
 
-#[derive(Resource, Default)]
-pub struct TerrainRender {
-    pub ents: HashMap<Cell, Entity>,
-    pub dirty: Vec<Cell>,
+#[derive(Resource)]
+pub struct ChunkRender {
+    pub meshes: HashMap<ChunkCoord, Entity>,
+    pub dirty: HashSet<ChunkCoord>,
     pub full: bool,
+    pub active_radius: u32,
 }
 
-/// Altura da coluna de uma célula. Elevação <= 0 vira um ladrilho fino
-/// (rebaixo é indicado por cor escura — não dá para cavar abaixo do plano do mapa).
+impl Default for ChunkRender {
+    fn default() -> Self {
+        Self {
+            meshes: HashMap::new(),
+            dirty: HashSet::new(),
+            full: false,
+            active_radius: 6,
+        }
+    }
+}
+
 pub fn elev_height(cell: f32, elev: i8) -> f32 {
     let tile = cell * 0.10;
     if elev <= 0 {
@@ -34,7 +54,6 @@ pub fn elev_height(cell: f32, elev: i8) -> f32 {
     }
 }
 
-/// Altura do topo da célula (onde uma peça deve apoiar).
 pub fn cell_top(terrain: &Terrain, g: &GridCfg, cell: Cell) -> f32 {
     terrain
         .cells
@@ -45,7 +64,7 @@ pub fn cell_top(terrain: &Terrain, g: &GridCfg, cell: Cell) -> f32 {
 
 pub fn set_cell(
     terrain: &mut Terrain,
-    render: &mut TerrainRender,
+    render: &mut ChunkRender,
     cell: Cell,
     val: Option<TerrainCell>,
 ) -> bool {
@@ -62,7 +81,7 @@ pub fn set_cell(
                 terrain.cells.remove(&cell);
             }
         }
-        render.dirty.push(cell);
+        render.dirty.insert(cell_to_chunk(cell));
     }
     changed
 }
@@ -84,7 +103,7 @@ pub fn terrain_tool(
     q_cam: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     grid: Res<GridRes>,
     mut terrain: ResMut<Terrain>,
-    mut render: ResMut<TerrainRender>,
+    mut render: ResMut<ChunkRender>,
     mut net: ResMut<Net>,
     mut stroke: Local<HashSet<Cell>>,
 ) {
@@ -157,48 +176,299 @@ pub fn terrain_tool(
     }
 }
 
-/// Materializa células como prismas low-poly (cubo no grid quadrado,
-/// prisma hexagonal no grid hex), com altura = elevação.
-pub fn terrain_render(
+#[derive(Component)]
+struct ChunkMarker;
+
+fn visible_chunks(rig: &CamRig, grid: &GridCfg, radius: u32) -> HashSet<ChunkCoord> {
+    let focus_cell = grid::world_to_cell(grid, Vec2::new(rig.focus.x, rig.focus.z));
+    let center_chunk = cell_to_chunk(focus_cell);
+    let r = radius as i32;
+    let mut visible = HashSet::new();
+    for dx in -r..=r {
+        for dy in -r..=r {
+            visible.insert((center_chunk.0 + dx, center_chunk.1 + dy));
+        }
+    }
+    visible
+}
+
+pub fn chunk_render_system(
     mut commands: Commands,
-    mut render: ResMut<TerrainRender>,
+    mut render: ResMut<ChunkRender>,
     grid: Res<GridRes>,
+    rig: Res<CamRig>,
     assets: Res<GameAssets>,
     mut ctx: Ctx3d,
+    mut mesh_assets: ResMut<Assets<Mesh>>,
 ) {
     if render.full {
         render.full = false;
-        let ents: Vec<Entity> = render.ents.drain().map(|(_, e)| e).collect();
-        for e in ents {
+        let ents: Vec<(ChunkCoord, Entity)> = render.meshes.drain().collect();
+        for (_, e) in ents {
             commands.entity(e).despawn();
         }
-        render.dirty = ctx.terrain.cells.keys().copied().collect();
+        let chunks: HashSet<ChunkCoord> = ctx
+            .terrain
+            .cells
+            .keys()
+            .map(|c| cell_to_chunk(*c))
+            .collect();
+        render.dirty.extend(chunks);
     }
+
+    let visible = visible_chunks(&rig, &grid.0, render.active_radius);
+
+    let outside: Vec<ChunkCoord> = render
+        .meshes
+        .keys()
+        .filter(|cc| !visible.contains(cc))
+        .copied()
+        .collect();
+    for cc in outside {
+        if let Some(e) = render.meshes.remove(&cc) {
+            commands.entity(e).despawn();
+        }
+    }
+
+    for &cc in &visible {
+        if !render.meshes.contains_key(&cc) && chunk_has_cells(&ctx.terrain, cc) {
+            render.dirty.insert(cc);
+        }
+    }
+
     if render.dirty.is_empty() {
         return;
     }
+
     let dirty = std::mem::take(&mut render.dirty);
-    for cell in dirty {
-        if let Some(e) = render.ents.remove(&cell) {
+    for cc in dirty {
+        if !visible.contains(&cc) {
+            continue;
+        }
+        if let Some(e) = render.meshes.remove(&cc) {
             commands.entity(e).despawn();
         }
-        let Some(v) = ctx.terrain.cells.get(&cell).copied() else {
+
+        let cells = collect_chunk_cells(&ctx.terrain, cc);
+        if cells.is_empty() {
             continue;
-        };
-        let h = elev_height(grid.0.cell, v.elev);
-        let c = grid::cell_center(&grid.0, cell);
-        let (mesh, sxz) = match grid.0.kind {
-            GridKind::Square => (ctx.lp.cube.clone(), grid.0.cell * 0.99),
-            GridKind::HexFlat => (ctx.lp.hex_prism.clone(), grid.0.cell * 0.5 * 0.995),
-        };
-        let mat = ctx.mats.terrain(&mut ctx.materials, &assets, v.tex, v.elev);
+        }
+
+        let (tex, elev) = dominant_terrain(&cells);
+        let mat = ctx.mats.terrain(&mut ctx.materials, &assets, tex, elev);
+        let mesh = build_chunk_mesh(&cells, &grid.0);
+        let mesh_handle = mesh_assets.add(mesh);
+
         let e = commands
             .spawn((
-                Mesh3d(mesh),
+                Mesh3d(mesh_handle),
                 MeshMaterial3d(mat),
-                Transform::from_xyz(c.x, h * 0.5 + 0.02, c.y).with_scale(Vec3::new(sxz, h, sxz)),
+                Transform::IDENTITY,
+                ChunkMarker,
             ))
             .id();
-        render.ents.insert(cell, e);
+        render.meshes.insert(cc, e);
+    }
+}
+
+fn chunk_has_cells(terrain: &Terrain, cc: ChunkCoord) -> bool {
+    let bx = cc.0 * CHUNK_SIZE;
+    let by = cc.1 * CHUNK_SIZE;
+    for lx in 0..CHUNK_SIZE {
+        for ly in 0..CHUNK_SIZE {
+            if terrain.cells.contains_key(&(bx + lx, by + ly)) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn collect_chunk_cells(terrain: &Terrain, cc: ChunkCoord) -> Vec<(Cell, TerrainCell)> {
+    let bx = cc.0 * CHUNK_SIZE;
+    let by = cc.1 * CHUNK_SIZE;
+    let mut cells = Vec::new();
+    for lx in 0..CHUNK_SIZE {
+        for ly in 0..CHUNK_SIZE {
+            let cell = (bx + lx, by + ly);
+            if let Some(tc) = terrain.cells.get(&cell) {
+                cells.push((cell, *tc));
+            }
+        }
+    }
+    cells
+}
+
+fn dominant_terrain(cells: &[(Cell, TerrainCell)]) -> (u8, i8) {
+    let mut counts: HashMap<(u8, i8), usize> = HashMap::new();
+    for (_, tc) in cells {
+        *counts.entry((tc.tex, tc.elev)).or_default() += 1;
+    }
+    counts
+        .into_iter()
+        .max_by_key(|(_, n)| *n)
+        .map(|(k, _)| k)
+        .unwrap_or((TEX_NONE, 0))
+}
+
+fn build_chunk_mesh(cells: &[(Cell, TerrainCell)], grid: &GridCfg) -> Mesh {
+    let mut positions: Vec<[f32; 3]> = Vec::new();
+    let mut uvs: Vec<[f32; 2]> = Vec::new();
+    let mut indices: Vec<u32> = Vec::new();
+
+    for &(cell, tc) in cells {
+        let center = grid::cell_center(grid, cell);
+        let h = elev_height(grid.cell, tc.elev);
+
+        match grid.kind {
+            GridKind::Square => {
+                let half = grid.cell * 0.99 * 0.5;
+                let base_idx = positions.len() as u32;
+                append_cube(
+                    &mut positions,
+                    &mut uvs,
+                    &mut indices,
+                    center,
+                    half,
+                    0.02,
+                    h + 0.02,
+                    base_idx,
+                );
+            }
+            GridKind::HexFlat => {
+                let s = grid.cell * 0.5 * 0.995;
+                append_hex_prism(
+                    &mut positions,
+                    &mut uvs,
+                    &mut indices,
+                    center,
+                    s,
+                    0.02,
+                    h + 0.02,
+                );
+            }
+        }
+    }
+
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+    .with_inserted_indices(bevy::mesh::Indices::U32(indices));
+    mesh.compute_flat_normals();
+    mesh
+}
+
+fn append_cube(
+    pos: &mut Vec<[f32; 3]>,
+    uvs: &mut Vec<[f32; 2]>,
+    indices: &mut Vec<u32>,
+    center: Vec2,
+    half: f32,
+    y_bot: f32,
+    y_top: f32,
+    base: u32,
+) {
+    let cx = center.x;
+    let cz = center.y;
+    let (l, r, f, b) = (cx - half, cx + half, cz - half, cz + half);
+
+    #[rustfmt::skip]
+    let verts: [[f32; 3]; 24] = [
+        [l, y_top, f], [r, y_top, f], [r, y_top, b], [l, y_top, b],
+        [l, y_bot, b], [r, y_bot, b], [r, y_bot, f], [l, y_bot, f],
+        [l, y_bot, f], [r, y_bot, f], [r, y_top, f], [l, y_top, f],
+        [r, y_bot, b], [l, y_bot, b], [l, y_top, b], [r, y_top, b],
+        [l, y_bot, b], [l, y_bot, f], [l, y_top, f], [l, y_top, b],
+        [r, y_bot, f], [r, y_bot, b], [r, y_top, b], [r, y_top, f],
+    ];
+
+    #[rustfmt::skip]
+    let face_uvs: [[f32; 2]; 4] = [
+        [0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0],
+    ];
+
+    for v in &verts {
+        pos.push(*v);
+    }
+    for _ in 0..6 {
+        for uv in &face_uvs {
+            uvs.push(*uv);
+        }
+    }
+    for face in 0..6u32 {
+        let fb = base + face * 4;
+        indices.extend_from_slice(&[fb, fb + 1, fb + 2, fb, fb + 2, fb + 3]);
+    }
+}
+
+fn append_hex_prism(
+    pos: &mut Vec<[f32; 3]>,
+    uvs: &mut Vec<[f32; 2]>,
+    indices: &mut Vec<u32>,
+    center: Vec2,
+    circumradius: f32,
+    y_bot: f32,
+    y_top: f32,
+) {
+    let cx = center.x;
+    let cz = center.y;
+
+    let corner = |i: usize, y: f32| -> [f32; 3] {
+        let a = (60.0 * i as f32).to_radians();
+        [cx + a.cos() * circumradius, y, cz + a.sin() * circumradius]
+    };
+    let cap_uv = |p: [f32; 3]| -> [f32; 2] {
+        [
+            (p[0] - cx) / circumradius * 0.5 + 0.5,
+            (p[2] - cz) / circumradius * 0.5 + 0.5,
+        ]
+    };
+
+    for i in 1..=4u32 {
+        let p0 = corner(0, y_top);
+        let p1 = corner((i + 1) as usize, y_top);
+        let p2 = corner(i as usize, y_top);
+        let b = pos.len() as u32;
+        for p in [p0, p1, p2] {
+            uvs.push(cap_uv(p));
+            pos.push(p);
+        }
+        indices.extend_from_slice(&[b, b + 1, b + 2]);
+    }
+
+    for i in 1..=4u32 {
+        let p0 = corner(0, y_bot);
+        let p1 = corner(i as usize, y_bot);
+        let p2 = corner((i + 1) as usize, y_bot);
+        let b = pos.len() as u32;
+        for p in [p0, p1, p2] {
+            uvs.push(cap_uv(p));
+            pos.push(p);
+        }
+        indices.extend_from_slice(&[b, b + 1, b + 2]);
+    }
+
+    for i in 0..6usize {
+        let j = (i + 1) % 6;
+        let u0 = i as f32 / 6.0;
+        let u1 = (i + 1) as f32 / 6.0;
+        let ct = corner(i, y_top);
+        let cb = corner(i, y_bot);
+        let jt = corner(j, y_top);
+        let jb = corner(j, y_bot);
+        let b = pos.len() as u32;
+        pos.extend_from_slice(&[ct, jb, cb, ct, jt, jb]);
+        uvs.extend_from_slice(&[
+            [u0, 0.0],
+            [u1, 1.0],
+            [u0, 1.0],
+            [u0, 0.0],
+            [u1, 0.0],
+            [u1, 1.0],
+        ]);
+        indices.extend_from_slice(&[b, b + 1, b + 2, b + 3, b + 4, b + 5]);
     }
 }

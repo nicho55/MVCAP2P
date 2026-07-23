@@ -10,6 +10,7 @@ use std::time::Duration;
 
 use super::camera::MainCamera;
 use super::lowpoly::Vegetation;
+use super::terrain::ChunkRender;
 use super::ScreenInfo;
 use crate::svg_assets::{tfont, GameAssets};
 
@@ -70,6 +71,7 @@ pub struct GraphicsSettings {
     pub grid_overlay: bool,
     /// Economia: limita a ~30 FPS (reduz calor/consumo, mantém rede fluida).
     pub power_saver: bool,
+    pub draw_distance: u32,
 }
 
 impl Default for GraphicsSettings {
@@ -83,6 +85,7 @@ impl Default for GraphicsSettings {
                 vegetation: true,
                 grid_overlay: true,
                 power_saver: false,
+                draw_distance: 4,
             }
         } else {
             // Desktop: qualidade cheia por padrão.
@@ -93,6 +96,7 @@ impl Default for GraphicsSettings {
                 vegetation: true,
                 grid_overlay: true,
                 power_saver: false,
+                draw_distance: 8,
             }
         }
     }
@@ -108,9 +112,14 @@ pub fn apply_graphics(
     mut light: Query<&mut DirectionalLight>,
     mut veg: Query<&mut Visibility, With<Vegetation>>,
     mut winit: ResMut<WinitSettings>,
+    mut chunk_render: ResMut<ChunkRender>,
 ) {
     if !settings.is_changed() {
         return;
+    }
+    if chunk_render.active_radius != settings.draw_distance {
+        chunk_render.active_radius = settings.draw_distance;
+        chunk_render.full = true;
     }
     for mut msaa in &mut msaa_q {
         *msaa = settings.msaa.to_msaa();
@@ -162,16 +171,18 @@ pub enum GfxOption {
     Vegetation,
     Grid,
     PowerSaver,
+    DrawDist,
 }
 
 impl GfxOption {
-    const ALL: [GfxOption; 6] = [
+    const ALL: [GfxOption; 7] = [
         GfxOption::Msaa,
         GfxOption::Shadows,
         GfxOption::Hdr,
         GfxOption::Vegetation,
         GfxOption::Grid,
         GfxOption::PowerSaver,
+        GfxOption::DrawDist,
     ];
     fn name(self) -> &'static str {
         match self {
@@ -181,6 +192,7 @@ impl GfxOption {
             GfxOption::Vegetation => "Arvores",
             GfxOption::Grid => "Grade",
             GfxOption::PowerSaver => "Economia (30fps)",
+            GfxOption::DrawDist => "Distância",
         }
     }
     fn is_on(self, s: &GraphicsSettings) -> bool {
@@ -191,16 +203,18 @@ impl GfxOption {
             GfxOption::Vegetation => s.vegetation,
             GfxOption::Grid => s.grid_overlay,
             GfxOption::PowerSaver => s.power_saver,
+            GfxOption::DrawDist => true,
         }
     }
-    fn value(self, s: &GraphicsSettings) -> &'static str {
+    fn value(self, s: &GraphicsSettings) -> String {
         match self {
-            GfxOption::Msaa => s.msaa.label(),
+            GfxOption::Msaa => s.msaa.label().to_string(),
+            GfxOption::DrawDist => format!("{}", s.draw_distance),
             other => {
                 if other.is_on(s) {
-                    "ON"
+                    "ON".to_string()
                 } else {
-                    "OFF"
+                    "OFF".to_string()
                 }
             }
         }
@@ -213,6 +227,14 @@ impl GfxOption {
             GfxOption::Vegetation => s.vegetation = !s.vegetation,
             GfxOption::Grid => s.grid_overlay = !s.grid_overlay,
             GfxOption::PowerSaver => s.power_saver = !s.power_saver,
+            GfxOption::DrawDist => {
+                s.draw_distance = match s.draw_distance {
+                    0..=3 => 6,
+                    4..=6 => 8,
+                    7..=8 => 12,
+                    _ => 4,
+                };
+            }
         }
     }
 }
