@@ -4,6 +4,7 @@ pub mod grid;
 pub mod hud;
 pub mod lowpoly;
 pub mod map;
+pub mod ruler;
 pub mod sync;
 pub mod terrain;
 pub mod tokens;
