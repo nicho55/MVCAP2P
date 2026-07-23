@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::camera::CamRig;
 use super::lowpoly::BASE_CELL;
 use super::map::MapState;
-use super::terrain::TerrainRender;
+use super::terrain::ChunkRender;
 use super::tokens::Token;
 use crate::protocol::*;
 
@@ -142,7 +142,7 @@ pub fn draw_grid(
 /// e redesenha o terreno. Filhos dos tokens escalam junto com o pai.
 pub fn grid_reflow(
     grid: Res<GridRes>,
-    mut trender: ResMut<TerrainRender>,
+    mut trender: ResMut<ChunkRender>,
     mut q_tokens: Query<(&mut Transform, &Token)>,
 ) {
     if !grid.is_changed() {
