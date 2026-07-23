@@ -47,18 +47,6 @@ screencap() {
   adb -s "$1" exec-out screencap -p > "$2" 2>/dev/null || true
 }
 
-# Grava a tela por N segundos numa orientação ESTÁVEL e puxa o mp4.
-# screenrecord encerra sozinho ao girar a tela, por isso um clipe por orientação.
-# $1=serial $2=segundos $3=arquivo_local.mp4
-screenrec() {
-  local dev="/sdcard/tabletop_rec.mp4"
-  adb -s "$1" shell rm -f "$dev" 2>/dev/null || true
-  adb -s "$1" shell screenrecord --time-limit "$2" --bit-rate 6000000 "$dev" 2>/dev/null || true
-  sleep 1
-  adb -s "$1" pull "$dev" "$3" >/dev/null 2>&1 || true
-  adb -s "$1" shell rm -f "$dev" 2>/dev/null || true
-}
-
 set_rotation() {
   adb -s "$1" shell settings put system accelerometer_rotation 0 2>/dev/null || true
   adb -s "$1" shell settings put system user_rotation "$2" 2>/dev/null || true
@@ -103,7 +91,7 @@ for S in "${SERIALS[@]}"; do
   # ── Rodada 2/4: Jogo landscape ─────────────────────────────────
   echo "  📸 2/4 Jogo landscape"
   adb -s "$S" logcat -c 2>/dev/null || true
-  EXIT_AT=$((LAUNCH_SECONDS + 45))
+  EXIT_AT=$((LAUNCH_SECONDS + 30))
   push_args "$S" '{"gm":true,"demo":true,"code":"VISUAL","exit_at":'"$EXIT_AT"'.0}'
   adb -s "$S" shell dumpsys gfxinfo "$PKG" reset >/dev/null 2>&1 || true
   launch_app "$S"
@@ -117,18 +105,12 @@ for S in "${SERIALS[@]}"; do
   fi
   sleep 4
   screencap "$S" "$OUT/${TAG}_02-game-landscape.png"
-  # 🎥 clipe em paisagem p/ flagrar flicker intermitente do HUD (#43/Bevy#14710)
-  echo "  🎥 gravando paisagem (6s)"
-  screenrec "$S" 6 "$OUT/${TAG}_05-rec-landscape.mp4"
 
   # ── Rodada 3/4: Jogo portrait ──────────────────────────────────
   echo "  📸 3/4 Jogo portrait"
   set_rotation "$S" 0
   sleep 2
   screencap "$S" "$OUT/${TAG}_03-game-portrait.png"
-  # 🎥 clipe em retrato (orientação onde o HUD sumia com mais frequência)
-  echo "  🎥 gravando retrato (6s)"
-  screenrec "$S" 6 "$OUT/${TAG}_06-rec-portrait.mp4"
 
   # ── Rodada 4/4: Jogo landscape restaurado ──────────────────────
   echo "  📸 4/4 Jogo landscape restaurado"
