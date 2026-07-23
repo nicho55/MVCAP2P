@@ -17,49 +17,107 @@ Você é o programador do projeto MVCAP2P — um VTT tático 3D P2P em Rust/Bevy
 - Documentação SSOT: `docs/content/docs/spec/index.md`
 - Convenções: `AGENTS.md`
 
+## Arquitetura de Telas
+
+O app tem 3 telas conceituais + uma camada persistente:
+
+| Camada | ZIndex | Quando | Conteúdo |
+|---|---|---|---|
+| **UiLayer** (persistente) | 100 | SEMPRE visível | Botão de Config, indicador de conexão, notificações |
+| **Lobby** | — | `AppState::Lobby` | Apelido, cor, criar sala, sala de teste, procurar sala, entrar com código |
+| **Jogo (HUD)** | 50 | `AppState::InGame` | Inspetor, toolbar, roster de jogadores, hints, status |
+| **GfxUI** | 51 | `AppState::InGame` | Painel de gráficos (MSAA, sombras, HDR, etc.) |
+| **DebugHud** | 52 | `InGame` + test room | FPS, entidades, chunks, peers |
+
+O botão de **Configurações** fica no `UiLayer` (`app/src/ui_layer.rs`, ZIndex 100) — visível em todas as telas, lobby e jogo. Atualmente o UiLayer só tem o ConnIndicator e NotificationArea.
+
 ## O que já foi implementado
 
 - ✅ #4 — UI Mobile-First (ADR-012, ADR-013, virtual_joystick)
 - ✅ #10 — DeviceProfile (`app/src/device.rs`) — plataforma, input mode
 - ✅ #11 — UI Engine SVG+PNG — UiLayer persistente (`app/src/ui_layer.rs`)
 - ✅ #12 — Telas Conceituais — debug HUD com `is_test_room` (`app/src/game/debug_hud.rs`)
+- ✅ #13 — Orçamento de Performance (PR #35 mergeado — `shared/src/lib.rs::limits`, `app/src/transcode.rs`)
 - ✅ #21 — Grid, Réguas, LoS, A* pathfinding (`app/src/game/ruler.rs`, 19 testes)
 - ✅ #28 — Sistema de Chunks base (`ChunkRender`, `chunk_render_system()`)
 - ✅ #32 — CLI Args no Android (`read_android_args()`, config JSON via ADB)
-- ✅ #13 — Orçamento de Performance (PR #35 mergeado — `shared/src/lib.rs::limits`, `app/src/transcode.rs`)
-- ✅ B0002 fix — System ordering completo (ADR-013, commit d48640ec)
+- ✅ B0002 fix — System ordering completo de 11+ conflitos (ADR-013, commit d48640ec)
 - ✅ ZIndex fix — HudRoot(50), GfxUI(51), DebugHud(52) (commit 01042ab2)
 
 ## Tarefas Pendentes (em ordem de prioridade)
 
 Ao começar cada issue, mova para **In Progress**. Ao abrir PR, mova para **In Review**.
 
-### 1. 🚨 Issue #41 — Refazer HUD do Jogo (P0 — BLOQUEIA TUDO)
-A HUD atual crasha ao rotacionar tela, renderiza com tamanhos fixos, e impede testes no dispositivo. **Sem UI funcional, nenhuma feature pode ser validada.**
+### 1. 🚨 Issue #42 — Pipeline de Screenshots Multi-Tela (FAZER PRIMEIRO)
+Sem isso você desenvolve UI às cegas. Modificar `scripts/deploy-farm.sh` para capturar screenshots de múltiplos estados:
 
-Problemas:
-- `spawn_hud()` usa `Val::Px()` com valores fixos — não responde a resize/rotação
-- Crash no Android ao redimensionar (sem rebuild da UI, surface wgpu invalida)
-- Sem safe area handling (notch, navigation bar)
+| # | Estado | Args JSON | Timing |
+|---|---|---|---|
+| 1 | Lobby | `{}` (sem args, não auto-entra) | 3s após launch |
+| 2 | Jogo landscape | `{"gm":true,"demo":true,"code":"VISUAL"}` | 6s após launch |
+| 3 | Jogo portrait | mesmos args, rotacionar tela via ADB | 2s após rotação |
+| 4 | Jogo restaurado | restaurar landscape | 2s após restaurar |
 
-O que fazer:
-- Reescrever `spawn_hud()` com layout responsivo (`Val::Percent`, `Val::Vw`, `Val::Vh`)
-- Sistema de rebuild automático quando `ScreenInfo` muda
-- Mesmo tratamento para `spawn_gfx_ui()` e `spawn_debug_hud()`
-- ZIndex correto já está aplicado (HudRoot=50, GfxUI=51, DebugHud=52)
+O script atual (`scripts/deploy-farm.sh`) faz UMA rodada com args fixos. Você vai precisar:
+- Fazer múltiplas rodadas (kill app → mudar args → relançar → screenshot)
+- Usar `adb shell settings put system user_rotation` para rotação
+- Nomear screenshots: `01-lobby.png`, `02-game-landscape.png`, `03-game-portrait.png`, `04-game-restored.png`
+
+Depois do push, você pode validar os screenshots:
 ```bash
-gh issue view 41 --repo nicho55/MVCAP2P
+gh run list --repo nicho55/MVCAP2P --workflow deploy-devices.yml --limit 1
+gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
+# Use a ferramenta Read para VER as imagens .png — você consegue ler imagens.
 ```
 
-### 1b. Issue #42 — Pipeline de Screenshots Multi-Tela (P0 — fazer junto com #41)
-O deploy atual captura 1 screenshot. Sem visão da UI, você trabalha às cegas.
-Modificar `deploy-farm.sh` para capturar screenshots de: lobby, jogo landscape, jogo portrait, config aberto.
-Você (Claude CLI) consegue **ler imagens** — use os screenshots para validar a UI após cada push.
 ```bash
 gh issue view 42 --repo nicho55/MVCAP2P
 ```
 
-### 2. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
+### 2. 🚨 Issue #41 — Refazer HUD do Jogo (P0 — BLOQUEIA TUDO)
+A HUD atual crasha ao rotacionar tela e impede testes no dispositivo. **Sem UI funcional, nenhuma feature pode ser validada.**
+
+Problemas:
+- `spawn_hud()` em `app/src/game/hud.rs` usa `Val::Px()` com valores fixos calculados no spawn — não responde a resize/rotação
+- Crash no Android ao redimensionar (sem rebuild da UI)
+- Sem safe area handling (notch, navigation bar)
+- `spawn_gfx_ui()` e `spawn_debug_hud()` têm o mesmo problema
+
+**Padrão a seguir — lobby já faz certo:**
+O lobby (`app/src/lobby.rs`) tem a função `lobby_responsive()` que detecta `si.is_changed()` e faz despawn+respawn da UI. Use esse mesmo padrão para a HUD do jogo:
+
+```rust
+fn lobby_responsive(
+    si: Res<ScreenInfo>,
+    q_root: Query<Entity, With<LobbyRoot>>,
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+) {
+    if !si.is_changed() { return; }
+    for e in &q_root {
+        commands.entity(e).despawn();
+    }
+    setup_lobby(commands, assets, si);
+}
+```
+
+O que fazer:
+- Criar sistema `hud_responsive` no mesmo molde — despawn+respawn quando `ScreenInfo` muda
+- Mesmo para `gfx_responsive` e `debug_hud_responsive`
+- Registrar esses sistemas no `game/mod.rs` (respeitando ADR-013 — ler a doc antes)
+- Preferir `Val::Percent`, `Val::Vw`, `Val::Vh` para layout; `Val::Px` só para gaps/bordas mínimos
+- Touch targets mínimos de 44px (guidelines Android)
+
+**IMPORTANTE — System Ordering (ADR-013):**
+Antes de adicionar QUALQUER sistema novo em `game/mod.rs`, leia `docs/content/docs/adr/013-system-ordering-b0002-fix.md` inteiro. Cada sistema que acessa um Resource compartilhado precisa de `.after()` explícito. Ignorar isso causa crash B0002 no Android. O responsivo da HUD deve rodar `.after(HudWriteSet)` no mínimo.
+
+Use o pipeline de screenshots (#42) para validar cada mudança visualmente.
+
+```bash
+gh issue view 41 --repo nicho55/MVCAP2P
+```
+
+### 3. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
 `ChunkRender` e `chunk_render_system()` estão implementados. O que falta:
 - **Texture atlas**: `dominant_terrain()` usa 1 material por chunk — células com texturas diferentes renderizam com cor errada. Usar vertex colors ou paleta UV.
 - **LOD médio**: chunks distantes (4-6) usar mesh simplificada (1 quad por chunk)
@@ -67,25 +125,25 @@ gh issue view 42 --repo nicho55/MVCAP2P
 gh issue view 40 --repo nicho55/MVCAP2P
 ```
 
-### 3. Issue #2 — Core de Identidade Local P2P
+### 4. Issue #2 — Core de Identidade Local P2P
 Substituir `PlayerUuid = u64` por identidade criptográfica Ed25519.
 ```bash
 gh issue view 2 --repo nicho55/MVCAP2P
 ```
 
-### 4. Issue #14 — Chave Pública/Privada Ed25519
+### 5. Issue #14 — Chave Pública/Privada Ed25519
 Keypair na primeira execução, persistido encriptado, `PlayerUuid` → `[u8; 16]` derivado.
 ```bash
 gh issue view 14 --repo nicho55/MVCAP2P
 ```
 
-### 5. Issue #15 — Content-Addressable Storage (CAS)
+### 6. Issue #15 — Content-Addressable Storage (CAS)
 `BlobId` migra de `u64` para `[u8; 32]` (BLAKE3). Armazenamento com dedup.
 ```bash
 gh issue view 15 --repo nicho55/MVCAP2P
 ```
 
-### 6. Issue #16 — Sync Inteligente de Assets
+### 7. Issue #16 — Sync Inteligente de Assets
 Hello inclui lista de hashes conhecidos, GM pula blobs que peer já tem.
 ```bash
 gh issue view 16 --repo nicho55/MVCAP2P
@@ -95,9 +153,7 @@ gh issue view 16 --repo nicho55/MVCAP2P
 
 ANTES de implementar qualquer feature, estude o código que já existe no projeto. Leia os arquivos que vai modificar e os vizinhos. O projeto tem um estilo próprio — siga ele, não invente outro.
 
-Exemplo: antes de criar o sistema de chunks, leia `terrain.rs`, `lowpoly.rs`, `grid.rs` e `sync.rs` inteiros. Entenda como `ChunkRender` funciona, como `Ctx3d` agrupa resources, como meshes são criadas em `lowpoly.rs`. Sua implementação deve parecer escrita pela mesma pessoa que escreveu o resto.
-
-Para features mais complexas (mesh merge, texture atlas, LOD), pesquise exemplos de como fazer em Bevy 0.18 — mas sempre adapte ao contexto do projeto. Não copie soluções genéricas com 5 camadas de abstração. Este projeto roda num J7. Cada struct, cada trait, cada alocação conta.
+Exemplo: antes de modificar a HUD, leia `hud.rs`, `lobby.rs`, `ui_layer.rs`, `graphics.rs`, `debug_hud.rs` e `game/mod.rs` inteiros. Entenda como `ScreenInfo` funciona, como `lobby_responsive()` faz rebuild, como os ZIndex estão organizados. Sua implementação deve parecer escrita pela mesma pessoa que escreveu o resto.
 
 ### Princípios inegociáveis
 
@@ -105,7 +161,7 @@ Para features mais complexas (mesh merge, texture atlas, LOD), pesquise exemplos
 2. **Não coloque coisa desnecessária.** Sem wrappers que só repassam, sem traits para uma única implementação, sem builders para structs com 2 campos, sem logs de debug que ninguém vai ler, sem comentários óbvios. Se remover uma linha não quebra nada e não muda comportamento, ela não deveria existir.
 3. **Siga os padrões do projeto.** Resources, SystemParams (`Ctx3d`), ECS idiomático do Bevy, `Msg` enum para rede, `Req → GM valida → broadcast`. Não invente padrões novos.
 4. **Flat é melhor que aninhado.** Structs simples, funções curtas, poucos níveis de indireção. O código de `terrain_tool()` é um bom exemplo — direto ao ponto, sem framework por cima.
-5. **Pesquise antes de implementar.** Features como mesh merge e texture atlas têm soluções conhecidas no ecossistema Bevy. Pesquise, entenda, e implemente a versão mais enxuta que resolve o problema dentro do contexto deste projeto.
+5. **Pesquise antes de implementar.** Features como responsive UI em Bevy têm soluções conhecidas. Pesquise, entenda, e implemente a versão mais enxuta que resolve o problema.
 
 ## Regras de trabalho
 
@@ -116,7 +172,8 @@ Para features mais complexas (mesh merge, texture atlas, LOD), pesquise exemplos
 5. Prefira editar arquivos existentes. Não crie abstrações além do necessário.
 6. Documente decisões arquiteturais em ADR se a mudança for significativa (`docs/content/docs/adr/`).
 7. A SSOT (`docs/content/docs/spec/index.md`) descreve como os sistemas devem funcionar — consulte antes de implementar.
-8. **Mover issue no board ao trabalhar:**
+8. **LEIA ADR-013 antes de modificar `game/mod.rs`.** Cada sistema novo precisa de `.after()` explícito para evitar B0002. O app crasha no Android sem isso.
+9. **Mover issue no board ao trabalhar:**
    - **Ao começar** uma issue → mover para **In Progress**
    - **Ao abrir PR** → mover para **In Review**
    - Usar os comandos abaixo (trocar `ISSUE_NUM` pelo número da issue):
@@ -143,27 +200,22 @@ O projeto tem um **runner self-hosted** (`neps-pc`, labels: `self-hosted, Linux,
 3. Deploy + coleta no runner local (instala, roda 20s, coleta gfxinfo/meminfo/logcat/screenshot)
 4. Resultados salvos como **artefato `perf-reports`** no GitHub Actions
 
-### Como acessar os erros
+### Como validar visualmente (IMPORTANTE)
 
+Você consegue **ler imagens** com a ferramenta Read. Após o deploy:
 ```bash
-# Ver o último workflow run
-gh run list --repo nicho55/MVCAP2P --workflow deploy-devices.yml --limit 5
+# Esperar o workflow concluir
+gh run list --repo nicho55/MVCAP2P --workflow deploy-devices.yml --limit 3
 
-# Ver logs completos de um run específico
-gh run view <RUN_ID> --repo nicho55/MVCAP2P --log
-
-# Baixar os relatórios (logcat, métricas, screenshots)
+# Baixar relatórios + screenshots
 gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
-cat /tmp/reports/*.txt    # logcat + métricas por device
+
+# VER os screenshots (Read funciona com .png)
+# /tmp/reports/01-lobby.png
+# /tmp/reports/02-game-landscape.png
+# /tmp/reports/03-game-portrait.png
 ```
-
-### O que está nos relatórios
-
-Cada `*.txt` contém:
-- **gfxinfo**: frames renderizados, janked frames
-- **meminfo**: RAM total usada pelo app
-- **logcat**: se app rodando → últimas 80 linhas do app. Se crashou → crash logs (AndroidRuntime, DEBUG, libc)
-- **screenshot** (`.png`): estado visual da tela
+Use isso para validar cada mudança de UI. Não faça push e torça — veja o resultado.
 
 ### Trigger manual
 
@@ -178,6 +230,11 @@ O script detecta crash (PID desapareceu) e captura os logs de crash do Android. 
 - `signal 11 (SIGSEGV)` ou `signal 6 (SIGABRT)` — crash nativo (Rust/Vulkan)
 - `backtrace:` — stack trace nativo
 
+### Arquivos do deploy
+- Workflow: `.github/workflows/deploy-devices.yml`
+- Script: `scripts/deploy-farm.sh`
+- Helper: `scripts/android-env.sh`
+
 ## Começar
 
 Leia o estado do projeto:
@@ -187,5 +244,5 @@ gh issue list --repo nicho55/MVCAP2P --state open --json number,title,labels --j
 cat AGENTS.md
 ```
 
-Comece pela issue #41 (UI responsiva — P0, bloqueia tudo). Depois #40 (texture atlas + LOD), depois as issues P1 em ordem.
+Comece pela issue #42 (screenshots multi-tela — pré-requisito para testar UI). Depois #41 (UI responsiva — P0, bloqueia tudo). Depois #40 (texture atlas + LOD), depois as issues P1 em ordem.
 ```
