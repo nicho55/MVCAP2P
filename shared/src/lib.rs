@@ -29,6 +29,19 @@ pub const CHUNK: usize = 14 * 1024;
 /// Valor sentinela para textura vazia/nenhuma.
 pub const TEX_NONE: u8 = 255;
 
+pub mod limits {
+    pub const MAX_RAM_MB: u32 = 600;
+    pub const MAX_TOKEN_BYTES: usize = 256 * 1024;
+    pub const MAX_TOKEN_PX: u32 = 256;
+    pub const MAX_MAP_BYTES: usize = 2 * 1024 * 1024;
+    pub const MAX_MAP_PX: u32 = 2048;
+    pub const MAX_SOUND_BYTES: usize = 128 * 1024;
+    pub const MAX_TEXT_BYTES: usize = 8 * 1024;
+    pub const THUMB_PX: u32 = 64;
+    pub const THUMB_MAX_BYTES: usize = 8 * 1024;
+    pub const MAX_STORAGE_MB: u32 = 200;
+}
+
 /// Paleta de 8 cores para os jogadores (RGB normalizado 0-1).
 pub const PALETTE: [(f32, f32, f32); 8] = [
     (0.898, 0.282, 0.302), // vermelho
