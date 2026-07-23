@@ -55,7 +55,9 @@ for S in "${SERIALS[@]}"; do
 
   # Zera métricas e inicia pelo LAUNCHER (robusto p/ NativeActivity).
   # Empurra config file para testes automatizados (--gm --demo, screenshot, exit).
-  ARGS_JSON='{"gm":true,"demo":true,"code":"TESTE","shot":"/data/local/tmp/tabletop_shot.png","shot_at":10.0,"exit_at":'$LAUNCH_SECONDS'.0}'
+  # exit_at = LAUNCH_SECONDS + 5 para coleta de métricas antes do app fechar.
+  EXIT_AT=$((LAUNCH_SECONDS + 5))
+  ARGS_JSON='{"gm":true,"demo":true,"code":"TESTE","shot":"/data/local/tmp/tabletop_shot.png","shot_at":10.0,"exit_at":'"$EXIT_AT"'.0}'
   echo "$ARGS_JSON" | adb -s "$S" shell "cat > /data/local/tmp/tabletop_args.json"
   adb -s "$S" shell dumpsys gfxinfo "$PKG" reset >/dev/null 2>&1 || true
   adb -s "$S" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
@@ -63,13 +65,13 @@ for S in "${SERIALS[@]}"; do
   echo "  ▶ rodando ${LAUNCH_SECONDS}s para coletar frames..."
   sleep "$LAUNCH_SECONDS"
 
-  # O app crashou? (pid some se caiu — típico do Vulkan em GPU velha)
-  if [ -z "$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')" ]; then
-    echo "  ⚠️  app não está mais rodando (possível crash de backend gráfico)." >&2
+  # O app crashou? (pid some se caiu — mas exit_at causa saída normal)
+  # Captura PID aqui — se vazio, app já saiu (esperado pelo exit_at timer)
+  PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
+  if [ -z "$PID" ]; then
+    echo "  ⚠️  app não está mais rodando (crash ou exit_at precoce)." >&2
     FAIL=1
   fi
-
-  PID="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')"
   REP="$OUT/${TAG}.txt"
   {
     echo "device=$S model=$M android=$R api=$SDK abi=$A"
@@ -81,8 +83,10 @@ for S in "${SERIALS[@]}"; do
       echo "--- últimas linhas do log do app ---"
       adb -s "$S" logcat -d -t 80 --pid="$PID" 2>/dev/null || true
     else
-      echo "--- CRASH LOG ---"
-      adb -s "$S" logcat -d -t 200 -s AndroidRuntime:E DEBUG:* libc:F tabletop:* 2>/dev/null || true
+      echo "--- LOG (app não está rodando) ---"
+      adb -s "$S" logcat -d -t 200 -s AndroidRuntime:E DEBUG:* libc:F "$PKG":* tabletop:* NativeActivity:* 2>/dev/null || true
+      echo "--- logcat geral (últimas 100 linhas) ---"
+      adb -s "$S" logcat -d -t 100 2>/dev/null | grep -iE "tabletop|fatal|signal|crash|vulkan|gpu|panic" || true
     fi
   } > "$REP" 2>&1
   adb -s "$S" exec-out screencap -p > "$OUT/${TAG}.png" 2>/dev/null || true
