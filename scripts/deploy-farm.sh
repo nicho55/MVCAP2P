@@ -54,6 +54,9 @@ for S in "${SERIALS[@]}"; do
   fi
 
   # Zera métricas e inicia pelo LAUNCHER (robusto p/ NativeActivity).
+  # Empurra config file para testes automatizados (--gm --demo, screenshot, exit).
+  ARGS_JSON='{"gm":true,"demo":true,"code":"TESTE","shot":"/data/local/tmp/tabletop_shot.png","shot_at":10.0,"exit_at":'$LAUNCH_SECONDS'.0}'
+  echo "$ARGS_JSON" | adb -s "$S" shell "cat > /data/local/tmp/tabletop_args.json"
   adb -s "$S" shell dumpsys gfxinfo "$PKG" reset >/dev/null 2>&1 || true
   adb -s "$S" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 
@@ -77,6 +80,7 @@ for S in "${SERIALS[@]}"; do
     adb -s "$S" logcat -d -t 40 --pid="$(adb -s "$S" shell pidof "$PKG" | tr -d '\r')" 2>/dev/null || true
   } > "$REP" 2>&1
   adb -s "$S" exec-out screencap -p > "$OUT/${TAG}.png" 2>/dev/null || true
+  adb -s "$S" pull /data/local/tmp/tabletop_shot.png "$OUT/${TAG}_app.png" 2>/dev/null || true
   echo "  ✓ relatório: $REP"
 done
 
