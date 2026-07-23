@@ -6,6 +6,7 @@ mod net;
 mod protocol;
 mod room_discovery;
 mod svg_assets;
+mod ui_layer;
 
 use bevy::prelude::*;
 #[cfg(target_os = "android")]
@@ -167,6 +168,7 @@ pub fn run_game() {
         .add_plugins((
             svg_assets::SvgAssetsPlugin,
             net::NetPlugin,
+            ui_layer::UiLayerPlugin,
             lobby::LobbyPlugin,
             game::GamePlugin,
         ))
