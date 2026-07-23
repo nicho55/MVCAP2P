@@ -1,11 +1,14 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+mod device;
 mod game;
 mod lobby;
 mod net;
 mod protocol;
 mod room_discovery;
 mod svg_assets;
+
+pub use device::DeviceProfile;
 
 use bevy::prelude::*;
 #[cfg(target_os = "android")]
@@ -100,6 +103,7 @@ pub fn run_game() {
 
     let mut app = App::new();
     app.insert_resource(args)
+        .insert_resource(DeviceProfile::detect())
         .insert_resource(ClearColor(Color::srgb(0.075, 0.065, 0.10)));
 
     #[cfg(not(target_os = "android"))]

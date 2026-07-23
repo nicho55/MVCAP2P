@@ -11,6 +11,7 @@ use std::time::Duration;
 use super::camera::MainCamera;
 use super::lowpoly::Vegetation;
 use super::ScreenInfo;
+use crate::device::DeviceProfile;
 use crate::svg_assets::{tfont, GameAssets};
 
 const PANEL: Color = Color::srgba(0.10, 0.09, 0.14, 0.95);
@@ -74,8 +75,13 @@ pub struct GraphicsSettings {
 
 impl Default for GraphicsSettings {
     fn default() -> Self {
-        if cfg!(target_os = "android") {
-            // Android começa enxuto para caber em aparelhos fracos.
+        Self::for_device(&DeviceProfile::default())
+    }
+}
+
+impl GraphicsSettings {
+    pub fn for_device(device: &DeviceProfile) -> Self {
+        if device.is_mobile() {
             Self {
                 msaa: MsaaLevel::Off,
                 shadows: false,
@@ -85,7 +91,6 @@ impl Default for GraphicsSettings {
                 power_saver: false,
             }
         } else {
-            // Desktop: qualidade cheia por padrão.
             Self {
                 msaa: MsaaLevel::X4,
                 shadows: true,
@@ -258,9 +263,9 @@ pub fn spawn_gfx_ui(
     settings: Res<GraphicsSettings>,
     assets: Res<GameAssets>,
     si: Res<ScreenInfo>,
+    device: Res<DeviceProfile>,
 ) {
-    // Fica abaixo do botão SAIR (mesmo canto sup. direito) para não sobrepor.
-    let top_clear = if cfg!(target_os = "android") {
+    let top_clear = if device.is_mobile() {
         sz(84.0, &si)
     } else {
         sz(46.0, &si)
