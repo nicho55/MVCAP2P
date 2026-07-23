@@ -49,7 +49,11 @@ impl Default for ScreenInfo {
 /// Recalcula `width`/`height` e, quando `auto_scale` está ativo, a escala
 /// responsiva. Roda a cada frame (em `First`) para reagir a mudanças de
 /// tamanho/rotação da janela em tempo real.
-fn screen_update(mut si: ResMut<ScreenInfo>, q_win: Query<&Window>, device: Res<crate::DeviceProfile>) {
+fn screen_update(
+    mut si: ResMut<ScreenInfo>,
+    q_win: Query<&Window>,
+    device: Res<crate::DeviceProfile>,
+) {
     let Ok(win) = q_win.single() else { return };
     let w = win.resolution.width();
     let h = win.resolution.height();

@@ -94,7 +94,13 @@ fn tool_button(
     });
 }
 
-fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si: &ScreenInfo, device: &DeviceProfile) {
+fn spawn_hud(
+    commands: &mut Commands,
+    assets: &GameAssets,
+    session: &Session,
+    si: &ScreenInfo,
+    device: &DeviceProfile,
+) {
     let gm = session.me.is_gm;
     let top = sz(if device.is_mobile() { 36.0 } else { 0.0 }, si);
     let bottom = sz(if device.is_mobile() { 60.0 } else { 0.0 }, si);
