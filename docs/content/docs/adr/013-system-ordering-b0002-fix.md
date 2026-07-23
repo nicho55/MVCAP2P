@@ -93,16 +93,45 @@ Após os PRs #36 (graphics) e #37 (debug_hud) serem mergeados, surgiu um novo B0
 | `terrain::chunk_render_system` | `ResMut<ChunkRender>` | `.after(HudWriteSet)` |
 | `debug_hud::update_debug_hud` | `Res<ChunkRender>` | `.after(HudWriteSet)` |
 
-Fix: ordenação explícita entre os três:
-```rust
-terrain::chunk_render_system
-    .after(terrain::terrain_tool)
-    .after(graphics::apply_graphics),
+### Auditoria completa — conflitos adicionais
 
-debug_hud::update_debug_hud
-    .after(graphics::apply_graphics)
-    .after(terrain::chunk_render_system),
+A correção do ChunkRender expôs que o B0002 reaparecia com conflitos em outros resources. Auditoria completa identificou:
+
+| Resource | System A (acesso) | System B (acesso) | Tipo |
+|---|---|---|---|
+| Mats / Assets<StdMat> (via Ctx3d) | sync_map (W) | resolve_pending_art (W) | W/W |
+| Mats / Assets<StdMat> (via Ctx3d) | resolve_pending_art (W) | refresh_ring_colors (W) | W/W |
+| Mats / Assets<StdMat> (via Ctx3d) | refresh_ring_colors (W) | chunk_render_system (W) | W/W |
+| CamRig | pan_zoom (W) | chunk_render_system (R) | W/R |
+| CamRig | touch_pan_zoom (W) | apply_rig (R) | W/R |
+| CamRig | touch_pan_zoom (W) | joystick_apply (W) | W/W |
+| UiHovered | track_ui_hover (W) | pan_zoom (R) | W/R |
+| Terrain | terrain_tool (W) | resolve_pending_art (R via Ctx3d) | W/R |
+| Terrain | terrain_tool (W) | token_y_follow (R) | W/R |
+| Selection (B0001) | delete_btn_click | (mesmo system Res+ResMut) | aliasing |
+| Ctx3d | handle_tokens (W) | assign_token_rx (W) | W/W |
+
+### Cadeia de ordenação final (gameplay block)
+
 ```
+SyncSet:
+  handle_hello → handle_core → handle_tokens → assign_token_rx
+
+Gameplay:
+  track_ui_hover → pan_zoom → touch_pan_zoom* → apply_rig
+                                                  ↓
+  sync_map → file_drop ─┬→ token_interact → delete_selected → terrain_tool
+                         │                                      ↓
+                         └→ resolve_pending_art → refresh_ring_colors
+                                                      ↓
+  grid_reflow ────────────────────────────→ chunk_render_system
+                                           (after: terrain_tool, apply_graphics,
+                                            apply_rig, grid_reflow, refresh_ring_colors)
+                                                      ↓
+                                            debug_hud::update_debug_hud
+```
+
+*`touch_pan_zoom` e `joystick_apply` são Android-only.
 
 ## Consequences
 
