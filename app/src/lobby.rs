@@ -419,6 +419,7 @@ fn start_session(
     gm: bool,
     join_code: Option<String>,
     signaling_override: Option<&str>,
+    is_test_room: bool,
     form: &mut LobbyForm,
     args: &CliArgs,
     net: &mut Net,
@@ -478,7 +479,11 @@ fn start_session(
         });
         info!("sala publicada no Supabase com host {publish_host}");
     }
-    commands.insert_resource(Session { me, code });
+    commands.insert_resource(Session {
+        me,
+        code,
+        is_test_room,
+    });
     next.set(AppState::InGame);
 }
 
@@ -506,6 +511,7 @@ fn lobby_auto(
             true,
             None,
             None,
+            false,
             &mut form,
             &args,
             &mut net,
@@ -518,6 +524,7 @@ fn lobby_auto(
             false,
             Some(code.to_uppercase()),
             None,
+            false,
             &mut form,
             &args,
             &mut net,
@@ -564,6 +571,7 @@ fn lobby_clicks(
                 true,
                 None,
                 None,
+                false,
                 &mut form,
                 &args,
                 &mut net,
@@ -580,6 +588,7 @@ fn lobby_clicks(
                 true,
                 None,
                 None,
+                true,
                 &mut form,
                 &args,
                 &mut net,
@@ -599,6 +608,7 @@ fn lobby_clicks(
                     false,
                     Some(code),
                     None,
+                    false,
                     &mut form,
                     &args,
                     &mut net,
@@ -616,6 +626,7 @@ fn lobby_clicks(
                 false,
                 Some(btn.code.clone()),
                 Some(&btn.signaling),
+                false,
                 &mut form,
                 &args,
                 &mut net,

@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod debug_hud;
 pub mod graphics;
 pub mod grid;
 pub mod hud;
@@ -9,6 +10,7 @@ pub mod terrain;
 pub mod tokens;
 pub mod virtual_joystick;
 
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::light::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 
@@ -90,7 +92,8 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<UiHovered>()
+        app.add_plugins(FrameTimeDiagnosticsPlugin::default())
+            .init_resource::<UiHovered>()
             .init_resource::<ScreenInfo>()
             .init_resource::<ActiveTool>()
             .init_resource::<camera::CamRig>()
@@ -113,11 +116,21 @@ impl Plugin for GamePlugin {
         )
         .add_systems(
             OnEnter(AppState::InGame),
-            (hud::setup_hud, game_init, graphics::spawn_gfx_ui),
+            (
+                hud::setup_hud,
+                game_init,
+                graphics::spawn_gfx_ui,
+                debug_hud::spawn_debug_hud,
+            ),
         )
         .add_systems(
             OnExit(AppState::InGame),
-            (leave_game, reset_ui_hover, graphics::despawn_gfx_ui),
+            (
+                leave_game,
+                reset_ui_hover,
+                graphics::despawn_gfx_ui,
+                debug_hud::despawn_debug_hud,
+            ),
         )
         .add_systems(First, screen_update)
         .configure_sets(Update, (SyncSet, HudWriteSet).chain())
@@ -163,6 +176,7 @@ impl Plugin for GamePlugin {
                     .after(hud::assign_token_click)
                     .after(SyncSet),
                 graphics::gfx_panel_visuals.after(graphics::gfx_toggle_click),
+                debug_hud::update_debug_hud,
             )
                 .run_if(in_state(AppState::InGame))
                 .after(HudWriteSet)
