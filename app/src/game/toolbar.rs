@@ -222,6 +222,9 @@ fn spawn_delete_button(bar: &mut ChildSpawnerCommands, assets: &GameAssets, si: 
         Button,
         DeleteBtn,
         Node {
+            // Oculto via Display::None p/ não reservar slot na coluna quando não
+            // há token selecionado (senão a barra estoura a banda e quebra em 2).
+            display: Display::None,
             width: Val::Px(sz(46.0, si)),
             height: Val::Px(sz(46.0, si)),
             border: UiRect::all(Val::Px(sz(2.0, si))),
@@ -232,7 +235,6 @@ fn spawn_delete_button(bar: &mut ChildSpawnerCommands, assets: &GameAssets, si: 
         },
         BackgroundColor(Color::srgba(0.45, 0.12, 0.12, 0.85)),
         BorderColor::all(Color::srgb(0.6, 0.2, 0.2)),
-        Visibility::Hidden,
     ))
     .with_children(|b| {
         b.spawn((
@@ -267,10 +269,10 @@ fn spawn_toolbar_inner(
         Node {
             position_type: PositionType::Absolute,
             right: Val::Px(p),
-            top: Val::Px(sz(172.0, si)),
+            top: Val::Px(sz(190.0, si)),
             bottom: Val::Px(p + bottom),
             flex_direction: FlexDirection::Row,
-            align_items: AlignItems::Center,
+            align_items: AlignItems::FlexStart,
             column_gap: Val::Px(gap),
             ..default()
         }
@@ -295,7 +297,7 @@ fn spawn_toolbar_inner(
     let cap = |n: &mut Node| {
         if portrait {
             // Em escala alta a coluna quebra em 2 colunas dentro da banda.
-            n.max_height = Val::Vh(62.0);
+            n.max_height = Val::Vh(72.0);
         } else {
             n.max_width = Val::Vw(96.0);
         }
@@ -482,7 +484,7 @@ pub fn toolbar_options_visibility(
 
 pub fn delete_btn_visibility(
     sel: Res<TokenSelection>,
-    mut q: Query<&mut Visibility, With<DeleteBtn>>,
+    mut q: Query<&mut Node, With<DeleteBtn>>,
     q_new: Query<(), Added<DeleteBtn>>,
 ) {
     // `q_new` reavalia quando a toolbar é reconstruída (rotação/escala respawnam
@@ -490,11 +492,12 @@ pub fn delete_btn_visibility(
     if !sel.is_changed() && q_new.is_empty() {
         return;
     }
-    for mut vis in &mut q {
-        *vis = if sel.0.is_some() {
-            Visibility::Inherited
+    // Display (não Visibility): oculto não deve reservar slot na coluna.
+    for mut n in &mut q {
+        n.display = if sel.0.is_some() {
+            Display::Flex
         } else {
-            Visibility::Hidden
+            Display::None
         };
     }
 }
