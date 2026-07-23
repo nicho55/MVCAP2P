@@ -296,8 +296,9 @@ fn spawn_toolbar_inner(
     };
     let cap = |n: &mut Node| {
         if portrait {
-            // Em escala alta a coluna quebra em 2 colunas dentro da banda.
-            n.max_height = Val::Vh(72.0);
+            // 8 botões não cabem em 1 coluna nesta tela; quebra intencional em
+            // 2 colunas de até 4 (altura de 4 botões: 4*46 + 3*gap + 2*pad).
+            n.max_height = Val::Px(sz(220.0, si));
         } else {
             n.max_width = Val::Vw(96.0);
         }
