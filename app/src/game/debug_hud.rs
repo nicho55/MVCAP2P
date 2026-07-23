@@ -1,7 +1,7 @@
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 
-use super::terrain::TerrainRender;
+use super::terrain::ChunkRender;
 use super::ScreenInfo;
 use crate::net::{Net, Roster, Session};
 use crate::svg_assets::{tfont, GameAssets};
@@ -69,7 +69,7 @@ pub fn update_debug_hud(
     diagnostics: Res<DiagnosticsStore>,
     net: Option<Res<Net>>,
     roster: Option<Res<Roster>>,
-    render: Option<Res<TerrainRender>>,
+    render: Option<Res<ChunkRender>>,
     mut q: Query<&mut Text, With<DebugText>>,
     q_all: Query<Entity>,
 ) {
@@ -93,7 +93,7 @@ pub fn update_debug_hud(
 
     let entities = q_all.iter().count();
 
-    let chunks = render.as_ref().map(|r| r.ents.len()).unwrap_or(0);
+    let chunks = render.as_ref().map(|r| r.meshes.len()).unwrap_or(0);
 
     let peers = net.as_ref().map(|n| n.peers().len()).unwrap_or(0);
 
