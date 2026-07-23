@@ -2,485 +2,19 @@
   "name": "protocol.rs",
   "path": "src/protocol.rs",
   "doc": [
-    " # Módulo: protocol",
-    " Define os tipos de dados e mensagens trocadas entre peers via WebRTC.",
-    " Toda comunicação serializada com `bincode` usa os tipos e enum `Msg`",
-    " declarados aqui. O GM é autoritativo: jogadores enviam `*Req`, GM",
-    " valida e broadcast a versão final."
+    " Ponte do cliente para o domínio compartilhado.",
+    " Re-exporta todos os tipos do crate [`shared`] (Bevy-free) e adiciona os",
+    " adaptadores específicos do cliente — a conversão de cor para `bevy::Color`.",
+    " Assim o resto do código continua usando `crate::protocol::*` sem mudança.",
+    " Ver ADR-009."
   ],
-  "structs": [
-    {
-      "name": "GridCfg",
-      "doc": [
-        " Configuração do grid: tipo e tamanho da célula em pixels."
-      ],
-      "fields": [
-        {
-          "name": "kind",
-          "ty": "GridKind",
-          "doc": [],
-          "attributes": []
-        },
-        {
-          "name": "cell",
-          "ty": "f32",
-          "doc": [
-            " Largura/altura de cada célula em unidades do mundo."
-          ],
-          "attributes": [
-            "# [doc = \" Largura/altura de cada célula em unidades do mundo.\"]"
-          ]
-        }
-      ],
-      "generics": "",
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Copy",
-        "Debug",
-        "PartialEq"
-      ],
-      "attributes": [
-        "# [doc = \" Configuração do grid: tipo e tamanho da célula em pixels.\"]",
-        "# [derive (Serialize , Deserialize , Clone , Copy , Debug , PartialEq)]"
-      ]
-    },
-    {
-      "name": "TerrainCell",
-      "doc": [
-        " Célula de terreno: textura e elevação."
-      ],
-      "fields": [
-        {
-          "name": "tex",
-          "ty": "u8",
-          "doc": [
-            " Índice da textura (TEX_NONE = vazio)."
-          ],
-          "attributes": [
-            "# [doc = \" Índice da textura (TEX_NONE = vazio).\"]"
-          ]
-        },
-        {
-          "name": "elev",
-          "ty": "i8",
-          "doc": [
-            " Elevação em unidades (positivo = para cima)."
-          ],
-          "attributes": [
-            "# [doc = \" Elevação em unidades (positivo = para cima).\"]"
-          ]
-        }
-      ],
-      "generics": "",
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Copy",
-        "Debug",
-        "PartialEq"
-      ],
-      "attributes": [
-        "# [doc = \" Célula de terreno: textura e elevação.\"]",
-        "# [derive (Serialize , Deserialize , Clone , Copy , Debug , PartialEq)]"
-      ]
-    },
-    {
-      "name": "TokenMeta",
-      "doc": [
-        " Metadados de um token: identificadores, dono, arte e posição."
-      ],
-      "fields": [
-        {
-          "name": "id",
-          "ty": "TokenId",
-          "doc": [],
-          "attributes": []
-        },
-        {
-          "name": "owner",
-          "ty": "PlayerUuid",
-          "doc": [
-            " UUID do jogador dono do token."
-          ],
-          "attributes": [
-            "# [doc = \" UUID do jogador dono do token.\"]"
-          ]
-        },
-        {
-          "name": "art",
-          "ty": "TokenArt",
-          "doc": [],
-          "attributes": []
-        },
-        {
-          "name": "cell",
-          "ty": "Cell",
-          "doc": [
-            " Coordenada da célula onde o token está."
-          ],
-          "attributes": [
-            "# [doc = \" Coordenada da célula onde o token está.\"]"
-          ]
-        }
-      ],
-      "generics": "",
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Debug"
-      ],
-      "attributes": [
-        "# [doc = \" Metadados de um token: identificadores, dono, arte e posição.\"]",
-        "# [derive (Serialize , Deserialize , Clone , Debug)]"
-      ]
-    },
-    {
-      "name": "PlayerMeta",
-      "doc": [
-        " Metadados de um jogador: identificadores, apelido e papel na mesa."
-      ],
-      "fields": [
-        {
-          "name": "uuid",
-          "ty": "PlayerUuid",
-          "doc": [],
-          "attributes": []
-        },
-        {
-          "name": "nick",
-          "ty": "String",
-          "doc": [],
-          "attributes": []
-        },
-        {
-          "name": "color",
-          "ty": "u8",
-          "doc": [
-            " Índice da cor na paleta."
-          ],
-          "attributes": [
-            "# [doc = \" Índice da cor na paleta.\"]"
-          ]
-        },
-        {
-          "name": "is_gm",
-          "ty": "bool",
-          "doc": [
-            " Se é o Mestre (autoridade do jogo)."
-          ],
-          "attributes": [
-            "# [doc = \" Se é o Mestre (autoridade do jogo).\"]"
-          ]
-        }
-      ],
-      "generics": "",
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Debug"
-      ],
-      "attributes": [
-        "# [doc = \" Metadados de um jogador: identificadores, apelido e papel na mesa.\"]",
-        "# [derive (Serialize , Deserialize , Clone , Debug)]"
-      ]
-    }
-  ],
-  "enums": [
-    {
-      "name": "GridKind",
-      "doc": [
-        " Tipo de grid do tabuleiro."
-      ],
-      "variants": [
-        {
-          "name": "Square",
-          "doc": [
-            " Grid quadrado."
-          ],
-          "fields": []
-        },
-        {
-          "name": "HexFlat",
-          "doc": [
-            " Grid hexagonal (flat-top)."
-          ],
-          "fields": []
-        }
-      ],
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Copy",
-        "Debug",
-        "PartialEq",
-        "Eq",
-        "Default"
-      ],
-      "generics": ""
-    },
-    {
-      "name": "TokenArt",
-      "doc": [
-        " Arte de um token: textura embutida ou blob transferido."
-      ],
-      "variants": [
-        {
-          "name": "BuiltIn",
-          "doc": [
-            " Textura pré-definida (índice do conjunto embutido)."
-          ],
-          "fields": [
-            "u8"
-          ]
-        },
-        {
-          "name": "Blob",
-          "doc": [
-            " Imagem personalizada transferida via blob."
-          ],
-          "fields": [
-            "BlobId"
-          ]
-        }
-      ],
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Copy",
-        "Debug",
-        "PartialEq",
-        "Eq",
-        "Hash"
-      ],
-      "generics": ""
-    },
-    {
-      "name": "BlobKind",
-      "doc": [
-        " Tipo de blob transferido entre peers."
-      ],
-      "variants": [
-        {
-          "name": "Image",
-          "doc": [
-            " Imagem (mapa ou arte de token)."
-          ],
-          "fields": []
-        }
-      ],
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Copy",
-        "Debug",
-        "PartialEq",
-        "Eq",
-        "Hash"
-      ],
-      "generics": ""
-    },
-    {
-      "name": "Msg",
-      "doc": [
-        " Mensagens trocadas entre peers via WebRTC (serializadas com bincode).",
-        "",
-        " O GM é autoritativo: jogadores enviam pedidos (`*Req`), o GM valida",
-        " e transmite a versão final (`TokenMoved`, `SpawnToken`, etc.).",
-        " Blobs (imagens) são enviados em chunks antes do `Welcome` para",
-        " garantir que estejam disponíveis ao processar o estado inicial."
-      ],
-      "variants": [
-        {
-          "name": "Hello",
-          "doc": [
-            " Jogador se apresenta ao GM (enviado ao conectar)."
-          ],
-          "fields": [
-            "PlayerMeta"
-          ]
-        },
-        {
-          "name": "Welcome",
-          "doc": [
-            " GM envia estado completo do jogo para o novo jogador."
-          ],
-          "fields": [
-            "players: Vec < PlayerMeta >",
-            "grid: GridCfg",
-            "terrain: Vec < (Cell , TerrainCell) >",
-            "tokens: Vec < TokenMeta >",
-            "map_blob: Option < BlobId >"
-          ]
-        },
-        {
-          "name": "PlayerJoined",
-          "doc": [
-            " GM notifica todos que um novo jogador entrou."
-          ],
-          "fields": [
-            "PlayerMeta"
-          ]
-        },
-        {
-          "name": "PlayerLeft",
-          "doc": [
-            " GM notifica que um jogador saiu (pelo UUID)."
-          ],
-          "fields": [
-            "PlayerUuid"
-          ]
-        },
-        {
-          "name": "Grid",
-          "doc": [
-            " GM altera configuração do grid."
-          ],
-          "fields": [
-            "GridCfg"
-          ]
-        },
-        {
-          "name": "BlobStart",
-          "doc": [
-            " Início da transferência de um blob (cabeçalho com metadados)."
-          ],
-          "fields": [
-            "id: BlobId",
-            "kind: BlobKind",
-            "len: u32",
-            "chunks: u32"
-          ]
-        },
-        {
-          "name": "BlobChunk",
-          "doc": [
-            " Um chunk de dados do blob (sequência numerada)."
-          ],
-          "fields": [
-            "id: BlobId",
-            "seq: u32",
-            "data: Vec < u8 >"
-          ]
-        },
-        {
-          "name": "SetMap",
-          "doc": [
-            " GM define/remove a imagem do mapa por blob ID."
-          ],
-          "fields": [
-            "blob: Option < BlobId >"
-          ]
-        },
-        {
-          "name": "SpawnTokenReq",
-          "doc": [
-            " Jogador pede ao GM para spawnar um token."
-          ],
-          "fields": [
-            "TokenMeta"
-          ]
-        },
-        {
-          "name": "SpawnToken",
-          "doc": [
-            " GM autoriza e broadcast do token spawnado."
-          ],
-          "fields": [
-            "TokenMeta"
-          ]
-        },
-        {
-          "name": "MoveTokenReq",
-          "doc": [
-            " Jogador pede ao GM para mover um token."
-          ],
-          "fields": [
-            "id: TokenId",
-            "cell: Cell"
-          ]
-        },
-        {
-          "name": "TokenMoved",
-          "doc": [
-            " GM autoriza e broadcast da nova posição."
-          ],
-          "fields": [
-            "id: TokenId",
-            "cell: Cell"
-          ]
-        },
-        {
-          "name": "RemoveTokenReq",
-          "doc": [
-            " Jogador pede ao GM para remover um token."
-          ],
-          "fields": [
-            "id: TokenId"
-          ]
-        },
-        {
-          "name": "RemoveToken",
-          "doc": [
-            " GM autoriza e broadcast da remoção."
-          ],
-          "fields": [
-            "id: TokenId"
-          ]
-        },
-        {
-          "name": "AssignToken",
-          "doc": [
-            " GM transfere a posse de um token para outro jogador."
-          ],
-          "fields": [
-            "id: TokenId",
-            "new_owner: PlayerUuid"
-          ]
-        },
-        {
-          "name": "DragPreview",
-          "doc": [
-            " Preview de arrasto (broadcast throttled ~20Hz para todos)."
-          ],
-          "fields": [
-            "id: TokenId",
-            "x: f32",
-            "y: f32"
-          ]
-        },
-        {
-          "name": "Terrain",
-          "doc": [
-            " GM modifica uma célula de terreno (pintar/esculpir)."
-          ],
-          "fields": [
-            "cell: Cell",
-            "val: Option < TerrainCell >"
-          ]
-        }
-      ],
-      "derives": [
-        "Serialize",
-        "Deserialize",
-        "Clone",
-        "Debug"
-      ],
-      "generics": ""
-    }
-  ],
+  "structs": [],
+  "enums": [],
   "fns": [
     {
       "name": "palette_color",
       "doc": [
-        " Retorna uma cor da paleta pelo índice (com wrap seguro)."
+        " Cor da paleta por índice cru — conveniência de UI (retorna `bevy::Color`)."
       ],
       "inputs": [
         "i : u8"
@@ -493,17 +27,41 @@
       "is_handler": false
     }
   ],
-  "traits": [],
-  "impls": [
+  "traits": [
     {
-      "ty": "GridCfg",
-      "trait_name": "Default",
+      "name": "ColorIdxExt",
+      "doc": [
+        " Extensão do cliente: converte um índice de cor da paleta em `bevy::Color`."
+      ],
       "methods": [
         {
-          "name": "default",
+          "name": "color",
           "doc": [],
-          "inputs": [],
-          "output": "Self",
+          "inputs": [
+            "self"
+          ],
+          "output": "Color",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "impls": [
+    {
+      "ty": "ColorIdx",
+      "trait_name": "ColorIdxExt",
+      "methods": [
+        {
+          "name": "color",
+          "doc": [],
+          "inputs": [
+            "self"
+          ],
+          "output": "Color",
           "generics": "",
           "asyncness": false,
           "visibility": "pub",
@@ -514,8 +72,8 @@
     }
   ],
   "uses": [
-    "use bevy :: prelude :: Color ;",
-    "use serde :: { Deserialize , Serialize } ;"
+    "pub use shared :: * ;",
+    "use bevy :: prelude :: Color ;"
   ],
   "submodules": [],
   "bevy_plugins": [],
@@ -523,68 +81,6 @@
   "components": [],
   "systems": [],
   "events": [],
-  "consts": [
-    {
-      "name": "CODE_ALPHABET",
-      "ty": "& [u8]",
-      "value": "b\"ABCDEFGHJKMNPQRSTUVWXYZ23456789\"",
-      "doc": [
-        " Alfabeto para códigos de sala (exclui I/1/O/0 para evitar confusão)."
-      ]
-    },
-    {
-      "name": "CHUNK",
-      "ty": "usize",
-      "value": "14 * 1024",
-      "doc": [
-        " Tamanho de cada chunk de blob em bytes (14 KB)."
-      ]
-    },
-    {
-      "name": "TEX_NONE",
-      "ty": "u8",
-      "value": "255",
-      "doc": [
-        " Valor sentinela para textura vazia/nenhuma."
-      ]
-    },
-    {
-      "name": "PALETTE",
-      "ty": "[(f32 , f32 , f32) ; 8]",
-      "value": "[(0.898 , 0.282 , 0.302) , (0.243 , 0.388 , 0.867) , (0.275 , 0.655 , 0.345) , (0.961 , 0.851 , 0.039) , (0.557 , 0.306 , 0.776) , (0.969 , 0.420 , 0.082) , (0.020 , 0.635 , 0.761) , (0.839 , 0.251 , 0.624) ,]",
-      "doc": [
-        " Paleta de 8 cores para os jogadores (RGB normalizado 0-1)."
-      ]
-    }
-  ],
-  "types": [
-    {
-      "name": "PlayerUuid",
-      "ty": "u64",
-      "doc": [
-        " Identificador único de jogador (gerado aleatoriamente a cada sessão)."
-      ]
-    },
-    {
-      "name": "TokenId",
-      "ty": "u64",
-      "doc": [
-        " Identificador único de token de jogo."
-      ]
-    },
-    {
-      "name": "BlobId",
-      "ty": "u64",
-      "doc": [
-        " Identificador único de blob (imagem transferida em chunks)."
-      ]
-    },
-    {
-      "name": "Cell",
-      "ty": "(i32 , i32)",
-      "doc": [
-        " Coordenada de célula no grid (coluna, linha)."
-      ]
-    }
-  ]
+  "consts": [],
+  "types": []
 }

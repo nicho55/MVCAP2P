@@ -3,7 +3,9 @@ use bevy::prelude::*;
 
 use super::lowpoly::Ctx3d;
 use super::map::DropMode;
-use super::tokens::{set_token_owner, OwnerRing, Selection as TokenSelection, Token};
+use super::tokens::{
+    delete_selected_entity, set_token_owner, OwnerRing, Selection as TokenSelection, Token,
+};
 use super::ActiveTool;
 use super::ScreenInfo;
 use crate::net::{Net, Roster, Session};
@@ -40,6 +42,8 @@ pub struct BackBtn;
 pub struct ScaleUpBtn;
 #[derive(Component)]
 pub struct ScaleDownBtn;
+#[derive(Component)]
+pub struct DeleteBtn;
 #[derive(Component)]
 pub struct AssignTokenBtn(pub PlayerUuid);
 
@@ -127,69 +131,74 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
             },
         ))
         .with_children(|root| {
-            // topo esquerdo: sala + status
-            root.spawn((
-                Node {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(p + top),
-                    left: Val::Px(p),
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(gap),
-                    padding: UiRect::all(Val::Px(p)),
-                    ..default()
-                },
-                BackgroundColor(PANEL),
-            ))
-            .with_children(|p| {
-                p.spawn((
-                    Text::new(format!("SALA {}", session.code)),
-                    tfont(assets, f0),
-                    TextColor(GOLD),
-                ));
-                p.spawn((
-                    StatusLabel,
-                    Text::new("conectando..."),
-                    tfont(assets, f1),
-                    TextColor(Color::srgb(0.8, 0.8, 0.8)),
-                ));
-                p.spawn((
-                    Text::new(if gm {
-                        "você é o MESTRE"
-                    } else {
-                        "você é JOGADOR"
-                    }),
-                    tfont(assets, f2),
-                    TextColor(Color::srgb(0.60, 0.58, 0.68)),
-                ));
-            });
-            // painel de jogadores
-            root.spawn((
-                Node {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(p * 2.0 + sz(60.0, si) + top),
-                    left: Val::Px(p),
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(gap2),
-                    padding: UiRect::all(Val::Px(p)),
-                    min_width: Val::Px(bw),
-                    ..default()
-                },
-                BackgroundColor(PANEL),
-            ))
-            .with_children(|p| {
-                p.spawn((
-                    Text::new("JOGADORES"),
-                    tfont(assets, f2),
-                    TextColor(Color::srgb(0.60, 0.58, 0.68)),
-                ));
-                p.spawn((
-                    RosterPanel,
+            // left column: info panel + roster, stacked vertically
+            root.spawn(Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(p + top),
+                left: Val::Px(p),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(gap2),
+                ..default()
+            })
+            .with_children(|col| {
+                // topo esquerdo: sala + status
+                col.spawn((
                     Node {
                         flex_direction: FlexDirection::Column,
                         row_gap: Val::Px(gap),
+                        padding: UiRect::all(Val::Px(p)),
                         ..default()
                     },
-                ));
+                    BackgroundColor(PANEL),
+                ))
+                .with_children(|p| {
+                    p.spawn((
+                        Text::new(format!("SALA {}", session.code)),
+                        tfont(assets, f0),
+                        TextColor(GOLD),
+                    ));
+                    p.spawn((
+                        StatusLabel,
+                        Text::new("conectando..."),
+                        tfont(assets, f1),
+                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
+                    ));
+                    p.spawn((
+                        Text::new(if gm {
+                            "você é o MESTRE"
+                        } else {
+                            "você é JOGADOR"
+                        }),
+                        tfont(assets, f2),
+                        TextColor(Color::srgb(0.60, 0.58, 0.68)),
+                    ));
+                });
+                // painel de jogadores
+                col.spawn((
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        row_gap: Val::Px(gap2),
+                        padding: UiRect::all(Val::Px(p)),
+                        min_width: Val::Px(bw.min(si.width * 0.25)),
+                        ..default()
+                    },
+                    BackgroundColor(PANEL),
+                ))
+                .with_children(|p| {
+                    p.spawn((
+                        Text::new("JOGADORES"),
+                        tfont(assets, f2),
+                        TextColor(Color::srgb(0.60, 0.58, 0.68)),
+                    ));
+                    p.spawn((
+                        RosterPanel,
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            row_gap: Val::Px(gap),
+                            ..default()
+                        },
+                    ));
+                });
             });
             // dica inferior direita
             root.spawn((
@@ -314,6 +323,31 @@ fn spawn_hud(commands: &mut Commands, assets: &GameAssets, session: &Session, si
                         assets.icon("token"),
                         si,
                     );
+                    // Botão de deletar token selecionado
+                    let del_bg = Color::srgba(0.45, 0.12, 0.12, 0.85);
+                    bar.spawn((
+                        Button,
+                        DeleteBtn,
+                        Node {
+                            width: Val::Px(sz(46.0, si)),
+                            height: Val::Px(sz(46.0, si)),
+                            border: UiRect::all(Val::Px(sz(2.0, si))),
+                            padding: UiRect::all(Val::Px(sz(6.0, si))),
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },
+                        BackgroundColor(del_bg),
+                        BorderColor::all(Color::srgb(0.6, 0.2, 0.2)),
+                        Visibility::Hidden,
+                    ))
+                    .with_children(|b| {
+                        b.spawn((
+                            Text::new("X"),
+                            tfont(assets, sz(18.0, si)),
+                            TextColor(Color::srgb(0.95, 0.70, 0.70)),
+                        ));
+                    });
                     // botões de escala
                     bar.spawn((
                         Button,
@@ -388,8 +422,9 @@ pub fn scale_btn_click(
     if (new - si.scale).abs() < 0.001 {
         return;
     }
-    si.scale = new;
+    // Usuário ajustou manualmente → desativa escala automática
     si.auto_scale = false;
+    si.scale = new;
     info!("escala do HUD ajustada para {new:.2}");
     for e in &q_old_hud {
         commands.entity(e).despawn();
@@ -617,6 +652,40 @@ pub fn assign_token_click(
             new_owner: btn.0,
         });
         info!("token {token_id} atribuído ao jogador {}", btn.0);
+    }
+}
+
+pub fn delete_btn_visibility(
+    sel: Res<TokenSelection>,
+    mut q: Query<&mut Visibility, With<DeleteBtn>>,
+) {
+    if !sel.is_changed() {
+        return;
+    }
+    for mut vis in &mut q {
+        *vis = if sel.0.is_some() {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+    }
+}
+
+pub fn delete_btn_click(
+    q: Query<&Interaction, (Changed<Interaction>, With<DeleteBtn>)>,
+    sel: Res<TokenSelection>,
+    session: Res<Session>,
+    mut net: ResMut<Net>,
+    mut commands: Commands,
+    q_tokens: Query<(Entity, &Token)>,
+    mut sel_mut: ResMut<TokenSelection>,
+) {
+    for i in &q {
+        if *i != Interaction::Pressed {
+            continue;
+        }
+        delete_selected_entity(&sel, &session, &mut net, &mut commands, &q_tokens);
+        sel_mut.0 = None;
     }
 }
 

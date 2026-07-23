@@ -18,7 +18,7 @@ o `dist/LEIA-ME.md` com o passo a passo de jogar em rede local. Gerar:
 
 ```bash
 cargo build --release        # binários em target/release/{tabletop,signaling}
-# empacotados em dist/ + tarball tabletop-p2p-linux-x86_64.tar.gz
+# empacotados em dist/ + tarball
 ```
 
 ## Rodando
@@ -106,8 +106,10 @@ app/src/
 ```
 
 Decisões notáveis:
-- **Bevy 0.16 + bevy_matchbox 0.12** fixados (última combinação estável dessa dupla).
+- **Bevy 0.18 + bevy_matchbox 0.14** fixados (upgrade realizado conforme ADR-011).
 - Estado inteiro cabe num `Welcome` (players, grid, terreno, tokens, blob do mapa),
   então *join tardio* e *resync pós-reconexão* são o mesmo código.
 - Propriedade de token por UUID de jogador (estável na sessão), não por PeerId
   (que muda a cada reconexão).
+- **Identidade P2P local** (sem servidor externo): token 256-bit persistido em
+  arquivo, username recall entre sessões. Ver ADR-011.

@@ -66,7 +66,7 @@ fn boot_to_lobby(mut next : ResMut < NextState < AppState > >) -> ()
 
 ### `auto_shot_exit`
 
-**Parâmetros**: `time : Res < Time >`, `args : Res < CliArgs >`, `mut commands : Commands`, `mut done : Local < bool >`, `mut exit : EventWriter < AppExit >`
+**Parâmetros**: `time : Res < Time >`, `args : Res < CliArgs >`, `mut commands : Commands`, `mut done : Local < bool >`, `mut exit : MessageWriter < AppExit >`
 
 ## Implementações
 

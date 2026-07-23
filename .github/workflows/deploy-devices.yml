@@ -4,6 +4,7 @@ name: deploy-devices
 #  - build: roda na nuvem do GitHub (ubuntu-latest), gera o APK.
 #  - deploy: roda no SEU self-hosted runner (label android-farm), com os
 #    celulares plugados/conectados via adb, instala e mede desempenho.
+#  - check: analisa os relatórios e cria issue de regressão se KPIs falharem.
 on:
   push:
     tags: ['v*']              # criar tag v0.2.0 = lançar versão
@@ -69,6 +70,10 @@ jobs:
         if: ${{ vars.J7_IP != '' }}
         run: adb connect ${{ vars.J7_IP }}:5555 || true
 
+      - name: Reconectar MG06 via WiFi (se MG06_IP estiver definido)
+        if: ${{ vars.MG06_IP != '' }}
+        run: adb connect ${{ vars.MG06_IP }}:5555 || true
+
       - name: Instalar + medir em todos os celulares
         run: LAUNCH_SECONDS='${{ inputs.launch_seconds || 20 }}' ./scripts/deploy-farm.sh
 
@@ -77,3 +82,62 @@ jobs:
         with:
           name: perf-reports
           path: reports/
+
+  check:
+    needs: deploy
+    if: always() && needs.deploy.result != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: perf-reports
+          path: reports/
+
+      - name: Verificar KPIs e criar issue se falhar
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAX_RAM_MB: 600
+          MIN_FPS: 30
+        run: |
+          FAILED=false
+          BODY="## Regressão de Performance Detectada\n\n"
+          BODY+="**Commit:** ${{ github.sha }}\n"
+          BODY+="**Ref:** ${{ github.ref }}\n\n"
+
+          for report in reports/*.txt; do
+            [ -f "$report" ] || continue
+            device=$(head -1 "$report" | grep -oP 'model=\K[^ ]+' || echo "unknown")
+
+            # Extrair RAM (TOTAL linha do meminfo)
+            ram_kb=$(grep -oP 'TOTAL[:\s]+\K[0-9]+' "$report" | head -1 || echo "0")
+            ram_mb=$((ram_kb / 1024))
+
+            # Extrair frames do gfxinfo
+            total_frames=$(grep -oP 'Total frames rendered: \K[0-9]+' "$report" || echo "0")
+
+            BODY+="### $device\n"
+            BODY+="- RAM: ${ram_mb} MB (limite: ${MAX_RAM_MB} MB)\n"
+            BODY+="- Frames: ${total_frames}\n"
+
+            if [ "$ram_mb" -gt "$MAX_RAM_MB" ] 2>/dev/null; then
+              BODY+="- **FALHA: RAM excede ${MAX_RAM_MB} MB**\n"
+              FAILED=true
+            fi
+
+            BODY+="\n"
+          done
+
+          if [ "$FAILED" = "true" ]; then
+            echo "$BODY" > /tmp/issue_body.md
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "[QA] Regressão de Performance — $(date +%Y-%m-%d)" \
+              --body "$(echo -e "$BODY")" \
+              --label "bug,prio:P0,area:infra"
+            echo "::error::KPIs falharam — issue de regressão criada."
+            exit 1
+          else
+            echo "✅ Todos os KPIs dentro dos limites."
+          fi

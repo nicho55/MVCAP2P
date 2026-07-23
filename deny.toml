@@ -32,8 +32,8 @@ multiple-versions = "warn"
 yanked = "warn"
 # Vários crates da árvore do Bevy/matchbox estão marcados como não-mantidos
 # (bincode, paste, async-std, rustls-pemfile, rustybuzz, ttf-parser). São
-# transitivos e sem substituto imediato na dupla fixada Bevy 0.16 + matchbox
-# 0.12; tratamos como informativo, não como falha.
+# transitivos e sem substituto imediato na dupla fixada Bevy 0.18 + matchbox
+# 0.14; tratamos como informativo, não como falha.
 unmaintained = "none"
 ignore = [
     # Vulnerabilidades transitivas via bevy_matchbox → webrtc (parsing de

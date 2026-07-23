@@ -1,0 +1,552 @@
+{
+  "name": "game/graphics.rs",
+  "path": "src/game/graphics.rs",
+  "doc": [
+    " Opções gráficas ajustáveis em runtime — foco em desempenho em dispositivos",
+    " fracos (Android). Cada campo liga/desliga um custo relevante de GPU/CPU e é",
+    " controlável pelo painel \"Gráficos\" do HUD. Defaults começam baixos no Android."
+  ],
+  "structs": [
+    {
+      "name": "GraphicsSettings",
+      "doc": [
+        " Estado das opções gráficas. É a fonte única — os sistemas reagem à mudança."
+      ],
+      "fields": [
+        {
+          "name": "msaa",
+          "ty": "MsaaLevel",
+          "doc": [
+            " Anti-serrilhado (custo de banda alto em GPUs móveis por tiles)."
+          ],
+          "attributes": [
+            "# [doc = \" Anti-serrilhado (custo de banda alto em GPUs móveis por tiles).\"]"
+          ]
+        },
+        {
+          "name": "shadows",
+          "ty": "bool",
+          "doc": [
+            " Sombras em cascata da luz direcional (pesadas em GPU fraca)."
+          ],
+          "attributes": [
+            "# [doc = \" Sombras em cascata da luz direcional (pesadas em GPU fraca).\"]"
+          ]
+        },
+        {
+          "name": "hdr",
+          "ty": "bool",
+          "doc": [
+            " Pipeline HDR + tonemapping na câmera."
+          ],
+          "attributes": [
+            "# [doc = \" Pipeline HDR + tonemapping na câmera.\"]"
+          ]
+        },
+        {
+          "name": "vegetation",
+          "ty": "bool",
+          "doc": [
+            " Renderizar as árvores low-poly (draw calls)."
+          ],
+          "attributes": [
+            "# [doc = \" Renderizar as árvores low-poly (draw calls).\"]"
+          ]
+        },
+        {
+          "name": "grid_overlay",
+          "ty": "bool",
+          "doc": [
+            " Desenhar a grade (gizmos, todo frame)."
+          ],
+          "attributes": [
+            "# [doc = \" Desenhar a grade (gizmos, todo frame).\"]"
+          ]
+        },
+        {
+          "name": "power_saver",
+          "ty": "bool",
+          "doc": [
+            " Economia: limita a ~30 FPS (reduz calor/consumo, mantém rede fluida)."
+          ],
+          "attributes": [
+            "# [doc = \" Economia: limita a ~30 FPS (reduz calor/consumo, mantém rede fluida).\"]"
+          ]
+        }
+      ],
+      "generics": "",
+      "derives": [
+        "Resource",
+        "Clone"
+      ],
+      "attributes": [
+        "# [doc = \" Estado das opções gráficas. É a fonte única — os sistemas reagem à mudança.\"]",
+        "# [derive (Resource , Clone)]"
+      ]
+    },
+    {
+      "name": "GfxUiRoot",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "GfxPanel",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "GfxOpenBtn",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component"
+      ],
+      "attributes": [
+        "# [derive (Component)]"
+      ]
+    },
+    {
+      "name": "GfxToggleBtn",
+      "doc": [],
+      "fields": [],
+      "generics": "",
+      "derives": [
+        "Component",
+        "Clone",
+        "Copy"
+      ],
+      "attributes": [
+        "# [derive (Component , Clone , Copy)]"
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "MsaaLevel",
+      "doc": [
+        " Nível de anti-serrilhado (MSAA). 4x é o padrão do Bevy e o mais caro."
+      ],
+      "variants": [
+        {
+          "name": "Off",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "X2",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "X4",
+          "doc": [],
+          "fields": []
+        }
+      ],
+      "derives": [
+        "Clone",
+        "Copy",
+        "PartialEq",
+        "Eq",
+        "Debug"
+      ],
+      "generics": ""
+    },
+    {
+      "name": "GfxOption",
+      "doc": [],
+      "variants": [
+        {
+          "name": "Msaa",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Shadows",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Hdr",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Vegetation",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "Grid",
+          "doc": [],
+          "fields": []
+        },
+        {
+          "name": "PowerSaver",
+          "doc": [],
+          "fields": []
+        }
+      ],
+      "derives": [
+        "Clone",
+        "Copy",
+        "PartialEq",
+        "Eq"
+      ],
+      "generics": ""
+    }
+  ],
+  "fns": [
+    {
+      "name": "sz",
+      "doc": [],
+      "inputs": [
+        "n : f32",
+        "si : & ScreenInfo"
+      ],
+      "output": "f32",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "apply_graphics",
+      "doc": [
+        " Aplica as opções ao mundo sempre que `GraphicsSettings` muda (e uma vez ao",
+        " iniciar, pois o recurso conta como \"changed\" no primeiro acesso)."
+      ],
+      "inputs": [
+        "mut commands : Commands",
+        "settings : Res < GraphicsSettings >",
+        "cam : Query < Entity , With < MainCamera > >",
+        "mut msaa_q : Query < & mut Msaa , With < MainCamera > >",
+        "mut light : Query < & mut DirectionalLight >",
+        "mut veg : Query < & mut Visibility , With < Vegetation > >",
+        "mut winit : ResMut < WinitSettings >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "btn_text",
+      "doc": [],
+      "inputs": [
+        "opt : GfxOption",
+        "s : & GraphicsSettings"
+      ],
+      "output": "String",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "toggle_btn",
+      "doc": [],
+      "inputs": [
+        "parent : & mut ChildSpawnerCommands",
+        "opt : GfxOption",
+        "s : & GraphicsSettings",
+        "assets : & GameAssets",
+        "si : & ScreenInfo"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "spawn_gfx_ui",
+      "doc": [
+        " Cria o botão \"Gráficos\" (canto superior direito) e o painel (oculto)."
+      ],
+      "inputs": [
+        "mut commands : Commands",
+        "settings : Res < GraphicsSettings >",
+        "assets : Res < GameAssets >",
+        "si : Res < ScreenInfo >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "despawn_gfx_ui",
+      "doc": [],
+      "inputs": [
+        "mut commands : Commands",
+        "q : Query < Entity , With < GfxUiRoot > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": true,
+      "is_handler": false
+    },
+    {
+      "name": "gfx_open_click",
+      "doc": [
+        " Abre/fecha o painel ao clicar em \"Gráficos\"."
+      ],
+      "inputs": [
+        "q : Query < & Interaction , (Changed < Interaction > , With < GfxOpenBtn >) >",
+        "mut panel : Query < & mut Visibility , With < GfxPanel > >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "gfx_toggle_click",
+      "doc": [
+        " Aplica o toggle da opção clicada ao recurso."
+      ],
+      "inputs": [
+        "q : Query < (& Interaction , & GfxToggleBtn) , Changed < Interaction > >",
+        "mut settings : ResMut < GraphicsSettings >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    },
+    {
+      "name": "gfx_panel_visuals",
+      "doc": [
+        " Reflete o estado atual nos rótulos/cores dos botões do painel."
+      ],
+      "inputs": [
+        "settings : Res < GraphicsSettings >",
+        "mut q_btn : Query < (& GfxToggleBtn , & Children , & mut BackgroundColor) >",
+        "mut q_text : Query < & mut Text >"
+      ],
+      "output": "()",
+      "generics": "",
+      "asyncness": false,
+      "visibility": "pub",
+      "is_system": false,
+      "is_handler": false
+    }
+  ],
+  "traits": [],
+  "impls": [
+    {
+      "ty": "MsaaLevel",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "next",
+          "doc": [],
+          "inputs": [
+            "self"
+          ],
+          "output": "Self",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "label",
+          "doc": [],
+          "inputs": [
+            "self"
+          ],
+          "output": "& 'static str",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "to_msaa",
+          "doc": [],
+          "inputs": [
+            "self"
+          ],
+          "output": "Msaa",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "GraphicsSettings",
+      "trait_name": "Default",
+      "methods": [
+        {
+          "name": "default",
+          "doc": [],
+          "inputs": [],
+          "output": "Self",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    },
+    {
+      "ty": "GfxOption",
+      "trait_name": null,
+      "methods": [
+        {
+          "name": "name",
+          "doc": [],
+          "inputs": [
+            "self"
+          ],
+          "output": "& 'static str",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "is_on",
+          "doc": [],
+          "inputs": [
+            "self",
+            "s : & GraphicsSettings"
+          ],
+          "output": "bool",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "value",
+          "doc": [],
+          "inputs": [
+            "self",
+            "s : & GraphicsSettings"
+          ],
+          "output": "& 'static str",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        },
+        {
+          "name": "toggle",
+          "doc": [],
+          "inputs": [
+            "self",
+            "s : & mut GraphicsSettings"
+          ],
+          "output": "()",
+          "generics": "",
+          "asyncness": false,
+          "visibility": "pub",
+          "is_system": false,
+          "is_handler": false
+        }
+      ]
+    }
+  ],
+  "uses": [
+    "use bevy :: ecs :: hierarchy :: ChildSpawnerCommands ;",
+    "use bevy :: prelude :: * ;",
+    "use bevy :: render :: view :: Hdr ;",
+    "use bevy :: winit :: { UpdateMode , WinitSettings } ;",
+    "use std :: time :: Duration ;",
+    "use super :: camera :: MainCamera ;",
+    "use super :: lowpoly :: Vegetation ;",
+    "use super :: ScreenInfo ;",
+    "use crate :: svg_assets :: { tfont , GameAssets } ;"
+  ],
+  "submodules": [],
+  "bevy_plugins": [],
+  "resources": [
+    "GraphicsSettings"
+  ],
+  "components": [
+    "GfxUiRoot",
+    "GfxPanel",
+    "GfxOpenBtn",
+    "GfxToggleBtn"
+  ],
+  "systems": [
+    "apply_graphics",
+    "toggle_btn",
+    "spawn_gfx_ui",
+    "despawn_gfx_ui"
+  ],
+  "events": [],
+  "consts": [
+    {
+      "name": "PANEL",
+      "ty": "Color",
+      "value": "Color :: srgba (0.10 , 0.09 , 0.14 , 0.95)",
+      "doc": []
+    },
+    {
+      "name": "BTN_BG",
+      "ty": "Color",
+      "value": "Color :: srgb (0.16 , 0.14 , 0.21)",
+      "doc": []
+    },
+    {
+      "name": "ON",
+      "ty": "Color",
+      "value": "Color :: srgb (0.18 , 0.40 , 0.22)",
+      "doc": []
+    },
+    {
+      "name": "GOLD",
+      "ty": "Color",
+      "value": "Color :: srgb (0.83 , 0.69 , 0.22)",
+      "doc": []
+    },
+    {
+      "name": "TEXT",
+      "ty": "Color",
+      "value": "Color :: srgb (0.92 , 0.90 , 0.95)",
+      "doc": []
+    }
+  ],
+  "types": []
+}

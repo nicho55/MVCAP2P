@@ -57,7 +57,7 @@ fn set_cell(terrain : & mut Terrain, render : & mut TerrainRender, cell : Cell, 
 ### `terrain_tool`
 
 ```rust
-fn terrain_tool(buttons : Res < ButtonInput < MouseButton > >, mut touch_ev : EventReader < TouchInput >, tool : Res < ActiveTool >, ui : Res < UiHovered >, drag : Res < TouchDrag >, session : Res < Session >, windows : Query < & Window >, q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >, grid : Res < GridRes >, mut terrain : ResMut < Terrain >, mut render : ResMut < TerrainRender >, mut net : ResMut < Net >, mut stroke : Local < HashSet < Cell > >) -> ()
+fn terrain_tool(buttons : Res < ButtonInput < MouseButton > >, mut touch_ev : MessageReader < TouchInput >, tool : Res < ActiveTool >, ui : Res < UiHovered >, drag : Res < TouchDrag >, session : Res < Session >, windows : Query < & Window >, q_cam : Query < (& Camera , & GlobalTransform) , With < MainCamera > >, grid : Res < GridRes >, mut terrain : ResMut < Terrain >, mut render : ResMut < TerrainRender >, mut net : ResMut < Net >, mut stroke : Local < HashSet < Cell > >) -> ()
 ```
 
 ## Systems (Bevy)

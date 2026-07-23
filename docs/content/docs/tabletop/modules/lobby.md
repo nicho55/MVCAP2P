@@ -79,7 +79,7 @@
 ### `lobby_typing`
 
 ```rust
-fn lobby_typing(mut form : ResMut < LobbyForm >, mut keys : EventReader < KeyboardInput >) -> ()
+fn lobby_typing(mut form : ResMut < LobbyForm >, mut keys : MessageReader < KeyboardInput >) -> ()
 ```
 
 ### `lobby_reflect`
@@ -103,12 +103,6 @@ fn detect_lan_ip() -> Option < String >
  Detecta o IP da LAN conectando um UDP socket a um endereço externo
 
  (sem enviar dados) e lendo o endereço local.
-
-### `random_code`
-
-```rust
-fn random_code() -> String
-```
 
 ## Systems (Bevy)
 

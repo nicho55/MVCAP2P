@@ -390,7 +390,7 @@
       "doc": [],
       "inputs": [
         "mut form : ResMut < LobbyForm >",
-        "mut keys : EventReader < KeyboardInput >"
+        "mut keys : MessageReader < KeyboardInput >"
       ],
       "output": "()",
       "generics": "",
@@ -458,17 +458,6 @@
       ],
       "inputs": [],
       "output": "Option < String >",
-      "generics": "",
-      "asyncness": false,
-      "visibility": "",
-      "is_system": false,
-      "is_handler": false
-    },
-    {
-      "name": "random_code",
-      "doc": [],
-      "inputs": [],
-      "output": "String",
       "generics": "",
       "asyncness": false,
       "visibility": "",
