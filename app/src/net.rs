@@ -39,6 +39,7 @@ pub struct PeerEvent {
 pub struct Session {
     pub me: PlayerMeta,
     pub code: RoomCode,
+    pub is_test_room: bool,
 }
 
 const MAX_RETRIES: u32 = 5;
