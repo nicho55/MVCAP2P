@@ -17,61 +17,56 @@ Você é o programador do projeto MVCAP2P — um VTT tático 3D P2P em Rust/Bevy
 - Documentação SSOT: `docs/content/docs/spec/index.md`
 - Convenções: `AGENTS.md`
 
-## Tarefas (em ordem de prioridade)
+## O que já foi implementado
 
-Todas as issues abaixo estão no status **Ready** no board. Ao começar cada uma, mova para **In Progress**. Ao abrir PR, mova para **In Review**.
+- ✅ #4 — UI Mobile-First (ADR-012, ADR-013, virtual_joystick)
+- ✅ #10 — DeviceProfile (`app/src/device.rs`) — plataforma, input mode
+- ✅ #11 — UI Engine SVG+PNG — UiLayer persistente (`app/src/ui_layer.rs`)
+- ✅ #12 — Telas Conceituais — debug HUD com `is_test_room` (`app/src/game/debug_hud.rs`)
+- ✅ #21 — Grid, Réguas, LoS, A* pathfinding (`app/src/game/ruler.rs`, 19 testes)
+- ✅ #28 — Sistema de Chunks base (`ChunkRender`, `chunk_render_system()`)
+- ✅ #32 — CLI Args no Android (`read_android_args()`, config JSON via ADB)
 
-### 1. Commitar código pendente (URGENTE)
-Há código não commitado (ADR-012, ADR-013, virtual_joystick). Faça:
+## Tarefas Pendentes (em ordem de prioridade)
+
+Ao começar cada issue, mova para **In Progress**. Ao abrir PR, mova para **In Review**.
+
+### 1. Issue #13 — Orçamento de Performance (PR #35 em andamento)
+PR #35 já existe na branch `feat/perf-budget`. Contém constantes de limite em `shared/src/lib.rs` (módulo `limits`) e pipeline de transcoding PNG/JPEG → WebP (`app/src/transcode.rs`). A PR precisa ser mergeada — verifique CI e resolva problemas se houver.
 ```bash
-git status
-git diff --stat
-```
-Revise as mudanças, crie um commit coerente e abra PR vinculado à issue #4.
-
-### 2. Issue #32 — CLI Args no Android (habilita testes automatizados)
-As flags CLI (`--gm`, `--demo`, `--exit-at`) não funcionam no Android. Implementar leitura de `/data/local/tmp/tabletop_args.json` no boot. Desbloqueia todos os testes automatizados no celular.
-```bash
-gh issue view 32 --repo nicho55/MVCAP2P
+gh pr view 35 --repo nicho55/MVCAP2P
 ```
 
-### 3. Issue #28 — Texture Atlas + LOD (chunks já implementados)
-A base do sistema de chunks JÁ ESTÁ implementada (`ChunkRender`, `chunk_render_system()`, `build_chunk_mesh()`). O que falta:
-- **Texture atlas**: hoje `dominant_terrain()` usa 1 cor por chunk, células com texturas diferentes renderizam errado. Usar vertex colors ou paleta UV.
-- **LOD médio**: chunks distantes (4-6) devem usar mesh simplificada (1 quad)
+### 2. Issue #28 — Texture Atlas + LOD (chunks base prontos, falta visual)
+`ChunkRender` e `chunk_render_system()` estão implementados. O que falta:
+- **Texture atlas**: `dominant_terrain()` usa 1 material por chunk — células com texturas diferentes renderizam com cor errada. Usar vertex colors ou paleta UV.
+- **LOD médio**: chunks distantes (4-6) usar mesh simplificada (1 quad por chunk)
 ```bash
 gh issue view 28 --repo nicho55/MVCAP2P
 ```
 
-### 4. Issue #10 — Detecção de Dispositivo no Bootstrap
-Criar resource `DeviceProfile` em `PreStartup`: plataforma, DPI, input mode (touch/mouse).
-Hoje `cfg!(target_os = "android")` está hardcoded — migrar branching de runtime para `DeviceProfile`.
+### 3. Issue #2 — Core de Identidade Local P2P
+Substituir `PlayerUuid = u64` por identidade criptográfica Ed25519.
 ```bash
-gh issue view 10 --repo nicho55/MVCAP2P
+gh issue view 2 --repo nicho55/MVCAP2P
 ```
 
-### 5. Issue #13 — Orçamento de Performance
-Constantes de limite em `shared/src/lib.rs` (módulo `limits`). Pipeline de transcoding PNG/JPEG → WebP.
+### 4. Issue #14 — Chave Pública/Privada Ed25519
+Keypair na primeira execução, persistido encriptado, `PlayerUuid` → `[u8; 16]` derivado.
 ```bash
-gh issue view 13 --repo nicho55/MVCAP2P
+gh issue view 14 --repo nicho55/MVCAP2P
 ```
 
-### 6. Issue #11 — UI Engine SVG+PNG
-Camada de UI independente que não é destruída nas transições de AppState. Expandir `svg_assets.rs`.
+### 5. Issue #15 — Content-Addressable Storage (CAS)
+`BlobId` migra de `u64` para `[u8; 32]` (BLAKE3). Armazenamento com dedup.
 ```bash
-gh issue view 11 --repo nicho55/MVCAP2P
+gh issue view 15 --repo nicho55/MVCAP2P
 ```
 
-### 7. Issue #12 — Telas Conceituais (Lobby/Jogo/Teste)
-Debug HUD para sala de testes (FPS, RAM, entities, draw calls). Recomendado: flag `is_test_room` na Session.
+### 6. Issue #16 — Sync Inteligente de Assets
+Hello inclui lista de hashes conhecidos, GM pula blobs que peer já tem.
 ```bash
-gh issue view 12 --repo nicho55/MVCAP2P
-```
-
-### 8. Issue #21 — Grid, Réguas, LoS e Fundação IA
-Elevação no grid, réguas (raio/cone/linha), Line of Sight, API de pathfinding A*.
-```bash
-gh issue view 21 --repo nicho55/MVCAP2P
+gh issue view 16 --repo nicho55/MVCAP2P
 ```
 
 ## Como escrever código neste projeto
@@ -166,9 +161,9 @@ O script detecta crash (PID desapareceu) e captura os logs de crash do Android. 
 Leia o estado do projeto:
 ```bash
 git log --oneline -10
-gh issue list --repo nicho55/MVCAP2P --label "prio:P0" --json number,title
+gh issue list --repo nicho55/MVCAP2P --state open --json number,title,labels --jq '.[] | "\(.number) [\(.labels | map(.name) | join(", "))] \(.title)"' | sort -n
 cat AGENTS.md
 ```
 
-Comece pelo item 1 (commit pendente), depois #32 (CLI args Android), depois #28 (texture atlas + LOD).
+Comece verificando PR #35 (perf budget), depois #28 (texture atlas + LOD), depois as issues P1 em ordem.
 ```
