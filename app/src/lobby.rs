@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 
+use crate::game::ScreenInfo;
 use crate::net::{Net, Roster, Session};
 use crate::protocol::*;
 use crate::room_discovery;
@@ -15,6 +16,11 @@ const FIELD_BG: Color = Color::srgb(0.16, 0.14, 0.21);
 const TEXT: Color = Color::srgb(0.92, 0.90, 0.95);
 const MUTED: Color = Color::srgb(0.58, 0.55, 0.66);
 const ROW_BG: Color = Color::srgba(0.20, 0.18, 0.26, 0.80);
+
+/// Escala responsiva de um valor (similar ao `sz` do hud.rs).
+fn sz(n: f32, si: &ScreenInfo) -> f32 {
+    (n * si.scale).round().max(1.0)
+}
 
 #[derive(Resource)]
 pub struct RoomList {
@@ -53,6 +59,7 @@ impl Plugin for LobbyPlugin {
                     lobby_typing,
                     lobby_reflect,
                     room_poll,
+                    lobby_responsive,
                 )
                     .run_if(in_state(AppState::Lobby)),
             );
@@ -104,6 +111,8 @@ struct Swatch(u8);
 #[derive(Component)]
 struct CreateBtn;
 #[derive(Component)]
+struct TestBtn;
+#[derive(Component)]
 struct JoinBtn;
 #[derive(Component)]
 struct RoomsPanel;
@@ -117,7 +126,13 @@ struct RoomEntryBtn {
 #[derive(Component)]
 struct RoomEmptyLabel;
 
-fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
+fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>, si: Res<ScreenInfo>) {
+    let p = sz(12.0, &si);
+    let gap = sz(10.0, &si);
+    let swatch = sz(40.0, &si);
+    let input_h = sz(46.0, &si);
+    let btn_h = sz(50.0, &si);
+    let logo = sz(120.0, &si);
     commands
         .spawn((
             LobbyRoot,
@@ -127,27 +142,41 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
-                row_gap: Val::Px(12.0),
+                row_gap: Val::Px(gap),
+                padding: UiRect::horizontal(Val::Px(p)),
                 ..default()
             },
             Interaction::default(),
         ))
-        .with_children(|p| {
-            p.spawn((
+        .with_children(|root| {
+            root.spawn((
                 ImageNode::new(assets.logo.clone()),
-                Node { width: Val::Px(140.0), height: Val::Px(140.0), ..default() },
+                Node {
+                    width: Val::Px(logo),
+                    height: Val::Px(logo),
+                    ..default()
+                },
             ));
-            p.spawn((Text::new("TABLETOP P2P"), tfont(&assets, 42.0), TextColor(GOLD)));
-            p.spawn((
+            root.spawn((
+                Text::new("TABLETOP P2P"),
+                tfont(&assets, sz(36.0, &si)),
+                TextColor(GOLD),
+            ));
+            root.spawn((
                 Text::new("VTT tático peer-to-peer — WebRTC, sem servidor de jogo"),
-                tfont(&assets, 15.0),
+                tfont(&assets, sz(14.0, &si)),
                 TextColor(MUTED),
             ));
-            // painel principal de formulário + salas lado a lado
-            p.spawn(Node {
+            // painel principal: formulário + salas lado a lado
+            root.spawn(Node {
                 flex_direction: FlexDirection::Row,
-                column_gap: Val::Px(16.0),
+                flex_wrap: FlexWrap::Wrap,
+                column_gap: Val::Px(sz(16.0, &si)),
+                row_gap: Val::Px(sz(12.0, &si)),
                 align_items: AlignItems::FlexStart,
+                justify_content: JustifyContent::Center,
+                width: Val::Percent(100.0),
+                max_width: Val::Px(sz(820.0, &si)),
                 ..default()
             })
             .with_children(|row| {
@@ -155,9 +184,10 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                 row.spawn((
                     Node {
                         flex_direction: FlexDirection::Column,
-                        row_gap: Val::Px(10.0),
-                        padding: UiRect::all(Val::Px(24.0)),
-                        width: Val::Px(440.0),
+                        row_gap: Val::Px(gap),
+                        padding: UiRect::all(Val::Px(sz(20.0, &si))),
+                        flex_grow: 1.0,
+                        min_width: Val::Px(sz(280.0, &si)),
                         border: UiRect::all(Val::Px(2.0)),
                         ..default()
                     },
@@ -165,14 +195,18 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                     BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                 ))
                 .with_children(|panel| {
-                    panel.spawn((Text::new("APELIDO"), tfont(&assets, 13.0), TextColor(MUTED)));
+                    panel.spawn((
+                        Text::new("APELIDO"),
+                        tfont(&assets, sz(13.0, &si)),
+                        TextColor(MUTED),
+                    ));
                     panel
                         .spawn((
                             Button,
                             NickField,
                             Node {
                                 width: Val::Percent(100.0),
-                                height: Val::Px(42.0),
+                                height: Val::Px(input_h),
                                 align_items: AlignItems::Center,
                                 padding: UiRect::horizontal(Val::Px(12.0)),
                                 border: UiRect::all(Val::Px(2.0)),
@@ -182,13 +216,23 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                             BorderColor::all(GOLD),
                         ))
                         .with_children(|f| {
-                            f.spawn((NickText, Text::new(""), tfont(&assets, 18.0), TextColor(TEXT)));
+                            f.spawn((
+                                NickText,
+                                Text::new(""),
+                                tfont(&assets, sz(18.0, &si)),
+                                TextColor(TEXT),
+                            ));
                         });
-                    panel.spawn((Text::new("SUA COR"), tfont(&assets, 13.0), TextColor(MUTED)));
+                    panel.spawn((
+                        Text::new("SUA COR"),
+                        tfont(&assets, sz(13.0, &si)),
+                        TextColor(MUTED),
+                    ));
                     panel
                         .spawn(Node {
                             flex_direction: FlexDirection::Row,
-                            column_gap: Val::Px(8.0),
+                            column_gap: Val::Px(sz(8.0, &si)),
+                            flex_wrap: FlexWrap::Wrap,
                             ..default()
                         })
                         .with_children(|row| {
@@ -197,8 +241,8 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                     Button,
                                     Swatch(i),
                                     Node {
-                                        width: Val::Px(36.0),
-                                        height: Val::Px(36.0),
+                                        width: Val::Px(swatch),
+                                        height: Val::Px(swatch),
                                         border: UiRect::all(Val::Px(3.0)),
                                         ..default()
                                     },
@@ -213,22 +257,50 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                             CreateBtn,
                             Node {
                                 width: Val::Percent(100.0),
-                                height: Val::Px(46.0),
+                                height: Val::Px(btn_h),
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
-                                margin: UiRect::top(Val::Px(8.0)),
+                                margin: UiRect::top(Val::Px(sz(4.0, &si))),
                                 ..default()
                             },
                             BackgroundColor(Color::srgb(0.55, 0.42, 0.12)),
                         ))
                         .with_children(|b| {
-                            b.spawn((Text::new("CRIAR SALA (MESTRE)"), tfont(&assets, 18.0), TextColor(Color::srgb(0.98, 0.95, 0.88))));
+                            b.spawn((
+                                Text::new("CRIAR SALA (MESTRE)"),
+                                tfont(&assets, sz(17.0, &si)),
+                                TextColor(Color::srgb(0.98, 0.95, 0.88)),
+                            ));
                         });
-                    panel.spawn((Text::new("OU ENTRE COM UM CÓDIGO"), tfont(&assets, 13.0), TextColor(MUTED)));
+                    panel
+                        .spawn((
+                            Button,
+                            TestBtn,
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Px(btn_h * 0.8),
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgb(0.22, 0.32, 0.52)),
+                        ))
+                        .with_children(|b| {
+                            b.spawn((
+                                Text::new("SALA DE TESTE (GM + 4 TOKENS)"),
+                                tfont(&assets, sz(14.0, &si)),
+                                TextColor(Color::srgb(0.85, 0.90, 0.98)),
+                            ));
+                        });
+                    panel.spawn((
+                        Text::new("OU ENTRE COM UM CÓDIGO"),
+                        tfont(&assets, sz(13.0, &si)),
+                        TextColor(MUTED),
+                    ));
                     panel
                         .spawn(Node {
                             flex_direction: FlexDirection::Row,
-                            column_gap: Val::Px(8.0),
+                            column_gap: Val::Px(sz(8.0, &si)),
                             ..default()
                         })
                         .with_children(|row| {
@@ -237,7 +309,7 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                 CodeField,
                                 Node {
                                     flex_grow: 1.0,
-                                    height: Val::Px(42.0),
+                                    height: Val::Px(input_h),
                                     align_items: AlignItems::Center,
                                     padding: UiRect::horizontal(Val::Px(12.0)),
                                     border: UiRect::all(Val::Px(2.0)),
@@ -247,14 +319,19 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                 BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                             ))
                             .with_children(|f| {
-                                f.spawn((CodeText, Text::new(""), tfont(&assets, 18.0), TextColor(TEXT)));
+                                f.spawn((
+                                    CodeText,
+                                    Text::new(""),
+                                    tfont(&assets, sz(18.0, &si)),
+                                    TextColor(TEXT),
+                                ));
                             });
                             row.spawn((
                                 Button,
                                 JoinBtn,
                                 Node {
-                                    width: Val::Px(120.0),
-                                    height: Val::Px(42.0),
+                                    width: Val::Px(sz(120.0, &si)),
+                                    height: Val::Px(input_h),
                                     align_items: AlignItems::Center,
                                     justify_content: JustifyContent::Center,
                                     ..default()
@@ -262,19 +339,29 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                                 BackgroundColor(Color::srgb(0.22, 0.32, 0.52)),
                             ))
                             .with_children(|b| {
-                                b.spawn((Text::new("ENTRAR"), tfont(&assets, 17.0), TextColor(TEXT)));
+                                b.spawn((
+                                    Text::new("ENTRAR"),
+                                    tfont(&assets, sz(16.0, &si)),
+                                    TextColor(TEXT),
+                                ));
                             });
                         });
-                    panel.spawn((StatusText, Text::new(""), tfont(&assets, 14.0), TextColor(Color::srgb(0.92, 0.45, 0.45))));
+                    panel.spawn((
+                        StatusText,
+                        Text::new(""),
+                        tfont(&assets, sz(14.0, &si)),
+                        TextColor(Color::srgb(0.92, 0.45, 0.45)),
+                    ));
                 });
                 // coluna da lista de salas
                 row.spawn((
                     RoomsPanel,
                     Node {
                         flex_direction: FlexDirection::Column,
-                        width: Val::Px(300.0),
-                        padding: UiRect::all(Val::Px(16.0)),
-                        row_gap: Val::Px(8.0),
+                        flex_grow: 0.5,
+                        min_width: Val::Px(sz(220.0, &si)),
+                        padding: UiRect::all(Val::Px(sz(14.0, &si))),
+                        row_gap: Val::Px(sz(8.0, &si)),
                         border: UiRect::all(Val::Px(2.0)),
                         ..default()
                     },
@@ -282,21 +369,25 @@ fn setup_lobby(mut commands: Commands, assets: Res<GameAssets>) {
                     BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                 ))
                 .with_children(|panel| {
-                    panel.spawn((Text::new("SALAS ABERTAS"), tfont(&assets, 14.0), TextColor(GOLD)));
+                    panel.spawn((
+                        Text::new("SALAS ABERTAS"),
+                        tfont(&assets, sz(14.0, &si)),
+                        TextColor(GOLD),
+                    ));
                     panel.spawn((
                         RoomsContainer,
                         Node {
                             flex_direction: FlexDirection::Column,
-                            row_gap: Val::Px(6.0),
+                            row_gap: Val::Px(sz(6.0, &si)),
                             width: Val::Percent(100.0),
                             ..default()
                         },
                     ));
                 });
             });
-            p.spawn((
+            root.spawn((
                 Text::new("Requer o servidor de sinalização: cargo run -p signaling  •  Tab alterna campos  •  F12 = screenshot"),
-                tfont(&assets, 13.0),
+                tfont(&assets, sz(12.0, &si)),
                 TextColor(Color::srgb(0.45, 0.43, 0.52)),
             ));
         });
@@ -306,6 +397,22 @@ fn cleanup_lobby(mut commands: Commands, q: Query<Entity, With<LobbyRoot>>) {
     for e in &q {
         commands.entity(e).despawn();
     }
+}
+
+/// Reconstrói o lobby quando a escala muda (janela redimensionada / rotação).
+fn lobby_responsive(
+    si: Res<ScreenInfo>,
+    q_root: Query<Entity, With<LobbyRoot>>,
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+) {
+    if !si.is_changed() {
+        return;
+    }
+    for e in &q_root {
+        commands.entity(e).despawn();
+    }
+    setup_lobby(commands, assets, si);
 }
 
 fn start_session(
@@ -427,9 +534,10 @@ fn lobby_clicks(
     q_code: Query<&Interaction, (Changed<Interaction>, With<CodeField>)>,
     q_swatch: Query<(&Interaction, &Swatch), Changed<Interaction>>,
     q_create: Query<&Interaction, (Changed<Interaction>, With<CreateBtn>)>,
+    q_test: Query<&Interaction, (Changed<Interaction>, With<TestBtn>)>,
     q_join: Query<&Interaction, (Changed<Interaction>, With<JoinBtn>)>,
     q_room_entry: Query<(&Interaction, &RoomEntryBtn), Changed<Interaction>>,
-    args: Res<CliArgs>,
+    mut args: ResMut<CliArgs>,
     mut net: ResMut<Net>,
     mut roster: ResMut<Roster>,
     mut commands: Commands,
@@ -452,6 +560,22 @@ fn lobby_clicks(
     }
     for i in &q_create {
         if *i == Interaction::Pressed {
+            start_session(
+                true,
+                None,
+                None,
+                &mut form,
+                &args,
+                &mut net,
+                &mut roster,
+                &mut commands,
+                &mut next,
+            );
+        }
+    }
+    for i in &q_test {
+        if *i == Interaction::Pressed {
+            args.demo = true;
             start_session(
                 true,
                 None,
@@ -602,6 +726,7 @@ fn room_poll(
     mut commands: Commands,
     time: Res<Time>,
     assets: Res<GameAssets>,
+    si: Res<ScreenInfo>,
 ) {
     list.timer.tick(time.delta());
     let result = { list.pending.lock().ok().and_then(|mut p| p.take()) };
@@ -645,7 +770,7 @@ fn room_poll(
             c.spawn((
                 RoomEmptyLabel,
                 Text::new(msg),
-                tfont(&assets, 13.0),
+                tfont(&assets, sz(13.0, &si)),
                 TextColor(MUTED),
             ));
         } else {
@@ -668,7 +793,11 @@ fn room_poll(
                     BorderColor::all(Color::srgb(0.30, 0.26, 0.40)),
                 ))
                 .with_children(|b| {
-                    b.spawn((Text::new(label), tfont(&assets, 12.0), TextColor(TEXT)));
+                    b.spawn((
+                        Text::new(label),
+                        tfont(&assets, sz(12.0, &si)),
+                        TextColor(TEXT),
+                    ));
                 });
             }
         }

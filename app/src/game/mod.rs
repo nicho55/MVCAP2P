@@ -7,6 +7,7 @@ pub mod map;
 pub mod sync;
 pub mod terrain;
 pub mod tokens;
+pub mod virtual_joystick;
 
 use bevy::light::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
@@ -22,7 +23,14 @@ pub struct ScreenInfo {
     pub width: f32,
     pub height: f32,
     pub scale: f32,
+    /// Quando `true` a escala é recalculada automaticamente a cada mudança
+    /// de tamanho da janela (incluindo rotação de tela no Android). O botão
+    /// A+/A- desativa a escala automática e assume controle manual.
     pub auto_scale: bool,
+    /// Largura de referência (desktop) usada no cálculo da escala automática.
+    ref_w: f32,
+    /// Altura de referência (mobile) usada no cálculo da escala automática.
+    ref_h: f32,
 }
 
 impl Default for ScreenInfo {
@@ -32,29 +40,31 @@ impl Default for ScreenInfo {
             height: 840.0,
             scale: 1.0,
             auto_scale: true,
+            ref_w: 900.0,
+            ref_h: 430.0,
         }
     }
 }
 
-/// Atualiza `width`/`height` do ScreenInfo. A escala automática só roda
-/// na primeira detecção da janela; depois o usuário controla com A+/A-.
+/// Recalcula `width`/`height` e, quando `auto_scale` está ativo, a escala
+/// responsiva. Roda a cada frame (em `First`) para reagir a mudanças de
+/// tamanho/rotação da janela em tempo real.
 fn screen_update(mut si: ResMut<ScreenInfo>, q_win: Query<&Window>) {
     let Ok(win) = q_win.single() else { return };
     let w = win.resolution.width();
     let h = win.resolution.height();
-    if (w - si.width).abs() > 10.0 || (h - si.height).abs() > 10.0 {
+    if (w - si.width).abs() > 1.0 || (h - si.height).abs() > 1.0 {
         si.width = w;
         si.height = h;
-        if si.auto_scale {
-            // Escala responsiva: no mobile a tela é estreita e de DPI alto, então
-            // baseamos numa referência menor e com piso maior para manter alvos
-            // de toque confortáveis (~44 px lógicos). Desktop acompanha a largura.
-            si.scale = if cfg!(target_os = "android") {
-                (w / 430.0).clamp(0.85, 1.6)
-            } else {
-                (w / 900.0).clamp(0.75, 2.0)
-            };
-        }
+    }
+    if si.auto_scale {
+        si.scale = if cfg!(target_os = "android") {
+            // Mobile: baseia na altura para manter toque ~44 px lógicos
+            (h / si.ref_h).clamp(0.85, 1.6)
+        } else {
+            // Desktop: baseia na largura
+            (w / si.ref_w).clamp(0.75, 2.0)
+        };
     }
 }
 
@@ -70,6 +80,11 @@ pub enum ActiveTool {
     ElevUp,
     ElevDown,
 }
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct SyncSet;
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct HudWriteSet;
 
 pub struct GamePlugin;
 
@@ -88,7 +103,8 @@ impl Plugin for GamePlugin {
             .init_resource::<tokens::Selection>()
             .init_resource::<tokens::Dragging>()
             .init_resource::<tokens::TouchDrag>()
-            .init_resource::<graphics::GraphicsSettings>();
+            .init_resource::<graphics::GraphicsSettings>()
+            .add_plugins(virtual_joystick::VirtualJoystickPlugin);
         #[cfg(target_os = "android")]
         app.init_resource::<camera::TouchState>();
         app.add_systems(
@@ -104,54 +120,106 @@ impl Plugin for GamePlugin {
             (leave_game, reset_ui_hover, graphics::despawn_gfx_ui),
         )
         .add_systems(First, screen_update)
-        .add_systems(Update, graphics::apply_graphics)
+        .configure_sets(Update, (SyncSet, HudWriteSet).chain())
+        .add_systems(Update, graphics::apply_graphics.after(HudWriteSet))
+        .add_systems(
+            Update,
+            (
+                sync::handle_hello,
+                sync::handle_core.after(sync::handle_hello),
+                sync::handle_tokens.after(sync::handle_core),
+                sync::assign_token_rx.after(sync::handle_core),
+            )
+                .in_set(SyncSet)
+                .run_if(in_state(AppState::InGame))
+                .after(NetSet),
+        )
+        .add_systems(
+            Update,
+            (
+                hud::toolbar_clicks.after(SyncSet),
+                hud::delete_btn_click.after(hud::toolbar_clicks),
+                hud::assign_token_click.after(hud::delete_btn_click),
+                hud::scale_btn_click.after(SyncSet),
+                hud::back_btn_click,
+                graphics::gfx_open_click,
+                graphics::gfx_toggle_click.after(SyncSet),
+            )
+                .in_set(HudWriteSet)
+                .run_if(in_state(AppState::InGame))
+                .after(NetSet),
+        )
+        .add_systems(
+            Update,
+            (
+                hud::toolbar_visuals.after(hud::toolbar_clicks),
+                hud::hint_label.after(hud::toolbar_clicks),
+                hud::delete_btn_visibility.after(hud::delete_btn_click),
+                hud::roster_panel
+                    .after(hud::scale_btn_click)
+                    .after(hud::delete_btn_click)
+                    .after(SyncSet),
+                hud::status_label
+                    .after(hud::assign_token_click)
+                    .after(SyncSet),
+                graphics::gfx_panel_visuals.after(graphics::gfx_toggle_click),
+            )
+                .run_if(in_state(AppState::InGame))
+                .after(HudWriteSet)
+                .after(NetSet),
+        )
         .add_systems(
             Update,
             (
                 track_ui_hover,
                 camera::pan_zoom,
                 #[cfg(target_os = "android")]
-                camera::touch_pan_zoom,
-                camera::apply_rig.after(camera::pan_zoom),
-                grid::draw_grid,
-                grid::grid_reflow,
-                map::file_drop,
-                map::sync_map,
-                tokens::token_interact,
+                camera::touch_pan_zoom.after(camera::pan_zoom),
+                camera::apply_rig
+                    .after(camera::pan_zoom)
+                    .after(virtual_joystick::joystick_apply),
+                map::sync_map.after(SyncSet),
+                map::file_drop.after(map::sync_map).after(HudWriteSet),
+                tokens::token_interact
+                    .after(track_ui_hover)
+                    .after(map::file_drop)
+                    .after(HudWriteSet),
                 tokens::token_y_follow.after(tokens::token_interact),
-                tokens::selection_visual,
-                tokens::delete_selected,
+                tokens::delete_selected.after(tokens::token_interact),
+                tokens::selection_visual
+                    .after(tokens::token_interact)
+                    .after(tokens::delete_selected),
                 #[cfg(target_os = "android")]
-                tokens::touch_interact,
+                tokens::touch_interact
+                    .after(track_ui_hover)
+                    .after(tokens::delete_selected)
+                    .after(HudWriteSet),
                 #[cfg(target_os = "android")]
                 tokens::touch_highlight,
                 tokens::resolve_pending_art,
                 tokens::refresh_ring_colors,
-                terrain::terrain_tool,
+                #[cfg(not(target_os = "android"))]
+                terrain::terrain_tool
+                    .after(track_ui_hover)
+                    .after(tokens::delete_selected)
+                    .after(HudWriteSet),
+                #[cfg(target_os = "android")]
+                terrain::terrain_tool
+                    .after(track_ui_hover)
+                    .after(tokens::touch_interact)
+                    .after(HudWriteSet),
                 terrain::terrain_render.after(terrain::terrain_tool),
-            )
-                .run_if(in_state(AppState::InGame)),
-        )
-        .add_systems(
-            Update,
-            (
-                sync::handle_hello,
-                sync::handle_core,
-                sync::handle_tokens,
-                sync::assign_token_rx,
-                hud::toolbar_clicks,
-                hud::toolbar_visuals,
-                hud::roster_panel,
-                hud::status_label,
-                hud::hint_label,
-                hud::back_btn_click,
-                hud::scale_btn_click,
-                hud::assign_token_click,
-                graphics::gfx_open_click,
-                graphics::gfx_toggle_click,
-                graphics::gfx_panel_visuals,
+                grid::grid_reflow
+                    .after(terrain::terrain_tool)
+                    .after(SyncSet)
+                    .after(HudWriteSet),
+                grid::draw_grid
+                    .after(map::sync_map)
+                    .after(map::file_drop)
+                    .after(camera::pan_zoom),
             )
                 .run_if(in_state(AppState::InGame))
+                .after(HudWriteSet)
                 .after(NetSet),
         );
     }

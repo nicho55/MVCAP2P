@@ -119,7 +119,7 @@ pub fn terrain_tool(
     if !mouse_down && !touch_active {
         return;
     }
-    if ui.0 && mouse_down {
+    if ui.0 && (mouse_down || touch_active) {
         return;
     }
     let Ok(win) = windows.single() else { return };

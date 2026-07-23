@@ -110,6 +110,7 @@ pub fn run_game() {
                     primary_window: Some(Window {
                         title,
                         resolution: bevy::window::WindowResolution::new(1366, 840),
+                        resizable: true,
                         ..default()
                     }),
                     ..default()

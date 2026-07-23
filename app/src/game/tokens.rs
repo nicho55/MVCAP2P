@@ -266,6 +266,18 @@ pub fn delete_selected(
     if !keys.just_pressed(KeyCode::Delete) {
         return;
     }
+    delete_selected_entity(&sel, &session, &mut net, &mut commands, &q_tokens);
+    sel.0 = None;
+}
+
+/// Remove o token selecionado (chamado pelo Delete key e pelo botão de UI).
+pub fn delete_selected_entity(
+    sel: &Selection,
+    session: &Session,
+    net: &mut Net,
+    commands: &mut Commands,
+    q_tokens: &Query<(Entity, &Token)>,
+) {
     let Some(id) = sel.0 else { return };
     let Some((e, tok)) = q_tokens.iter().find(|(_, t)| t.meta.id == id) else {
         return;
@@ -273,11 +285,9 @@ pub fn delete_selected(
     if session.me.is_gm {
         commands.entity(e).despawn();
         net.broadcast(&Msg::RemoveToken { id });
-        sel.0 = None;
     } else if tok.meta.owner == session.me.uuid {
         commands.entity(e).despawn();
         net.send_gm(&Msg::RemoveTokenReq { id });
-        sel.0 = None;
     }
 }
 
@@ -325,6 +335,7 @@ pub fn touch_interact(
     mut q_tokens: Query<(Entity, &mut Transform, &mut Token)>,
     session: Res<Session>,
     tool: Res<ActiveTool>,
+    ui: Res<UiHovered>,
     mut sel: ResMut<Selection>,
     mut drag: ResMut<TouchDrag>,
     mut net: ResMut<Net>,
@@ -343,6 +354,9 @@ pub fn touch_interact(
     for t in touch_ev.read() {
         match t.phase {
             TouchPhase::Started => {
+                if ui.0 {
+                    continue;
+                }
                 if drag.finger_id.is_some() {
                     continue;
                 }
