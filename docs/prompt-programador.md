@@ -43,81 +43,70 @@ O botão de **Configurações** fica no `UiLayer` (`app/src/ui_layer.rs`, ZIndex
 - ✅ #32 — CLI Args no Android (`read_android_args()`, config JSON via ADB)
 - ✅ B0002 fix — System ordering completo de 11+ conflitos (ADR-013, commit d48640ec)
 - ✅ ZIndex fix — HudRoot(50), GfxUI(51), DebugHud(52) (commit 01042ab2)
+- ✅ #41 — HUD responsive (rebuild on resize) — mergeado, mas HUD antiga ainda precisa ser reescrita
+- ✅ #42 — Pipeline de screenshots multi-tela (lobby, game landscape, portrait, restored)
 
 ## Tarefas Pendentes (em ordem de prioridade)
 
 Ao começar cada issue, mova para **In Progress**. Ao abrir PR, mova para **In Review**.
 
-### 1. 🚨 Issue #42 — Pipeline de Screenshots Multi-Tela (FAZER PRIMEIRO)
-Sem isso você desenvolve UI às cegas. Modificar `scripts/deploy-farm.sh` para capturar screenshots de múltiplos estados:
-
-| # | Estado | Args JSON | Timing |
-|---|---|---|---|
-| 1 | Lobby | `{}` (sem args, não auto-entra) | 3s após launch |
-| 2 | Jogo landscape | `{"gm":true,"demo":true,"code":"VISUAL"}` | 6s após launch |
-| 3 | Jogo portrait | mesmos args, rotacionar tela via ADB | 2s após rotação |
-| 4 | Jogo restaurado | restaurar landscape | 2s após restaurar |
-
-O script atual (`scripts/deploy-farm.sh`) faz UMA rodada com args fixos. Você vai precisar:
-- Fazer múltiplas rodadas (kill app → mudar args → relançar → screenshot)
-- Usar `adb shell settings put system user_rotation` para rotação
-- Nomear screenshots: `01-lobby.png`, `02-game-landscape.png`, `03-game-portrait.png`, `04-game-restored.png`
-
-Depois do push, você pode validar os screenshots:
+**Use o pipeline de screenshots para validar cada mudança visualmente:**
 ```bash
-gh run list --repo nicho55/MVCAP2P --workflow deploy-devices.yml --limit 1
+# Após push, esperar workflow concluir
+gh run list --repo nicho55/MVCAP2P --workflow deploy-devices.yml --limit 3
+# Baixar screenshots
 gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
-# Use a ferramenta Read para VER as imagens .png — você consegue ler imagens.
+# VER as imagens (Claude CLI consegue ler .png)
 ```
+
+### 1. 🚨 Issue #43 — Fix flickering da HUD (P0 — bug)
+A HUD pisca/flica no Android. O `hud_responsive` compete com `setup_hud` no primeiro frame: `Local<>` começa em `(0,0,0)`, sempre difere do `ScreenInfo` real, e faz despawn+respawn da HUD que acabou de spawnar.
+
+**Fix:** Remover `setup_hud` de `OnEnter(AppState::InGame)`. Deixar APENAS `hud_responsive` ser responsável por spawnar a HUD (ele já faz spawn quando `q_root.is_empty()`). Mesmo para `gfx_responsive` e `debug_hud_responsive`. Ou: inicializar o `Local<>` com os valores reais do `ScreenInfo` no primeiro frame sem rebuildar.
 
 ```bash
-gh issue view 42 --repo nicho55/MVCAP2P
+gh issue view 43 --repo nicho55/MVCAP2P
 ```
 
-### 2. 🚨 Issue #41 — Refazer HUD do Jogo (P0 — BLOQUEIA TUDO)
-A HUD atual crasha ao rotacionar tela e impede testes no dispositivo. **Sem UI funcional, nenhuma feature pode ser validada.**
+### 2. 🚨 Issue #18 — Toolbar Modular (P0 — reescrever a toolbar)
+A toolbar atual é uma prova de conceito. Precisa ser reescrita do zero:
 
-Problemas:
-- `spawn_hud()` em `app/src/game/hud.rs` usa `Val::Px()` com valores fixos calculados no spawn — não responde a resize/rotação
-- Crash no Android ao redimensionar (sem rebuild da UI)
-- Sem safe area handling (notch, navigation bar)
-- `spawn_gfx_ui()` e `spawn_debug_hud()` têm o mesmo problema
+- **4 ferramentas visíveis** por vez + **slider horizontal** para acessar o resto
+- **GM** vê: seleção, todas as pinturas de terreno, elevação, borracha, grid, configurações de grid
+- **Jogador** vê: seleção + ferramentas relevantes ao seu papel (sem edição de terreno)
+- Ferramentas de terreno (pintura, elevação, borracha) **NÃO aparecem para jogador**
+- Cada ferramenta é um ícone SVG moldura + PNG ícone
+- Posição: **inferior centralizada** em landscape, adaptável em portrait
 
-**Padrão a seguir — lobby já faz certo:**
-O lobby (`app/src/lobby.rs`) tem a função `lobby_responsive()` que detecta `si.is_changed()` e faz despawn+respawn da UI. Use esse mesmo padrão para a HUD do jogo:
-
-```rust
-fn lobby_responsive(
-    si: Res<ScreenInfo>,
-    q_root: Query<Entity, With<LobbyRoot>>,
-    mut commands: Commands,
-    assets: Res<GameAssets>,
-) {
-    if !si.is_changed() { return; }
-    for e in &q_root {
-        commands.entity(e).despawn();
-    }
-    setup_lobby(commands, assets, si);
-}
-```
-
-O que fazer:
-- Criar sistema `hud_responsive` no mesmo molde — despawn+respawn quando `ScreenInfo` muda
-- Mesmo para `gfx_responsive` e `debug_hud_responsive`
-- Registrar esses sistemas no `game/mod.rs` (respeitando ADR-013 — ler a doc antes)
-- Preferir `Val::Percent`, `Val::Vw`, `Val::Vh` para layout; `Val::Px` só para gaps/bordas mínimos
-- Touch targets mínimos de 44px (guidelines Android)
-
-**IMPORTANTE — System Ordering (ADR-013):**
-Antes de adicionar QUALQUER sistema novo em `game/mod.rs`, leia `docs/content/docs/adr/013-system-ordering-b0002-fix.md` inteiro. Cada sistema que acessa um Resource compartilhado precisa de `.after()` explícito. Ignorar isso causa crash B0002 no Android. O responsivo da HUD deve rodar `.after(HudWriteSet)` no mínimo.
-
-Use o pipeline de screenshots (#42) para validar cada mudança visualmente.
+Leia a issue #18 completa para os critérios de aceite.
 
 ```bash
-gh issue view 41 --repo nicho55/MVCAP2P
+gh issue view 18 --repo nicho55/MVCAP2P
 ```
 
-### 3. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
+### 3. 🚨 Issue #24 — Controles Dual-Stick (P0 — corrigir joysticks)
+Os joysticks estão com as funções invertidas. Spec correta do game designer:
+
+| Controle | Função |
+|---|---|
+| **Joystick esquerdo** | Mover o **token selecionado** pela grid (NÃO a câmera) |
+| **Joystick direito** | **Mira de habilidade** (futuro — pode ficar inativo por ora) |
+| **Toque livre** | **Câmera** — pan/orbit em qualquer área que NÃO seja botão ou joystick |
+
+**Regra de prioridade de toque:**
+1. Toque em **botão/painel** → ação do botão
+2. Toque em **zona de joystick** → ativa joystick
+3. Toque em **área livre** → pan/orbit de câmera
+
+O sistema atual (`camera::touch_pan_zoom`) controla a câmera — ele deve continuar funcionando, mas restrito a toques fora de joysticks e botões. O joystick esquerdo (`virtual_joystick.rs`) atualmente move a câmera — precisa ser reescrito para mover o token selecionado.
+
+Leia a issue #24 completa para os critérios de aceite.
+
+```bash
+gh issue view 24 --repo nicho55/MVCAP2P
+```
+
+### 4. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
 `ChunkRender` e `chunk_render_system()` estão implementados. O que falta:
 - **Texture atlas**: `dominant_terrain()` usa 1 material por chunk — células com texturas diferentes renderizam com cor errada. Usar vertex colors ou paleta UV.
 - **LOD médio**: chunks distantes (4-6) usar mesh simplificada (1 quad por chunk)
@@ -125,25 +114,25 @@ gh issue view 41 --repo nicho55/MVCAP2P
 gh issue view 40 --repo nicho55/MVCAP2P
 ```
 
-### 4. Issue #2 — Core de Identidade Local P2P
+### 5. Issue #2 — Core de Identidade Local P2P
 Substituir `PlayerUuid = u64` por identidade criptográfica Ed25519.
 ```bash
 gh issue view 2 --repo nicho55/MVCAP2P
 ```
 
-### 5. Issue #14 — Chave Pública/Privada Ed25519
+### 6. Issue #14 — Chave Pública/Privada Ed25519
 Keypair na primeira execução, persistido encriptado, `PlayerUuid` → `[u8; 16]` derivado.
 ```bash
 gh issue view 14 --repo nicho55/MVCAP2P
 ```
 
-### 6. Issue #15 — Content-Addressable Storage (CAS)
+### 7. Issue #15 — Content-Addressable Storage (CAS)
 `BlobId` migra de `u64` para `[u8; 32]` (BLAKE3). Armazenamento com dedup.
 ```bash
 gh issue view 15 --repo nicho55/MVCAP2P
 ```
 
-### 7. Issue #16 — Sync Inteligente de Assets
+### 8. Issue #16 — Sync Inteligente de Assets
 Hello inclui lista de hashes conhecidos, GM pula blobs que peer já tem.
 ```bash
 gh issue view 16 --repo nicho55/MVCAP2P
@@ -244,5 +233,5 @@ gh issue list --repo nicho55/MVCAP2P --state open --json number,title,labels --j
 cat AGENTS.md
 ```
 
-Comece pela issue #42 (screenshots multi-tela — pré-requisito para testar UI). Depois #41 (UI responsiva — P0, bloqueia tudo). Depois #40 (texture atlas + LOD), depois as issues P1 em ordem.
+Comece pela issue #43 (fix flickering — rápido). Depois #18 (toolbar modular — reescrever a toolbar). Depois #24 (controles dual-stick — corrigir joysticks e câmera). Use os screenshots do deploy para validar cada mudança.
 ```
