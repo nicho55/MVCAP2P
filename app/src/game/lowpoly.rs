@@ -1,7 +1,5 @@
-use bevy::asset::RenderAssetUsages;
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::ecs::system::SystemParam;
-use bevy::mesh::PrimitiveTopology;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
@@ -15,8 +13,6 @@ pub const BASE_CELL: f32 = 64.0;
 
 #[derive(Resource, Clone)]
 pub struct LowPoly {
-    pub cube: Handle<Mesh>,
-    pub hex_prism: Handle<Mesh>,
     pub cylinder: Handle<Mesh>,
     pub cone: Handle<Mesh>,
 }
@@ -44,8 +40,6 @@ pub struct Ctx3d<'w> {
 
 pub fn setup_lowpoly(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands.insert_resource(LowPoly {
-        cube: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
-        hex_prism: meshes.add(hex_prism_mesh()),
         cylinder: meshes.add(Cylinder::new(1.0, 1.0)),
         cone: meshes.add(Cone {
             radius: 1.0,
@@ -203,62 +197,6 @@ impl Mats {
         self.leaves[v] = Some(h.clone());
         h
     }
-}
-
-/// Prisma hexagonal flat-top (circumraio 1, altura 1, centrado na origem),
-/// vértices duplicados por face para flat shading.
-fn hex_prism_mesh() -> Mesh {
-    let corner = |i: usize, y: f32| -> [f32; 3] {
-        let a = (60.0 * i as f32).to_radians();
-        [a.cos(), y, a.sin()]
-    };
-    let mut pos: Vec<[f32; 3]> = Vec::with_capacity(60);
-    let mut uv: Vec<[f32; 2]> = Vec::with_capacity(60);
-    let cap_uv = |p: [f32; 3]| -> [f32; 2] { [p[0] * 0.5 + 0.5, p[2] * 0.5 + 0.5] };
-
-    // topo (normal +Y)
-    for i in 1..=4 {
-        for p in [corner(0, 0.5), corner(i + 1, 0.5), corner(i, 0.5)] {
-            uv.push(cap_uv(p));
-            pos.push(p);
-        }
-    }
-    // base (normal -Y)
-    for i in 1..=4 {
-        for p in [corner(0, -0.5), corner(i, -0.5), corner(i + 1, -0.5)] {
-            uv.push(cap_uv(p));
-            pos.push(p);
-        }
-    }
-    // laterais
-    for i in 0..6 {
-        let j = (i + 1) % 6;
-        let (u0, u1) = (i as f32 / 6.0, (i + 1) as f32 / 6.0);
-        let ct = corner(i, 0.5);
-        let cb = corner(i, -0.5);
-        let jt = corner(j, 0.5);
-        let jb = corner(j, -0.5);
-        for (p, t) in [
-            (ct, [u0, 0.0]),
-            (jb, [u1, 1.0]),
-            (cb, [u0, 1.0]),
-            (ct, [u0, 0.0]),
-            (jt, [u1, 0.0]),
-            (jb, [u1, 1.0]),
-        ] {
-            pos.push(p);
-            uv.push(t);
-        }
-    }
-
-    let mut mesh = Mesh::new(
-        PrimitiveTopology::TriangleList,
-        RenderAssetUsages::default(),
-    )
-    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
-    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv);
-    mesh.compute_flat_normals();
-    mesh
 }
 
 /// Árvore low-poly: tronco + dois cones de copa. Filha da entidade do mapa.

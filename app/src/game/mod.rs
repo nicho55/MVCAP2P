@@ -99,7 +99,7 @@ impl Plugin for GamePlugin {
             .init_resource::<map::MapState>()
             .init_resource::<grid::GridRes>()
             .init_resource::<terrain::Terrain>()
-            .init_resource::<terrain::TerrainRender>()
+            .init_resource::<terrain::ChunkRender>()
             .init_resource::<tokens::Selection>()
             .init_resource::<tokens::Dragging>()
             .init_resource::<tokens::TouchDrag>()
@@ -208,7 +208,7 @@ impl Plugin for GamePlugin {
                     .after(track_ui_hover)
                     .after(tokens::touch_interact)
                     .after(HudWriteSet),
-                terrain::terrain_render.after(terrain::terrain_tool),
+                terrain::chunk_render_system.after(terrain::terrain_tool),
                 grid::grid_reflow
                     .after(terrain::terrain_tool)
                     .after(SyncSet)
@@ -249,7 +249,7 @@ fn leave_game(
     mut commands: Commands,
     mut net: ResMut<Net>,
     session: Option<Res<Session>>,
-    mut render: ResMut<terrain::TerrainRender>,
+    mut render: ResMut<terrain::ChunkRender>,
     q_hud: Query<Entity, With<hud::HudRoot>>,
     q_ground: Query<Entity, With<map::MapGround>>,
     q_tokens: Query<Entity, With<tokens::Token>>,
@@ -257,7 +257,7 @@ fn leave_game(
     let code = session.as_ref().map(|s| s.code.clone());
     let is_gm = session.as_ref().map(|s| s.me.is_gm).unwrap_or(false);
     net.disconnect();
-    render.ents.clear();
+    render.meshes.clear();
     render.dirty.clear();
     for e in q_hud.iter().chain(q_ground.iter()).chain(q_tokens.iter()) {
         commands.entity(e).despawn();
