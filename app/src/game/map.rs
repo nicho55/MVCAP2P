@@ -8,6 +8,7 @@ use super::tokens;
 use crate::net::{Blobs, Net, Roster, Session};
 use crate::protocol::*;
 use crate::svg_assets::GameAssets;
+use crate::transcode::{self, AssetKind};
 
 #[derive(Resource, Default)]
 pub struct MapState {
@@ -105,12 +106,27 @@ pub fn import_map_bytes(
     net: &mut Net,
     map_state: &mut MapState,
 ) {
+    let data = match transcode::transcode(&bytes, AssetKind::Map) {
+        Ok(r) => {
+            info!(
+                "mapa transcodificado: {}x{}, {} KB",
+                r.width,
+                r.height,
+                r.data.len() / 1024
+            );
+            r.data
+        }
+        Err(e) => {
+            warn!("transcoding do mapa falhou: {e}");
+            return;
+        }
+    };
     let id: BlobId = rand::random();
-    if blobs.store(id, bytes.clone(), images).is_none() {
-        warn!("imagem de mapa inválida");
+    if blobs.store(id, data.clone(), images).is_none() {
+        warn!("imagem de mapa inválida após transcoding");
         return;
     }
-    net.send_blob_to(None, id, &bytes);
+    net.send_blob_to(None, id, &data);
     net.broadcast(&Msg::SetMap { blob: Some(id) });
     map_state.want = Some(id);
 }
@@ -161,12 +177,27 @@ pub fn file_drop(
                 import_map_bytes(bytes, &mut blobs, &mut images, &mut net, &mut map_state);
             }
             DropMode::Token => {
+                let data = match transcode::transcode(&bytes, AssetKind::Token) {
+                    Ok(r) => {
+                        info!(
+                            "token transcodificado: {}x{}, {} KB",
+                            r.width,
+                            r.height,
+                            r.data.len() / 1024
+                        );
+                        r.data
+                    }
+                    Err(e) => {
+                        warn!("transcoding do token falhou: {e}");
+                        continue;
+                    }
+                };
                 let blob_id: BlobId = rand::random();
-                if blobs.store(blob_id, bytes.clone(), &mut images).is_none() {
-                    warn!("imagem inválida: {}", path_buf.display());
+                if blobs.store(blob_id, data.clone(), &mut images).is_none() {
+                    warn!("imagem inválida após transcoding: {}", path_buf.display());
                     continue;
                 }
-                net.send_blob_to(None, blob_id, &bytes);
+                net.send_blob_to(None, blob_id, &data);
                 let cell = windows
                     .single()
                     .ok()

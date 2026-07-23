@@ -6,6 +6,7 @@ mod net;
 mod protocol;
 mod room_discovery;
 mod svg_assets;
+pub mod transcode;
 
 use bevy::prelude::*;
 #[cfg(target_os = "android")]
