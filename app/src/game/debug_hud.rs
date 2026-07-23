@@ -25,6 +25,15 @@ pub fn spawn_debug_hud(
     assets: Res<GameAssets>,
     si: Res<ScreenInfo>,
 ) {
+    spawn_debug_hud_inner(&mut commands, &session, &assets, &si);
+}
+
+fn spawn_debug_hud_inner(
+    commands: &mut Commands,
+    session: &Session,
+    assets: &GameAssets,
+    si: &ScreenInfo,
+) {
     if !session.is_test_room {
         return;
     }
@@ -33,12 +42,12 @@ pub fn spawn_debug_hud(
             DebugHudRoot,
             Node {
                 position_type: PositionType::Absolute,
-                bottom: Val::Px(sz(8.0, &si)),
-                left: Val::Px(sz(8.0, &si)),
+                bottom: Val::Px(sz(8.0, si)),
+                left: Val::Px(sz(8.0, si)),
                 flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(sz(6.0, &si))),
-                row_gap: Val::Px(sz(2.0, &si)),
-                min_width: Val::Px(sz(220.0, &si)),
+                padding: UiRect::all(Val::Px(sz(6.0, si))),
+                row_gap: Val::Px(sz(2.0, si)),
+                min_width: Val::Px(sz(220.0, si)),
                 ..default()
             },
             ZIndex(52),
@@ -47,13 +56,13 @@ pub fn spawn_debug_hud(
         .with_children(|root| {
             root.spawn((
                 Text::new("DEBUG"),
-                tfont(&assets, sz(12.0, &si)),
+                tfont(assets, sz(12.0, si)),
                 TextColor(Color::srgb(0.83, 0.69, 0.22)),
             ));
             root.spawn((
                 DebugText,
                 Text::new(""),
-                tfont(&assets, sz(11.0, &si)),
+                tfont(assets, sz(11.0, si)),
                 TextColor(TEXT),
             ));
         });
@@ -63,6 +72,22 @@ pub fn despawn_debug_hud(mut commands: Commands, q: Query<Entity, With<DebugHudR
     for e in &q {
         commands.entity(e).despawn();
     }
+}
+
+pub fn debug_hud_responsive(
+    si: Res<ScreenInfo>,
+    q_root: Query<Entity, With<DebugHudRoot>>,
+    mut commands: Commands,
+    session: Res<Session>,
+    assets: Res<GameAssets>,
+) {
+    if !si.is_changed() {
+        return;
+    }
+    for e in &q_root {
+        commands.entity(e).despawn();
+    }
+    spawn_debug_hud_inner(&mut commands, &session, &assets, &si);
 }
 
 pub fn update_debug_hud(

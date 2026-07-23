@@ -287,21 +287,31 @@ pub fn spawn_gfx_ui(
     si: Res<ScreenInfo>,
     device: Res<DeviceProfile>,
 ) {
+    spawn_gfx_ui_inner(&mut commands, &settings, &assets, &si, &device);
+}
+
+fn spawn_gfx_ui_inner(
+    commands: &mut Commands,
+    settings: &GraphicsSettings,
+    assets: &GameAssets,
+    si: &ScreenInfo,
+    device: &DeviceProfile,
+) {
     let top_clear = if device.is_mobile() {
-        sz(84.0, &si)
+        sz(84.0, si)
     } else {
-        sz(46.0, &si)
+        sz(46.0, si)
     };
     commands
         .spawn((
             GfxUiRoot,
             Node {
                 position_type: PositionType::Absolute,
-                right: Val::Px(sz(8.0, &si)),
+                right: Val::Px(sz(8.0, si)),
                 top: Val::Px(top_clear),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::FlexEnd,
-                row_gap: Val::Px(sz(4.0, &si)),
+                row_gap: Val::Px(sz(4.0, si)),
                 ..default()
             },
             ZIndex(51),
@@ -311,8 +321,8 @@ pub fn spawn_gfx_ui(
                 Button,
                 GfxOpenBtn,
                 Node {
-                    min_height: Val::Px(sz(44.0, &si)),
-                    padding: UiRect::axes(Val::Px(sz(14.0, &si)), Val::Px(sz(7.0, &si))),
+                    min_height: Val::Px(sz(44.0, si)),
+                    padding: UiRect::axes(Val::Px(sz(14.0, si)), Val::Px(sz(7.0, si))),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     ..default()
@@ -322,7 +332,7 @@ pub fn spawn_gfx_ui(
             .with_children(|b| {
                 b.spawn((
                     Text::new("Graficos"),
-                    tfont(&assets, sz(14.0, &si)),
+                    tfont(assets, sz(14.0, si)),
                     TextColor(GOLD),
                 ));
             });
@@ -333,7 +343,7 @@ pub fn spawn_gfx_ui(
                 Node {
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexEnd,
-                    padding: UiRect::all(Val::Px(sz(6.0, &si))),
+                    padding: UiRect::all(Val::Px(sz(6.0, si))),
                     max_width: Val::Vw(70.0),
                     max_height: Val::Vh(72.0),
                     ..default()
@@ -342,7 +352,7 @@ pub fn spawn_gfx_ui(
             ))
             .with_children(|panel| {
                 for opt in GfxOption::ALL {
-                    toggle_btn(panel, opt, &settings, &assets, &si);
+                    toggle_btn(panel, opt, settings, assets, si);
                 }
             });
         });
@@ -401,4 +411,21 @@ pub fn gfx_panel_visuals(
             }
         }
     }
+}
+
+pub fn gfx_responsive(
+    si: Res<ScreenInfo>,
+    q_root: Query<Entity, With<GfxUiRoot>>,
+    mut commands: Commands,
+    settings: Res<GraphicsSettings>,
+    assets: Res<GameAssets>,
+    device: Res<DeviceProfile>,
+) {
+    if !si.is_changed() {
+        return;
+    }
+    for e in &q_root {
+        commands.entity(e).despawn();
+    }
+    spawn_gfx_ui_inner(&mut commands, &settings, &assets, &si, &device);
 }

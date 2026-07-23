@@ -65,11 +65,14 @@ fn screen_update(
         si.height = h;
     }
     if si.auto_scale {
-        si.scale = if device.is_mobile() {
+        let new_scale = if device.is_mobile() {
             (h / si.ref_h).clamp(0.85, 1.6)
         } else {
             (w / si.ref_w).clamp(0.75, 2.0)
         };
+        if (new_scale - si.scale).abs() > 0.001 {
+            si.scale = new_scale;
+        }
     }
 }
 
@@ -182,6 +185,9 @@ impl Plugin for GamePlugin {
                 debug_hud::update_debug_hud
                     .after(graphics::apply_graphics)
                     .after(terrain::chunk_render_system),
+                hud::hud_responsive.after(hud::scale_btn_click),
+                graphics::gfx_responsive.after(hud::scale_btn_click),
+                debug_hud::debug_hud_responsive.after(hud::scale_btn_click),
             )
                 .run_if(in_state(AppState::InGame))
                 .after(HudWriteSet)
@@ -222,13 +228,11 @@ impl Plugin for GamePlugin {
                     .after(tokens::delete_selected)
                     .after(HudWriteSet),
                 #[cfg(target_os = "android")]
-                tokens::touch_highlight
-                    .after(tokens::touch_interact),
+                tokens::touch_highlight.after(tokens::touch_interact),
                 tokens::resolve_pending_art
                     .after(map::file_drop)
                     .after(terrain::terrain_tool),
-                tokens::refresh_ring_colors
-                    .after(tokens::resolve_pending_art),
+                tokens::refresh_ring_colors.after(tokens::resolve_pending_art),
                 #[cfg(not(target_os = "android"))]
                 terrain::terrain_tool
                     .after(track_ui_hover)

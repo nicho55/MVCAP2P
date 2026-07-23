@@ -401,11 +401,6 @@ pub fn scale_btn_click(
     q_down: Query<&Interaction, (Changed<Interaction>, With<ScaleDownBtn>)>,
     q_up: Query<&Interaction, (Changed<Interaction>, With<ScaleUpBtn>)>,
     mut si: ResMut<ScreenInfo>,
-    mut commands: Commands,
-    q_old_hud: Query<Entity, With<HudRoot>>,
-    assets: Res<GameAssets>,
-    session: Res<Session>,
-    device: Res<DeviceProfile>,
 ) {
     let delta = if q_up.iter().any(|i| *i == Interaction::Pressed) {
         SCALE_STEP
@@ -418,14 +413,9 @@ pub fn scale_btn_click(
     if (new - si.scale).abs() < 0.001 {
         return;
     }
-    // Usuário ajustou manualmente → desativa escala automática
     si.auto_scale = false;
     si.scale = new;
     info!("escala do HUD ajustada para {new:.2}");
-    for e in &q_old_hud {
-        commands.entity(e).despawn();
-    }
-    spawn_hud(&mut commands, &assets, &session, &si, &device);
 }
 
 pub fn toolbar_clicks(
@@ -724,4 +714,21 @@ pub fn hint_label(
             "Ferramenta: {tool_s}  |  soltar imagem cria: {mode}\nbotão direito/WASD: mover câmera  |  botão meio/Q/E: girar  |  scroll: zoom  |  Delete: remover token  |  F12: screenshot"
         );
     }
+}
+
+pub fn hud_responsive(
+    si: Res<ScreenInfo>,
+    q_root: Query<Entity, With<HudRoot>>,
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    session: Res<Session>,
+    device: Res<DeviceProfile>,
+) {
+    if !si.is_changed() {
+        return;
+    }
+    for e in &q_root {
+        commands.entity(e).despawn();
+    }
+    spawn_hud(&mut commands, &assets, &session, &si, &device);
 }
