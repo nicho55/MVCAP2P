@@ -26,15 +26,29 @@ Você é o programador do projeto MVCAP2P — um VTT tático 3D P2P em Rust/Bevy
 - ✅ #21 — Grid, Réguas, LoS, A* pathfinding (`app/src/game/ruler.rs`, 19 testes)
 - ✅ #28 — Sistema de Chunks base (`ChunkRender`, `chunk_render_system()`)
 - ✅ #32 — CLI Args no Android (`read_android_args()`, config JSON via ADB)
+- ✅ #13 — Orçamento de Performance (PR #35 mergeado — `shared/src/lib.rs::limits`, `app/src/transcode.rs`)
+- ✅ B0002 fix — System ordering completo (ADR-013, commit d48640ec)
+- ✅ ZIndex fix — HudRoot(50), GfxUI(51), DebugHud(52) (commit 01042ab2)
 
 ## Tarefas Pendentes (em ordem de prioridade)
 
 Ao começar cada issue, mova para **In Progress**. Ao abrir PR, mova para **In Review**.
 
-### 1. Issue #13 — Orçamento de Performance (PR #35 em andamento)
-PR #35 já existe na branch `feat/perf-budget`. Contém constantes de limite em `shared/src/lib.rs` (módulo `limits`) e pipeline de transcoding PNG/JPEG → WebP (`app/src/transcode.rs`). A PR precisa ser mergeada — verifique CI e resolva problemas se houver.
+### 1. 🚨 Issue #41 — Refazer HUD do Jogo (P0 — BLOQUEIA TUDO)
+A HUD atual crasha ao rotacionar tela, renderiza com tamanhos fixos, e impede testes no dispositivo. **Sem UI funcional, nenhuma feature pode ser validada.**
+
+Problemas:
+- `spawn_hud()` usa `Val::Px()` com valores fixos — não responde a resize/rotação
+- Crash no Android ao redimensionar (sem rebuild da UI, surface wgpu invalida)
+- Sem safe area handling (notch, navigation bar)
+
+O que fazer:
+- Reescrever `spawn_hud()` com layout responsivo (`Val::Percent`, `Val::Vw`, `Val::Vh`)
+- Sistema de rebuild automático quando `ScreenInfo` muda
+- Mesmo tratamento para `spawn_gfx_ui()` e `spawn_debug_hud()`
+- ZIndex correto já está aplicado (HudRoot=50, GfxUI=51, DebugHud=52)
 ```bash
-gh pr view 35 --repo nicho55/MVCAP2P
+gh issue view 41 --repo nicho55/MVCAP2P
 ```
 
 ### 2. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
@@ -165,5 +179,5 @@ gh issue list --repo nicho55/MVCAP2P --state open --json number,title,labels --j
 cat AGENTS.md
 ```
 
-Comece verificando PR #35 (perf budget — já mergeado), depois #40 (texture atlas + LOD), depois as issues P1 em ordem.
+Comece pela issue #41 (UI responsiva — P0, bloqueia tudo). Depois #40 (texture atlas + LOD), depois as issues P1 em ordem.
 ```
