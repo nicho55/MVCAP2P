@@ -51,6 +51,14 @@ O que fazer:
 gh issue view 41 --repo nicho55/MVCAP2P
 ```
 
+### 1b. Issue #42 — Pipeline de Screenshots Multi-Tela (P0 — fazer junto com #41)
+O deploy atual captura 1 screenshot. Sem visão da UI, você trabalha às cegas.
+Modificar `deploy-farm.sh` para capturar screenshots de: lobby, jogo landscape, jogo portrait, config aberto.
+Você (Claude CLI) consegue **ler imagens** — use os screenshots para validar a UI após cada push.
+```bash
+gh issue view 42 --repo nicho55/MVCAP2P
+```
+
 ### 2. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
 `ChunkRender` e `chunk_render_system()` estão implementados. O que falta:
 - **Texture atlas**: `dominant_terrain()` usa 1 material por chunk — células com texturas diferentes renderizam com cor errada. Usar vertex colors ou paleta UV.
