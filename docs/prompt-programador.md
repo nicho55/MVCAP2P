@@ -37,12 +37,12 @@ PR #35 já existe na branch `feat/perf-budget`. Contém constantes de limite em 
 gh pr view 35 --repo nicho55/MVCAP2P
 ```
 
-### 2. Issue #28 — Texture Atlas + LOD (chunks base prontos, falta visual)
+### 2. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
 `ChunkRender` e `chunk_render_system()` estão implementados. O que falta:
 - **Texture atlas**: `dominant_terrain()` usa 1 material por chunk — células com texturas diferentes renderizam com cor errada. Usar vertex colors ou paleta UV.
 - **LOD médio**: chunks distantes (4-6) usar mesh simplificada (1 quad por chunk)
 ```bash
-gh issue view 28 --repo nicho55/MVCAP2P
+gh issue view 40 --repo nicho55/MVCAP2P
 ```
 
 ### 3. Issue #2 — Core de Identidade Local P2P
@@ -165,5 +165,5 @@ gh issue list --repo nicho55/MVCAP2P --state open --json number,title,labels --j
 cat AGENTS.md
 ```
 
-Comece verificando PR #35 (perf budget), depois #28 (texture atlas + LOD), depois as issues P1 em ordem.
+Comece verificando PR #35 (perf budget — já mergeado), depois #40 (texture atlas + LOD), depois as issues P1 em ordem.
 ```
