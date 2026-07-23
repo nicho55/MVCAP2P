@@ -22,7 +22,8 @@ pub enum AppState {
     InGame,
 }
 
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Debug, Clone, serde::Deserialize)]
+#[serde(default)]
 pub struct CliArgs {
     pub gm: bool,
     pub join: Option<String>,
@@ -78,11 +79,21 @@ fn parse_args() -> CliArgs {
     a
 }
 
+#[cfg(target_os = "android")]
+fn read_android_args() -> Option<CliArgs> {
+    let path = "/data/local/tmp/tabletop_args.json";
+    let data = std::fs::read_to_string(path).ok()?;
+    let parsed: CliArgs = serde_json::from_str(&data).ok()?;
+    let _ = std::fs::remove_file(path);
+    info!("args lidos de {path}: {parsed:?}");
+    Some(parsed)
+}
+
 pub fn run_game() {
     #[cfg(not(target_os = "android"))]
     let args = parse_args();
     #[cfg(target_os = "android")]
-    let args = CliArgs::default();
+    let args = read_android_args().unwrap_or_default();
 
     #[cfg(not(target_os = "android"))]
     let mut title = String::from("Tabletop P2P");
