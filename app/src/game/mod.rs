@@ -131,6 +131,7 @@ impl Plugin for GamePlugin {
             .init_resource::<tokens::Selection>()
             .init_resource::<tokens::Dragging>()
             .init_resource::<tokens::TouchDrag>()
+            .init_resource::<toolbar::ToolbarState>()
             .init_resource::<graphics::GraphicsSettings>()
             .add_plugins(virtual_joystick::VirtualJoystickPlugin);
         #[cfg(target_os = "android")]
@@ -168,10 +169,8 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
-                toolbar::toolbar_clicks.after(SyncSet),
-                toolbar::toolbar_shortcuts.after(SyncSet),
-                toolbar::delete_btn_click.after(toolbar::toolbar_clicks),
-                hud::assign_token_click.after(toolbar::delete_btn_click),
+                toolbar::toolbar_click.after(SyncSet),
+                hud::assign_token_click.after(toolbar::toolbar_click),
                 hud::scale_btn_click.after(SyncSet),
                 hud::back_btn_click,
                 graphics::gfx_open_click,
@@ -184,18 +183,12 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
-                toolbar::toolbar_visuals.after(toolbar::toolbar_clicks),
-                toolbar::toolbar_responsive.after(hud::scale_btn_click),
-                toolbar::toolbar_options_visibility
-                    .after(toolbar::toolbar_clicks)
-                    .after(toolbar::toolbar_responsive),
-                toolbar::delete_btn_visibility
-                    .after(toolbar::delete_btn_click)
-                    .after(toolbar::toolbar_responsive),
-                hud::hint_label.after(toolbar::toolbar_clicks),
+                toolbar::toolbar_visuals.after(toolbar::toolbar_click),
+                toolbar::toolbar_build.after(hud::scale_btn_click),
+                hud::hint_label.after(toolbar::toolbar_click),
                 hud::roster_panel
                     .after(hud::scale_btn_click)
-                    .after(toolbar::delete_btn_click)
+                    .after(toolbar::toolbar_click)
                     .after(SyncSet),
                 hud::status_label
                     .after(hud::assign_token_click)
