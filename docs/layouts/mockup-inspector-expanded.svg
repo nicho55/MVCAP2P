@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="800" height="420">
+  <defs>
+    <style>
+      .phone{fill:#1a1a2e;stroke:#444;stroke-width:2;rx:14}
+      .lbl{font-family:sans-serif;font-size:9px;fill:#777;text-anchor:middle}
+      .title{font-family:sans-serif;font-size:13px;fill:#fff;font-weight:bold;text-anchor:middle}
+      .sub{font-family:sans-serif;font-size:10px;fill:#999;text-anchor:middle}
+      .cfg{fill:#3a3a5a;stroke:#7777cc;stroke-width:1.5}
+      .insp-exp{fill:#1e3d1e;stroke:#66cc66;stroke-width:2;rx:8}
+      .jzone{fill:none;stroke:#aa5555;stroke-width:1;stroke-dasharray:4 2}
+      .jknob{fill:#3a2a2a;stroke:#cc6666;stroke-width:2}
+      .tbtn{fill:#2a2a4a;stroke:#6666cc;stroke-width:1.5}
+      .ttrack{fill:#222;stroke:#555;stroke-width:1;rx:10}
+      .t{font-family:sans-serif;font-size:10px;fill:#ccc;text-anchor:middle;dominant-baseline:central}
+      .n{font-family:sans-serif;font-size:12px;fill:#8888ff;text-anchor:middle;dominant-baseline:central;font-weight:bold}
+      .fl{font-family:sans-serif;font-size:9px;fill:#88cc88;text-anchor:start}
+      .fv{font-family:sans-serif;font-size:10px;fill:#fff;text-anchor:start}
+      .sec{font-family:sans-serif;font-size:10px;fill:#66cc66;text-anchor:start;font-weight:bold}
+      .abil{fill:#2a4a2a;stroke:#44aa44;stroke-width:1;rx:4}
+      .collapse{fill:#2a4a2a;stroke:#66cc66;stroke-width:1;rx:3}
+    </style>
+  </defs>
+
+  <text x="400" y="18" class="title">Inspector Expandido — Landscape</text>
+  <text x="400" y="34" class="sub">(toque para expandir/recolher, cresce para baixo)</text>
+
+  <!-- Phone -->
+  <rect x="40" y="42" width="720" height="370" class="phone"/>
+
+  <!-- (2) Config — top right -->
+  <circle cx="730" cy="62" r="16" class="cfg"/>
+  <text x="730" y="62" class="t">&#9881;</text>
+
+  <!-- (1) Inspector EXPANDED — top center, grows downward -->
+  <rect x="200" y="48" width="360" height="230" class="insp-exp"/>
+
+  <!-- Collapse handle at bottom -->
+  <rect x="350" y="274" width="60" height="10" class="collapse"/>
+  <text x="380" y="279" class="t" style="font-size:7px;fill:#88cc88">&#9650; recolher</text>
+
+  <!-- Token image -->
+  <rect x="215" y="56" width="55" height="55" fill="#2a4a2a" stroke="#44aa44" rx="4"/>
+  <text x="242" y="83" class="t" style="font-size:9px">Token</text>
+
+  <!-- Name -->
+  <text x="280" y="68" class="fv" style="font-size:12px;font-weight:bold">Aragorn</text>
+  <text x="280" y="82" class="fl">Guerreiro Nv. 5</text>
+
+  <!-- HP bar -->
+  <text x="280" y="100" class="fl">HP</text>
+  <text x="300" y="100" class="fv">45 / 52</text>
+  <rect x="280" y="104" width="120" height="5" fill="#333" rx="2"/>
+  <rect x="280" y="104" width="104" height="5" fill="#44aa44" rx="2"/>
+
+  <!-- Stats grid -->
+  <text x="215" y="128" class="sec">&#9876; Atributos</text>
+
+  <text x="215" y="146" class="fl">AC</text>
+  <text x="240" y="146" class="fv">16</text>
+  <text x="280" y="146" class="fl">SPD</text>
+  <text x="310" y="146" class="fv">30ft</text>
+
+  <text x="215" y="164" class="fl">FOR</text>
+  <text x="240" y="164" class="fv">16</text>
+  <text x="280" y="164" class="fl">DES</text>
+  <text x="310" y="164" class="fv">14</text>
+  <text x="350" y="164" class="fl">CON</text>
+  <text x="380" y="164" class="fv">13</text>
+
+  <text x="215" y="182" class="fl">INT</text>
+  <text x="240" y="182" class="fv">10</text>
+  <text x="280" y="182" class="fl">SAB</text>
+  <text x="310" y="182" class="fv">12</text>
+  <text x="350" y="182" class="fl">CAR</text>
+  <text x="380" y="182" class="fv">8</text>
+
+  <!-- Abilities -->
+  <text x="215" y="206" class="sec">&#10026; Habilidades</text>
+
+  <rect x="215" y="212" width="160" height="22" class="abil"/>
+  <text x="225" y="223" class="fv" style="font-size:9px">&#9876; Ataque Corpo-a-corpo</text>
+
+  <rect x="215" y="238" width="160" height="22" class="abil"/>
+  <text x="225" y="249" class="fv" style="font-size:9px">&#10024; Second Wind</text>
+
+  <rect x="385" y="212" width="160" height="22" class="abil"/>
+  <text x="395" y="223" class="fv" style="font-size:9px">&#9760; Action Surge</text>
+
+  <!-- (4) Toolbar — bottom center -->
+  <rect x="250" y="355" width="260" height="48" class="ttrack"/>
+  <circle cx="290" cy="379" r="18" class="tbtn"/>
+  <text x="290" y="379" class="n">4</text>
+  <circle cx="340" cy="379" r="18" class="tbtn"/>
+  <text x="340" y="379" class="n">4</text>
+  <circle cx="390" cy="379" r="18" class="tbtn"/>
+  <text x="390" y="379" class="n">4</text>
+  <circle cx="440" cy="379" r="18" class="tbtn"/>
+  <text x="440" y="379" class="n">4</text>
+
+  <!-- (3) Joystick — bottom right -->
+  <circle cx="670" cy="340" r="55" class="jzone"/>
+  <circle cx="670" cy="340" r="24" class="jknob"/>
+  <text x="670" y="340" class="t">L</text>
+</svg>

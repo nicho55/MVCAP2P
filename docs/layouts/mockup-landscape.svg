@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="800" height="420">
+  <defs>
+    <style>
+      .phone{fill:#1a1a2e;stroke:#444;stroke-width:2;rx:14}
+      .lbl{font-family:sans-serif;font-size:9px;fill:#777;text-anchor:middle}
+      .title{font-family:sans-serif;font-size:13px;fill:#fff;font-weight:bold;text-anchor:middle}
+      .cfg{fill:#3a3a5a;stroke:#7777cc;stroke-width:1.5}
+      .insp{fill:#1e2d1e;stroke:#44aa44;stroke-width:1.5;rx:6}
+      .jzone{fill:none;stroke:#aa5555;stroke-width:1;stroke-dasharray:4 2}
+      .jknob{fill:#3a2a2a;stroke:#cc6666;stroke-width:2}
+      .tbtn{fill:#2a2a4a;stroke:#6666cc;stroke-width:1.5}
+      .ttrack{fill:#222;stroke:#555;stroke-width:1;rx:10}
+      .dot{fill:#555}.dot-on{fill:#8888ff}
+      .touch{fill:none;stroke:#333;stroke-width:1;stroke-dasharray:6 3}
+      .t{font-family:sans-serif;font-size:10px;fill:#ccc;text-anchor:middle;dominant-baseline:central}
+      .n{font-family:sans-serif;font-size:12px;fill:#8888ff;text-anchor:middle;dominant-baseline:central;font-weight:bold}
+      .hint{font-family:sans-serif;font-size:8px;fill:#555;text-anchor:middle;font-style:italic}
+    </style>
+  </defs>
+
+  <text x="400" y="18" class="title">HUD Landscape — Estado Normal</text>
+
+  <!-- Phone -->
+  <rect x="40" y="30" width="720" height="370" class="phone"/>
+
+  <!-- Touch area (camera) -->
+  <rect x="50" y="40" width="700" height="350" class="touch" rx="10"/>
+  <text x="400" y="230" class="hint">toque livre = pan/orbit camera</text>
+
+  <!-- (1) Inspector — top center -->
+  <rect x="280" y="40" width="240" height="50" class="insp"/>
+  <text x="320" y="60" class="t" style="font-size:9px">HP 45</text>
+  <text x="370" y="60" class="t" style="font-size:9px">AC 16</text>
+  <text x="420" y="60" class="t" style="font-size:9px">Lv.5</text>
+  <text x="470" y="60" class="t" style="font-size:9px">&#9876;</text>
+  <!-- expand handle -->
+  <rect x="370" y="88" width="60" height="10" fill="#44aa44" rx="4" opacity="0.5"/>
+  <text x="400" y="93" class="t" style="font-size:7px;fill:#88cc88">&#9660; expandir</text>
+  <text x="400" y="112" class="lbl">(1) Inspector</text>
+
+  <!-- (2) Config — top right -->
+  <circle cx="730" cy="58" r="16" class="cfg"/>
+  <text x="730" y="58" class="t">&#9881;</text>
+  <text x="730" y="82" class="lbl">(2)</text>
+
+  <!-- (4) Toolbar — bottom center, horizontal row -->
+  <rect x="250" y="340" width="260" height="50" class="ttrack"/>
+
+  <circle cx="290" cy="365" r="18" class="tbtn"/>
+  <text x="290" y="365" class="n">4</text>
+
+  <circle cx="340" cy="365" r="18" class="tbtn"/>
+  <text x="340" y="365" class="n">4</text>
+
+  <circle cx="390" cy="365" r="18" class="tbtn"/>
+  <text x="390" y="365" class="n">4</text>
+
+  <circle cx="440" cy="365" r="18" class="tbtn"/>
+  <text x="440" y="365" class="n">4</text>
+
+  <!-- carousel dots -->
+  <circle cx="470" cy="350" r="2.5" class="dot-on"/>
+  <circle cx="478" cy="350" r="2.5" class="dot"/>
+  <circle cx="486" cy="350" r="2.5" class="dot"/>
+  <text x="480" y="365" class="t" style="font-size:10px;fill:#666">&#9664;</text>
+  <text x="400" y="407" class="lbl">(4) Toolbar — 4 vis + carousel &#9664;</text>
+
+  <!-- (3) Joystick — bottom right -->
+  <circle cx="670" cy="330" r="55" class="jzone"/>
+  <circle cx="670" cy="330" r="24" class="jknob"/>
+  <text x="670" y="330" class="t">L</text>
+  <text x="670" y="400" class="lbl">(3) Joystick</text>
+</svg>

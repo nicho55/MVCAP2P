@@ -23,28 +23,88 @@ O app tem 3 telas conceituais + uma camada persistente:
 
 | Camada | ZIndex | Quando | Conteúdo |
 |---|---|---|---|
-| **UiLayer** (persistente) | 100 | SEMPRE visível | Botão de Config, indicador de conexão, notificações |
+| **UiLayer** (persistente) | 100 | SEMPRE visível | Botão de Config (topo direito), indicador de conexão, notificações |
 | **Lobby** | — | `AppState::Lobby` | Apelido, cor, criar sala, sala de teste, procurar sala, entrar com código |
-| **Jogo (HUD)** | 50 | `AppState::InGame` | Inspetor, toolbar, roster de jogadores, hints, status |
+| **Jogo (HUD)** | 50 | `AppState::InGame` | Inspector, toolbar, joystick, roster de jogadores |
 | **GfxUI** | 51 | `AppState::InGame` | Painel de gráficos (MSAA, sombras, HDR, etc.) |
 | **DebugHud** | 52 | `InGame` + test room | FPS, entidades, chunks, peers |
 
-O botão de **Configurações** fica no `UiLayer` (`app/src/ui_layer.rs`, ZIndex 100) — visível em todas as telas, lobby e jogo. Atualmente o UiLayer só tem o ConnIndicator e NotificationArea.
+## Layout da HUD — Design Aprovado pelo Game Designer
+
+### ⚠️ IMPORTANTE: Siga exatamente este layout
+
+O game designer criou mockups aprovados em `docs/layouts/mockup-*.svg`. A HUD tem **4 elementos principais** com posições fixas:
+
+| # | Componente | Posição | Orientação |
+|---|---|---|---|
+| **(1) Inspector** | **Topo centro** | Landscape + Portrait |
+| **(2) Config** | **Topo direito** | Landscape + Portrait (UiLayer, ZIndex 100) |
+| **(3) Joystick** | **Inferior direito** | Landscape + Portrait |
+| **(4) Toolbar** | **Inferior centro** | Landscape + Portrait |
+
+### Mockups de referência (LEIA antes de implementar)
+
+| Mockup | Arquivo | O que mostra |
+|---|---|---|
+| Layout landscape | `docs/layouts/mockup-landscape.svg` | Posição dos 4 elementos |
+| Layout portrait | `docs/layouts/mockup-portrait.svg` | Adaptação portrait |
+| Inspector expandido | `docs/layouts/mockup-inspector-expanded.svg` | Ficha completa |
+| Toolbar + submenu | `docs/layouts/mockup-toolbar-expanded.svg` | Carousel, submenu, drag-to-add |
+
+### (1) Inspector — Topo Centro
+
+- **Recolhido**: barra fina horizontal com resumo (HP, AC, ícone da classe)
+- **Expandido**: toque no inspector → expande para **BAIXO**, mostra ficha completa
+- Handle ▼/▲ na base para expandir/recolher
+- **Conteúdo varia** conforme seleção:
+  - Inimigo → stats (HP, AC, status)
+  - Aliado → stats + info de suporte
+  - Próprio token → **menu de personagem** (ficha completa: imagem, atributos, habilidades)
+  - Nada selecionado → minimizado/oculto
+
+### (2) Config — Topo Direito
+
+- Botão de engrenagem no UiLayer (ZIndex 100), visível em TODAS as telas
+- Já existe em `app/src/ui_layer.rs` — só precisa reposicionar para topo direito
+
+### (3) Joystick — Inferior Direito
+
+- Move o **token selecionado** pela grid (NÃO a câmera)
+- Se nenhum token selecionado → feedback visual (inativo)
+- Sempre visível durante o jogo
+- Câmera é movida por **toque em área livre** (qualquer toque fora de botões/joystick/painéis)
+
+### (4) Toolbar — Inferior Centro
+
+- **4 ferramentas visíveis** em linha horizontal
+- **Carousel**: desliza para a **esquerda (◄)** para acessar mais ferramentas
+- **Submenus**: toque na tool ativa abre submenu para **cima (▲)**
+- **Drag-right-to-add**: arrastar toolbar para direita até limite → [+ Add] aparece → abre config
+- **GM** vê: seleção, pinturas de terreno, elevação, borracha, grid
+- **Jogador** vê: seleção + ferramentas relevantes (sem edição de terreno)
+
+### Controles de toque — Prioridade
+
+1. Toque em **botão/painel** → ação do botão
+2. Toque em **zona do joystick** → ativa joystick
+3. Toque em **área livre** → pan/orbit câmera
 
 ## O que já foi implementado
 
 - ✅ #4 — UI Mobile-First (ADR-012, ADR-013, virtual_joystick)
-- ✅ #10 — DeviceProfile (`app/src/device.rs`) — plataforma, input mode
+- ✅ #10 — DeviceProfile (`app/src/device.rs`)
 - ✅ #11 — UI Engine SVG+PNG — UiLayer persistente (`app/src/ui_layer.rs`)
-- ✅ #12 — Telas Conceituais — debug HUD com `is_test_room` (`app/src/game/debug_hud.rs`)
-- ✅ #13 — Orçamento de Performance (PR #35 mergeado — `shared/src/lib.rs::limits`, `app/src/transcode.rs`)
-- ✅ #21 — Grid, Réguas, LoS, A* pathfinding (`app/src/game/ruler.rs`, 19 testes)
-- ✅ #28 — Sistema de Chunks base (`ChunkRender`, `chunk_render_system()`)
-- ✅ #32 — CLI Args no Android (`read_android_args()`, config JSON via ADB)
-- ✅ B0002 fix — System ordering completo de 11+ conflitos (ADR-013, commit d48640ec)
-- ✅ ZIndex fix — HudRoot(50), GfxUI(51), DebugHud(52) (commit 01042ab2)
-- ✅ #41 — HUD responsive (rebuild on resize) — mergeado, mas HUD antiga ainda precisa ser reescrita
-- ✅ #42 — Pipeline de screenshots multi-tela (lobby, game landscape, portrait, restored)
+- ✅ #12 — Telas Conceituais — debug HUD com `is_test_room`
+- ✅ #13 — Orçamento de Performance (`shared/src/lib.rs::limits`, `app/src/transcode.rs`)
+- ✅ #21 — Grid, Réguas, LoS, A* pathfinding
+- ✅ #28 — Sistema de Chunks base
+- ✅ #32 — CLI Args no Android
+- ✅ B0002 fix — System ordering (ADR-013)
+- ✅ ZIndex fix — HudRoot(50), GfxUI(51), DebugHud(52)
+- ✅ #41 — HUD responsive (rebuild on resize)
+- ✅ #42 — Pipeline de screenshots multi-tela
+- ✅ #43 — Fix flickering da HUD
+- ✅ #18 — Toolbar modular (PR #47) — ⚠️ **REJEITADA pelo game designer, será substituída por #49**
 
 ## Tarefas Pendentes (em ordem de prioridade)
 
@@ -59,81 +119,69 @@ gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
 # VER as imagens (Claude CLI consegue ler .png)
 ```
 
-### 1. 🚨 Issue #43 — Fix flickering da HUD (P0 — bug)
-A HUD pisca/flica no Android. O `hud_responsive` compete com `setup_hud` no primeiro frame: `Local<>` começa em `(0,0,0)`, sempre difere do `ScreenInfo` real, e faz despawn+respawn da HUD que acabou de spawnar.
+### 1. 🚨 Issue #49 — Toolbar Rework (P0 — reescrever a toolbar)
 
-**Fix:** Remover `setup_hud` de `OnEnter(AppState::InGame)`. Deixar APENAS `hud_responsive` ser responsável por spawnar a HUD (ele já faz spawn quando `q_root.is_empty()`). Mesmo para `gfx_responsive` e `debug_hud_responsive`. Ou: inicializar o `Local<>` com os valores reais do `ScreenInfo` no primeiro frame sem rebuildar.
+A toolbar do PR #47 foi rejeitada pelo game designer. Implementar do zero seguindo o design aprovado:
 
-```bash
-gh issue view 43 --repo nicho55/MVCAP2P
-```
-
-### 2. 🚨 Issue #18 — Toolbar Modular (P0 — reescrever a toolbar)
-A toolbar atual é uma prova de conceito. Precisa ser reescrita do zero:
-
-- **4 ferramentas visíveis** por vez + **slider horizontal** para acessar o resto
-- **GM** vê: seleção, todas as pinturas de terreno, elevação, borracha, grid, configurações de grid
-- **Jogador** vê: seleção + ferramentas relevantes ao seu papel (sem edição de terreno)
-- Ferramentas de terreno (pintura, elevação, borracha) **NÃO aparecem para jogador**
-- Cada ferramenta é um ícone SVG moldura + PNG ícone
-- Posição: **inferior centralizada** em landscape, adaptável em portrait
-
-Leia a issue #18 completa para os critérios de aceite.
+- **Posição**: inferior centro, horizontal
+- **4 botões visíveis** + carousel ◄
+- **Submenus** expandem para cima ▲
+- **Drag-right-to-add** pattern
+- **GM-only**: ferramentas de terreno
+- **LEIA** `docs/layouts/mockup-toolbar-expanded.svg` antes de começar
 
 ```bash
-gh issue view 18 --repo nicho55/MVCAP2P
+gh issue view 49 --repo nicho55/MVCAP2P
 ```
 
-### 3. 🚨 Issue #24 — Controles Dual-Stick (P0 — corrigir joysticks)
-Os joysticks estão com as funções invertidas. Spec correta do game designer:
+### 2. 🚨 Issue #19 — Inspector Panel (P0 — novo componente)
 
-| Controle | Função |
-|---|---|
-| **Joystick esquerdo** | Mover o **token selecionado** pela grid (NÃO a câmera) |
-| **Joystick direito** | **Mira de habilidade** (futuro — pode ficar inativo por ora) |
-| **Toque livre** | **Câmera** — pan/orbit em qualquer área que NÃO seja botão ou joystick |
+Inspector é o componente (1) do layout:
 
-**Regra de prioridade de toque:**
-1. Toque em **botão/painel** → ação do botão
-2. Toque em **zona de joystick** → ativa joystick
-3. Toque em **área livre** → pan/orbit de câmera
+- **Posição**: topo centro
+- **Recolhido**: barra fina com HP/AC
+- **Expandido**: cresce para baixo, mostra ficha completa
+- Conteúdo varia: inimigo/aliado/self(=menu personagem)/nada(=oculto)
+- **LEIA** `docs/layouts/mockup-inspector-expanded.svg` antes de começar
 
-O sistema atual (`camera::touch_pan_zoom`) controla a câmera — ele deve continuar funcionando, mas restrito a toques fora de joysticks e botões. O joystick esquerdo (`virtual_joystick.rs`) atualmente move a câmera — precisa ser reescrito para mover o token selecionado.
+```bash
+gh issue view 19 --repo nicho55/MVCAP2P
+```
 
-Leia a issue #24 completa para os critérios de aceite.
+### 3. 🚨 Issue #24 — Controles Dual-Stick (P0 — corrigir joystick)
+
+O joystick está na posição errada e com função errada:
+
+- **Posição**: inferior **DIREITO**
+- **Função**: mover o **token selecionado** (NÃO a câmera)
+- Câmera = toque em área livre
+- **LEIA** `docs/layouts/mockup-landscape.svg` para posicionamento
 
 ```bash
 gh issue view 24 --repo nicho55/MVCAP2P
 ```
 
-### 4. Issue #40 — Texture Atlas + LOD (chunks base prontos, falta visual)
-`ChunkRender` e `chunk_render_system()` estão implementados. O que falta:
-- **Texture atlas**: `dominant_terrain()` usa 1 material por chunk — células com texturas diferentes renderizam com cor errada. Usar vertex colors ou paleta UV.
-- **LOD médio**: chunks distantes (4-6) usar mesh simplificada (1 quad por chunk)
+### 4. Issue #40 — Texture Atlas + LOD
 ```bash
 gh issue view 40 --repo nicho55/MVCAP2P
 ```
 
 ### 5. Issue #2 — Core de Identidade Local P2P
-Substituir `PlayerUuid = u64` por identidade criptográfica Ed25519.
 ```bash
 gh issue view 2 --repo nicho55/MVCAP2P
 ```
 
 ### 6. Issue #14 — Chave Pública/Privada Ed25519
-Keypair na primeira execução, persistido encriptado, `PlayerUuid` → `[u8; 16]` derivado.
 ```bash
 gh issue view 14 --repo nicho55/MVCAP2P
 ```
 
 ### 7. Issue #15 — Content-Addressable Storage (CAS)
-`BlobId` migra de `u64` para `[u8; 32]` (BLAKE3). Armazenamento com dedup.
 ```bash
 gh issue view 15 --repo nicho55/MVCAP2P
 ```
 
 ### 8. Issue #16 — Sync Inteligente de Assets
-Hello inclui lista de hashes conhecidos, GM pula blobs que peer já tem.
 ```bash
 gh issue view 16 --repo nicho55/MVCAP2P
 ```
@@ -143,6 +191,8 @@ gh issue view 16 --repo nicho55/MVCAP2P
 ANTES de implementar qualquer feature, estude o código que já existe no projeto. Leia os arquivos que vai modificar e os vizinhos. O projeto tem um estilo próprio — siga ele, não invente outro.
 
 Exemplo: antes de modificar a HUD, leia `hud.rs`, `lobby.rs`, `ui_layer.rs`, `graphics.rs`, `debug_hud.rs` e `game/mod.rs` inteiros. Entenda como `ScreenInfo` funciona, como `lobby_responsive()` faz rebuild, como os ZIndex estão organizados. Sua implementação deve parecer escrita pela mesma pessoa que escreveu o resto.
+
+**⚠️ LEIA os mockups SVG em `docs/layouts/` antes de implementar qualquer componente de UI.** Eles são a fonte de verdade do layout aprovado pelo game designer.
 
 ### Princípios inegociáveis
 
@@ -206,6 +256,8 @@ gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
 ```
 Use isso para validar cada mudança de UI. Não faça push e torça — veja o resultado.
 
+**⚠️ Compare os screenshots com os mockups SVG em `docs/layouts/` para garantir que o layout está correto.**
+
 ### Trigger manual
 
 ```bash
@@ -233,5 +285,7 @@ gh issue list --repo nicho55/MVCAP2P --state open --json number,title,labels --j
 cat AGENTS.md
 ```
 
-Comece pela issue #43 (fix flickering — rápido). Depois #18 (toolbar modular — reescrever a toolbar). Depois #24 (controles dual-stick — corrigir joysticks e câmera). Use os screenshots do deploy para validar cada mudança.
+**PRIMEIRO**: Leia os mockups SVG em `docs/layouts/mockup-*.svg` para entender o layout aprovado.
+
+Comece pela issue #49 (toolbar rework). Depois #19 (inspector panel). Depois #24 (controles). Use os screenshots do deploy para validar cada mudança comparando com os mockups.
 ```
