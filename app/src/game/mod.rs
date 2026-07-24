@@ -221,14 +221,11 @@ impl Plugin for GamePlugin {
                 #[cfg(target_os = "android")]
                 camera::touch_pan_zoom.after(camera::pan_zoom),
                 #[cfg(not(target_os = "android"))]
-                camera::apply_rig
-                    .after(camera::pan_zoom)
-                    .after(virtual_joystick::joystick_apply),
+                camera::apply_rig.after(camera::pan_zoom),
                 #[cfg(target_os = "android")]
                 camera::apply_rig
                     .after(camera::pan_zoom)
-                    .after(camera::touch_pan_zoom)
-                    .after(virtual_joystick::joystick_apply),
+                    .after(camera::touch_pan_zoom),
                 map::sync_map.after(SyncSet),
                 map::file_drop.after(map::sync_map).after(HudWriteSet),
                 tokens::token_interact

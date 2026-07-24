@@ -9,6 +9,8 @@ use bevy::platform::collections::HashMap;
 
 #[cfg(target_os = "android")]
 use super::tokens::TouchDrag;
+#[cfg(target_os = "android")]
+use super::virtual_joystick::JoystickTouch;
 use super::UiHovered;
 
 #[derive(Component)]
@@ -193,11 +195,16 @@ pub fn touch_pan_zoom(
     mut rig: ResMut<CamRig>,
     ui: Res<UiHovered>,
     drag: Res<TouchDrag>,
+    joystick: Res<JoystickTouch>,
 ) {
     if drag.token_id.is_some() {
         return;
     }
     for t in touch_ev.read() {
+        // O dedo que segura o joystick não move a câmera.
+        if joystick.0 == Some(t.id) {
+            continue;
+        }
         if ui.0 && matches!(t.phase, TouchPhase::Started) {
             continue;
         }
