@@ -104,7 +104,8 @@ O game designer criou mockups aprovados em `docs/layouts/mockup-*.svg`. A HUD te
 - ✅ #41 — HUD responsive (rebuild on resize)
 - ✅ #42 — Pipeline de screenshots multi-tela
 - ✅ #43 — Fix flickering da HUD
-- ✅ #18 — Toolbar modular (PR #47) — ⚠️ **REJEITADA pelo game designer, será substituída por #49**
+- ✅ #18 — Toolbar modular (PR #47) — rejeitada, substituída por #49
+- ✅ #49 — Toolbar Rework (PR #50) — **APROVADA**, inferior centro, carousel, submenus
 
 ## Tarefas Pendentes (em ordem de prioridade)
 
@@ -119,22 +120,7 @@ gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
 # VER as imagens (Claude CLI consegue ler .png)
 ```
 
-### 1. 🚨 Issue #49 — Toolbar Rework (P0 — reescrever a toolbar)
-
-A toolbar do PR #47 foi rejeitada pelo game designer. Implementar do zero seguindo o design aprovado:
-
-- **Posição**: inferior centro, horizontal
-- **4 botões visíveis** + carousel ◄
-- **Submenus** expandem para cima ▲
-- **Drag-right-to-add** pattern
-- **GM-only**: ferramentas de terreno
-- **LEIA** `docs/layouts/mockup-toolbar-expanded.svg` antes de começar
-
-```bash
-gh issue view 49 --repo nicho55/MVCAP2P
-```
-
-### 2. 🚨 Issue #19 — Inspector Panel (P0 — novo componente)
+### 1. 🚨 Issue #19 — Inspector Panel (P0 — novo componente) ← PRÓXIMA
 
 Inspector é o componente (1) do layout:
 
@@ -148,7 +134,7 @@ Inspector é o componente (1) do layout:
 gh issue view 19 --repo nicho55/MVCAP2P
 ```
 
-### 3. 🚨 Issue #24 — Controles Dual-Stick (P0 — corrigir joystick)
+### 2. 🚨 Issue #24 — Controles Dual-Stick (P0 — corrigir joystick)
 
 O joystick está na posição errada e com função errada:
 
@@ -161,27 +147,27 @@ O joystick está na posição errada e com função errada:
 gh issue view 24 --repo nicho55/MVCAP2P
 ```
 
-### 4. Issue #40 — Texture Atlas + LOD
+### 3. Issue #40 — Texture Atlas + LOD
 ```bash
 gh issue view 40 --repo nicho55/MVCAP2P
 ```
 
-### 5. Issue #2 — Core de Identidade Local P2P
+### 4. Issue #2 — Core de Identidade Local P2P
 ```bash
 gh issue view 2 --repo nicho55/MVCAP2P
 ```
 
-### 6. Issue #14 — Chave Pública/Privada Ed25519
+### 5. Issue #14 — Chave Pública/Privada Ed25519
 ```bash
 gh issue view 14 --repo nicho55/MVCAP2P
 ```
 
-### 7. Issue #15 — Content-Addressable Storage (CAS)
+### 6. Issue #15 — Content-Addressable Storage (CAS)
 ```bash
 gh issue view 15 --repo nicho55/MVCAP2P
 ```
 
-### 8. Issue #16 — Sync Inteligente de Assets
+### 7. Issue #16 — Sync Inteligente de Assets
 ```bash
 gh issue view 16 --repo nicho55/MVCAP2P
 ```
@@ -287,5 +273,5 @@ cat AGENTS.md
 
 **PRIMEIRO**: Leia os mockups SVG em `docs/layouts/mockup-*.svg` para entender o layout aprovado.
 
-Comece pela issue #49 (toolbar rework). Depois #19 (inspector panel). Depois #24 (controles). Use os screenshots do deploy para validar cada mudança comparando com os mockups.
+Comece pela issue #19 (inspector panel — topo centro, expandível). Depois #24 (controles — joystick inferior direito). Use os screenshots do deploy para validar cada mudança comparando com os mockups.
 ```
