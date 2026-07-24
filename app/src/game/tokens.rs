@@ -338,6 +338,7 @@ pub fn touch_interact(
     ui: Res<UiHovered>,
     mut sel: ResMut<Selection>,
     mut drag: ResMut<TouchDrag>,
+    joystick: Res<super::virtual_joystick::JoystickTouch>,
     mut net: ResMut<Net>,
     grid: Res<GridRes>,
     terrain: Res<Terrain>,
@@ -352,6 +353,10 @@ pub fn touch_interact(
     };
 
     for t in touch_ev.read() {
+        // O dedo do joystick não seleciona nem arrasta tokens.
+        if joystick.0 == Some(t.id) {
+            continue;
+        }
         match t.phase {
             TouchPhase::Started => {
                 if ui.0 {
