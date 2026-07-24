@@ -3,6 +3,7 @@ pub mod debug_hud;
 pub mod graphics;
 pub mod grid;
 pub mod hud;
+pub mod inspector;
 pub mod lowpoly;
 pub mod map;
 pub mod ruler;
@@ -132,6 +133,7 @@ impl Plugin for GamePlugin {
             .init_resource::<tokens::Dragging>()
             .init_resource::<tokens::TouchDrag>()
             .init_resource::<toolbar::ToolbarState>()
+            .init_resource::<inspector::InspectorState>()
             .init_resource::<graphics::GraphicsSettings>()
             .add_plugins(virtual_joystick::VirtualJoystickPlugin);
         #[cfg(target_os = "android")]
@@ -149,6 +151,7 @@ impl Plugin for GamePlugin {
                 graphics::despawn_gfx_ui,
                 debug_hud::despawn_debug_hud,
                 toolbar::despawn_toolbar,
+                inspector::despawn_inspector,
             ),
         )
         .add_systems(First, screen_update)
@@ -173,6 +176,7 @@ impl Plugin for GamePlugin {
                 hud::assign_token_click.after(toolbar::toolbar_click),
                 hud::scale_btn_click.after(SyncSet),
                 hud::back_btn_click,
+                inspector::inspector_click.after(SyncSet),
                 graphics::gfx_open_click,
                 graphics::gfx_toggle_click.after(SyncSet),
             )
@@ -185,6 +189,10 @@ impl Plugin for GamePlugin {
             (
                 toolbar::toolbar_visuals.after(toolbar::toolbar_click),
                 toolbar::toolbar_build.after(hud::scale_btn_click),
+                inspector::inspector_build
+                    .after(hud::scale_btn_click)
+                    .after(inspector::inspector_click)
+                    .after(SyncSet),
                 hud::hint_label.after(toolbar::toolbar_click),
                 hud::roster_panel
                     .after(hud::scale_btn_click)
