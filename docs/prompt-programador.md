@@ -121,13 +121,16 @@ gh run download <RUN_ID> --repo nicho55/MVCAP2P -n perf-reports -D /tmp/reports
 # VER as imagens (Claude CLI consegue ler .png)
 ```
 
-### 1. 🚨 Issue #24 — Controles Dual-Stick (P0 — corrigir joystick) ← PRÓXIMA
+### 1. 🚨 Issue #24 — Joystick de Movimento (P0) ← PRÓXIMA
 
-O joystick está na posição errada e com função errada:
+Joystick ÚNICO — **mira/ataque cancelado** pelo game designer:
 
 - **Posição**: inferior **DIREITO**
-- **Função**: mover o **token selecionado** (NÃO a câmera)
-- Câmera = toque em área livre
+- **Função**: mover o **token selecionado** pela grid (NÃO a câmera)
+- Câmera = toque em área livre (pan/orbit/pinch zoom)
+- Se nenhum token selecionado → joystick inativo com feedback visual
+- Sempre visível durante o jogo
+- **NÃO implementar** joystick de mira/ataque — cancelado
 - **LEIA** `docs/layouts/mockup-landscape.svg` para posicionamento
 
 ```bash
